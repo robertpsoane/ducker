@@ -1,0 +1,27 @@
+[package]
+name = "ducker"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bollard = "0.16.1"
+chrono = "0.4.38"
+clap = { version = "4.5.6", features = ["derive"] }
+color-eyre = "0.6.3"
+crossterm = { version = "0.27", features = ["event-stream"] }
+futures = "0.3.30"
+
+# docker = "0.0.41"
+itertools = "0.13.0"
+# openssl = "0.10.64"
+openssl-sys = "0.9.102"
+ratatui = { version = "0.26.3", features = ["serde"] }
+serde = "1.0.203"
+tokio = { version = "1.38.0", features = ["full"] }
+# openssl = { version = "^0.10.0", features = ["vendored"] }
+# tuirealm = { version = "^1.9.0", default-features = false, features = [
+#     "derive",
+#     "serialize",
+#     "ratatui",
+#     "crossterm",
+# ] }
