@@ -20,17 +20,29 @@ use ratatui::{
 
 use crate::{
     component::Component,
-    events::{message::MessageResponse, Key},
+    events::{key, message::MessageResponse, Key},
+    help::PageHelp,
 };
 
 use super::confirmation_modal::{BooleanOptions, ConfirmationModal, ModalState};
 
 const NAME: &str = "Containers";
 
+const UP_KEY: Key = Key::Up;
+const DOWN_KEY: Key = Key::Down;
+
+const A_KEY: Key = Key::Char('a');
+const J_KEY: Key = Key::Char('j');
+const K_KEY: Key = Key::Char('k');
+const D_KEY: Key = Key::Char('d');
+const R_KEY: Key = Key::Char('r');
+const S_KEY: Key = Key::Char('s');
+
 #[derive(Debug)]
 pub struct Containers {
     pub name: String,
     pub visible: bool,
+    page_help: PageHelp,
     docker: Docker,
     containers: Vec<ContainerSummary>,
     list_state: TableState,
@@ -39,8 +51,15 @@ pub struct Containers {
 
 impl Containers {
     pub async fn new(visible: bool, docker: Docker) -> Result<Self> {
+        let page_help = PageHelp::new("Containers".into())
+            .add_input(format!("{}", A_KEY), "attach".into())
+            .add_input(format!("{}", D_KEY), "delete".into())
+            .add_input(format!("{}", R_KEY), "run".into())
+            .add_input(format!("{}", S_KEY), "stop".into());
+
         let mut instance = Self {
             name: String::from(NAME),
+            page_help: page_help,
             visible,
             docker,
             containers: vec![],
@@ -83,15 +102,15 @@ impl Containers {
         let delete_modal_state = self.delete_modal.state.clone();
         let result = match delete_modal_state {
             ModalState::Invisible => match message {
-                Key::Up | Key::Char('k') => {
+                UP_KEY | K_KEY => {
                     self.decrement_list();
                     MessageResponse::Consumed
                 }
-                Key::Down | Key::Char('j') => {
+                DOWN_KEY | J_KEY => {
                     self.increment_list();
                     MessageResponse::Consumed
                 }
-                Key::Char('d') => {
+                D_KEY => {
                     if let Ok(container) = self.get_container() {
                         let container_id = container.id.clone().unwrap_or_default();
                         let image = container.image.clone().unwrap_or_default();
@@ -103,16 +122,22 @@ impl Containers {
                         MessageResponse::NotConsumed
                     }
                 }
-                Key::Char('r') => {
+                R_KEY => {
                     self.start_container()
                         .await
                         .context("could not start container")?;
                     MessageResponse::NotConsumed
                 }
-                Key::Char('s') => {
+                S_KEY => {
                     self.stop_container()
                         .await
-                        .context("could not start container")?;
+                        .context("could not stop container")?;
+                    MessageResponse::NotConsumed
+                }
+                A_KEY => {
+                    self.attach_container()
+                        .await
+                        .context("could not attach to container")?;
                     MessageResponse::NotConsumed
                 }
                 _ => MessageResponse::NotConsumed,
@@ -238,6 +263,21 @@ impl Containers {
     }
 
     async fn stop_container(&mut self) -> Result<Option<()>> {
+        if let Ok(container) = self.get_container() {
+            if let Some(container_id) = container.id.clone() {
+                self.docker
+                    .stop_container(&container_id, None)
+                    .await
+                    .context("failed to start container")?;
+            }
+
+            self.refresh().await?;
+            return Ok(Some(()));
+        }
+        Ok(None)
+    }
+
+    async fn attach_container(&mut self) -> Result<Option<()>> {
         if let Ok(container) = self.get_container() {
             if let Some(container_id) = container.id.clone() {
                 self.docker

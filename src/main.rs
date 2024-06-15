@@ -5,6 +5,7 @@ use events::{EventLoop, Key, Message};
 
 mod app;
 mod component;
+mod help;
 mod util;
 mod events {
     pub mod event_loop;
