@@ -1,12 +1,18 @@
-use app::{App, Running};
 use clap::Parser;
-use color_eyre::eyre::{bail, Context};
+use color_eyre::eyre::Context;
 use events::{EventLoop, Key, Message};
-
-mod app;
+use ui::App;
 mod component;
-mod help;
+
+mod page;
+mod state;
 mod util;
+mod ui {
+    pub mod app;
+    pub mod page_manager;
+
+    pub use app::App;
+}
 mod events {
     pub mod event_loop;
     pub mod key;
@@ -18,12 +24,14 @@ mod events {
     pub use message::Message;
     pub use transition::Transition;
 }
-mod components {
-    pub mod body;
-    pub mod confirmation_modal;
+mod pages {
     pub mod containers;
+}
+mod components {
+    pub mod confirmation_modal;
     pub mod footer;
     pub mod header;
+    pub mod help;
     pub mod input_field;
 }
 pub mod terminal;
@@ -45,7 +53,7 @@ async fn main() -> color_eyre::Result<()> {
 
     events.start().context("failed to start event loop")?;
 
-    while app.running != Running::Done {
+    while app.running != state::Running::Done {
         terminal
             .draw(|f| {
                 app.draw(f);
@@ -73,7 +81,9 @@ async fn main() -> color_eyre::Result<()> {
                     .context("unable to execute transition")?;
             }
 
-            Message::Tick => (),
+            Message::Tick => {
+                app.update(Key::Null).await.context("failed to update")?;
+            }
         }
     }
 

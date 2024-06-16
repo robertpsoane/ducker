@@ -1,5 +1,7 @@
 use std::{
     default,
+    rc::Rc,
+    sync::{Arc, Mutex},
     time::{Duration, UNIX_EPOCH},
 };
 
@@ -20,11 +22,11 @@ use ratatui::{
 
 use crate::{
     component::Component,
-    events::{key, message::MessageResponse, Key},
-    help::PageHelp,
+    components::confirmation_modal::{BooleanOptions, ConfirmationModal, ModalState},
+    components::help::PageHelp,
+    events::{message::MessageResponse, Key},
+    page::Page,
 };
-
-use super::confirmation_modal::{BooleanOptions, ConfirmationModal, ModalState};
 
 const NAME: &str = "Containers";
 
@@ -37,50 +39,28 @@ const K_KEY: Key = Key::Char('k');
 const D_KEY: Key = Key::Char('d');
 const R_KEY: Key = Key::Char('r');
 const S_KEY: Key = Key::Char('s');
+const G_KEY: Key = Key::Char('g');
+const SHIFT_G_KEY: Key = Key::Char('G');
 
 #[derive(Debug)]
 pub struct Containers {
     pub name: String,
     pub visible: bool,
-    page_help: PageHelp,
+    page_help: Arc<Mutex<PageHelp>>,
     docker: Docker,
     containers: Vec<ContainerSummary>,
     list_state: TableState,
     delete_modal: ConfirmationModal<BooleanOptions>,
 }
 
-impl Containers {
-    pub async fn new(visible: bool, docker: Docker) -> Result<Self> {
-        let page_help = PageHelp::new("Containers".into())
-            .add_input(format!("{}", A_KEY), "attach".into())
-            .add_input(format!("{}", D_KEY), "delete".into())
-            .add_input(format!("{}", R_KEY), "run".into())
-            .add_input(format!("{}", S_KEY), "stop".into());
-
-        let mut instance = Self {
-            name: String::from(NAME),
-            page_help: page_help,
-            visible,
-            docker,
-            containers: vec![],
-            list_state: TableState::default(),
-            delete_modal: ConfirmationModal::<BooleanOptions>::new("Delete".into()),
-        };
-
-        if instance.visible {
-            instance
-                .set_visible()
-                .await
-                .context("attempt to set new containers list as visible failed")?;
-        }
-
-        Ok(instance)
-    }
-
-    pub async fn update(&mut self, message: Key) -> Result<MessageResponse> {
+#[async_trait::async_trait]
+impl Page for Containers {
+    async fn update(&mut self, message: Key) -> Result<MessageResponse> {
         if !self.visible {
             return Ok(MessageResponse::NotConsumed);
         }
+
+        self.refresh().await?;
 
         // TODO: The validator should take a callback on initialisation that manages the delete
         // or on instantiation with extra variables passed on on init - probabyl
@@ -126,20 +106,29 @@ impl Containers {
                     self.start_container()
                         .await
                         .context("could not start container")?;
-                    MessageResponse::NotConsumed
+                    MessageResponse::Consumed
                 }
                 S_KEY => {
                     self.stop_container()
                         .await
                         .context("could not stop container")?;
-                    MessageResponse::NotConsumed
+                    MessageResponse::Consumed
                 }
                 A_KEY => {
                     self.attach_container()
                         .await
                         .context("could not attach to container")?;
-                    MessageResponse::NotConsumed
+                    MessageResponse::Consumed
                 }
+                G_KEY => {
+                    self.list_state.select(Some(0));
+                    MessageResponse::Consumed
+                }
+                SHIFT_G_KEY => {
+                    self.list_state.select(Some(self.containers.len() - 1));
+                    MessageResponse::Consumed
+                }
+
                 _ => MessageResponse::NotConsumed,
             },
             ModalState::Waiting(_) => {
@@ -167,12 +156,60 @@ impl Containers {
         Ok(result)
     }
 
-    pub async fn initialise_state(&mut self) -> Result<()> {
+    async fn initialise(&mut self) -> Result<()> {
         self.list_state = TableState::default();
         self.list_state.select(Some(0));
 
         self.refresh().await?;
         Ok(())
+    }
+
+    async fn set_visible(&mut self) -> Result<()> {
+        self.visible = true;
+        self.initialise()
+            .await
+            .context("unable to set containers as visible")?;
+        Ok(())
+    }
+
+    async fn set_invisible(&mut self) -> Result<()> {
+        self.visible = false;
+        Ok(())
+    }
+
+    fn get_help(&self) -> Arc<Mutex<PageHelp>> {
+        self.page_help.clone()
+    }
+}
+
+impl Containers {
+    pub async fn new(visible: bool, docker: Docker) -> Result<Self> {
+        let page_help = PageHelp::new("Containers".into())
+            // .add_input(format!("{}", A_KEY), "attach".into())
+            .add_input(format!("{}", D_KEY), "delete".into())
+            .add_input(format!("{}", R_KEY), "run".into())
+            .add_input(format!("{}", S_KEY), "stop".into())
+            .add_input(format!("{}", G_KEY), "to-top".into())
+            .add_input(format!("{}", SHIFT_G_KEY), "to-bottom".into());
+
+        let mut instance = Self {
+            name: String::from(NAME),
+            page_help: Arc::new(Mutex::new(page_help)),
+            visible,
+            docker,
+            containers: vec![],
+            list_state: TableState::default(),
+            delete_modal: ConfirmationModal::<BooleanOptions>::new("Delete".into()),
+        };
+
+        if instance.visible {
+            instance
+                .set_visible()
+                .await
+                .context("attempt to set new containers list as visible failed")?;
+        }
+
+        Ok(instance)
     }
 
     async fn refresh(&mut self) -> Result<(), color_eyre::eyre::Error> {
@@ -185,18 +222,6 @@ impl Containers {
             .await
             .context("unable to retrieve list of containers")?;
         Ok(())
-    }
-
-    pub async fn set_visible(&mut self) -> Result<()> {
-        self.visible = true;
-        self.initialise_state()
-            .await
-            .context("unable to set containers as visible")?;
-        Ok(())
-    }
-
-    pub async fn set_invisible(&mut self) {
-        self.visible = false
     }
 
     fn increment_list(&mut self) {

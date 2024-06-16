@@ -70,6 +70,7 @@ pub enum Key {
     Ctrl(char),
     Alt(char),
     Unknown,
+    Null,
 }
 
 impl Key {

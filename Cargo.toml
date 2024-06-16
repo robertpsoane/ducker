@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+async-trait = "0.1.80"
 bollard = "0.16.1"
 chrono = "0.4.38"
 clap = { version = "4.5.6", features = ["derive"] }
@@ -18,6 +19,7 @@ openssl-sys = "0.9.102"
 ratatui = { version = "0.26.3", features = ["serde"] }
 serde = "1.0.203"
 tokio = { version = "1.38.0", features = ["full"] }
+tui-big-text = "0.4.4"
 # openssl = { version = "^0.10.0", features = ["vendored"] }
 # tuirealm = { version = "^1.9.0", default-features = false, features = [
 #     "derive",

@@ -1,3 +1,4 @@
+use color_eyre::owo_colors::OwoColorize;
 use ratatui::{
     layout::{self, Constraint, Layout, Rect},
     style::{Color, Style},
@@ -8,6 +9,7 @@ use ratatui::{
     },
     Frame,
 };
+use tui_big_text::{BigText, PixelSize};
 
 use crate::component::Component;
 
@@ -16,17 +18,17 @@ pub struct Header {}
 
 impl Component for Header {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
-        let [left, right] =
-            Layout::horizontal(vec![Constraint::Percentage(50), Constraint::Percentage(50)])
-                .areas(area);
+        let big_text = match BigText::builder()
+            .pixel_size(PixelSize::HalfHeight)
+            .style(Style::default().fg(Color::Green))
+            .lines(vec!["Ducker".into()])
+            .alignment(layout::Alignment::Center)
+            .build()
+        {
+            Ok(b) => b,
+            _ => panic!("Ahhhh!"),
+        };
 
-        let title_block = Block::default()
-            .borders(Borders::ALL)
-            .style(Style::default());
-
-        let title = Paragraph::new(Text::styled("Ducker", Style::default().fg(Color::Green)))
-            .block(title_block);
-
-        f.render_widget(title, left)
+        f.render_widget(big_text, area)
     }
 }

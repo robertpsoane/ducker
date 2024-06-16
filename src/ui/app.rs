@@ -1,70 +1,43 @@
-use std::{result, str::FromStr};
-
-use color_eyre::{
-    eyre::{Context, Ok, Result},
-    owo_colors::OwoColorize,
-};
+use color_eyre::eyre::{Context, Ok, Result};
 use ratatui::{
     layout::{Constraint, Layout, Rect},
-    prelude::*,
-    style::{Color, Style},
-    widgets::Block,
     Frame,
 };
 use tokio::sync::mpsc::Sender;
 
 use crate::{
     component::Component,
-    components::{body::Body, footer::Footer, header::Header, input_field::InputField},
+    components::{footer::Footer, header::Header, input_field::InputField},
     events::{key::Key, message::MessageResponse, Message, Transition},
+    state,
+    ui::page_manager::PageManager,
 };
-
-// TODO: Merge mode and running to State { View, TextInput, Finishing ... }
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub enum Mode {
-    #[default]
-    View,
-    TextInput,
-}
-
-#[derive(Debug, Default, PartialEq, Eq)]
-pub enum Running {
-    #[default]
-    Running,
-    Done,
-}
-
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub enum Page {
-    #[default]
-    Containers,
-}
 
 #[derive(Debug)]
 pub struct App {
-    pub running: Running,
-    pub page: Page,
-    mode: Mode,
-    header: Header,
-    body: Body,
+    pub running: state::Running,
+    pub page: state::CurrentPage,
+    mode: state::Mode,
+    title: Header,
+    page_manager: PageManager,
     footer: Footer,
     input_field: InputField,
 }
 
 impl App {
     pub async fn new(tx: Sender<Message<Key, Transition>>) -> Result<Self> {
-        let page = Page::default();
+        let page = state::CurrentPage::default();
 
-        let body = Body::new(page.clone())
+        let body = PageManager::new(page.clone())
             .await
             .context("unable to create new body component")?;
 
         let app = Self {
-            running: Running::default(),
+            running: state::Running::default(),
             page,
-            mode: Mode::default(),
-            header: Header::default(),
-            body,
+            mode: state::Mode::default(),
+            title: Header::default(),
+            page_manager: body,
             footer: Footer::default(),
             input_field: InputField::new(tx),
         };
@@ -73,15 +46,15 @@ impl App {
 
     pub async fn update(&mut self, message: Key) -> Result<MessageResponse> {
         match self.mode {
-            Mode::View => self.update_view_mode(message).await,
-            Mode::TextInput => self.update_text_mode(message).await,
+            state::Mode::View => self.update_view_mode(message).await,
+            state::Mode::TextInput => self.update_text_mode(message).await,
         }
     }
 
     pub async fn transition(&mut self, transition: Transition) -> Result<MessageResponse> {
         let result = match transition {
             Transition::Quit => {
-                self.running = Running::Done;
+                self.running = state::Running::Done;
                 MessageResponse::Consumed
             }
         };
@@ -90,7 +63,7 @@ impl App {
 
     async fn update_view_mode(&mut self, message: Key) -> Result<MessageResponse> {
         match self
-            .body
+            .page_manager
             .update(message)
             .await
             .context("unable to update body")?
@@ -101,11 +74,11 @@ impl App {
 
         match message {
             Key::Char('q') | Key::Char('Q') => {
-                self.running = Running::Done;
+                self.running = state::Running::Done;
                 Ok(MessageResponse::Consumed)
             }
             Key::Char(':') => {
-                self.set_mode(Mode::TextInput);
+                self.set_mode(state::Mode::TextInput);
                 Ok(MessageResponse::Consumed)
             }
             _ => Ok(MessageResponse::NotConsumed),
@@ -115,7 +88,7 @@ impl App {
     async fn update_text_mode(&mut self, message: Key) -> Result<MessageResponse> {
         let result = match message {
             Key::Esc => {
-                self.set_mode(Mode::View);
+                self.set_mode(state::Mode::View);
                 MessageResponse::Consumed
             }
             _ => self.input_field.update(message).await.unwrap(),
@@ -123,22 +96,22 @@ impl App {
         Ok(result)
     }
 
-    fn set_mode(&mut self, mode: Mode) {
+    fn set_mode(&mut self, mode: state::Mode) {
         self.mode = mode.clone();
         match mode {
-            Mode::TextInput => self.input_field.initialise(),
-            Mode::View => {}
+            state::Mode::TextInput => self.input_field.initialise(),
+            state::Mode::View => {}
         }
     }
 
     pub fn draw(&mut self, f: &mut Frame<'_>) {
         let layout: Layout;
-        let header: Rect;
+        let top: Rect;
 
-        let body: Rect;
+        let page: Rect;
         let footer: Rect;
         match self.mode {
-            Mode::TextInput => {
+            state::Mode::TextInput => {
                 let text_input: Rect;
                 layout = Layout::vertical([
                     Constraint::Length(5),
@@ -146,7 +119,7 @@ impl App {
                     Constraint::Min(0),
                     Constraint::Length(1),
                 ]);
-                [header, text_input, body, footer] = layout.areas(f.size());
+                [top, text_input, page, footer] = layout.areas(f.size());
                 self.input_field.draw(f, text_input);
             }
             _ => {
@@ -155,12 +128,20 @@ impl App {
                     Constraint::Min(0),
                     Constraint::Length(1),
                 ]);
-                [header, body, footer] = layout.areas(f.size());
+                [top, page, footer] = layout.areas(f.size());
             }
         }
 
-        self.header.draw(f, header);
-        self.body.draw(f, body);
+        let [left_space, title, right_space] = Layout::horizontal(vec![
+            Constraint::Percentage(30),
+            Constraint::Percentage(40),
+            Constraint::Percentage(30),
+        ])
+        .areas(top);
+
+        self.title.draw(f, title);
+        self.page_manager.draw(f, page);
+        self.page_manager.draw_help(f, right_space);
         self.footer.draw(f, footer)
     }
 }

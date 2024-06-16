@@ -16,8 +16,6 @@ impl Footer {}
 impl Component for Footer {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         let keys = [
-            // ("H/←", "Left"),
-            // ("L/→", "Right"),
             ("K/↑", "Up"),
             ("J/↓", "Down"),
             ("Q/q", "Quit"),
