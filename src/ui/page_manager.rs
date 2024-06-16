@@ -1,34 +1,26 @@
-use std::{
-    any::Any,
-    rc::Rc,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
-use bollard::Docker;
 use color_eyre::eyre::{Context, Result};
-use futures::lock;
 use ratatui::{
     layout::{Alignment, Margin, Rect},
     prelude::*,
-    style::{Color, Style},
-    text::Span,
     widgets::{block::Title, Block, Padding},
     Frame,
 };
 
 use crate::{
-    component::Component,
-    components::help::PageHelp,
-    events::{message::MessageResponse, Key},
-    page::Page,
-    pages::containers::Containers,
+    events::{message::MessageResponse, Key, Transition},
+    pages::{containers::Containers, images::Images},
     state,
+    traits::Component,
+    traits::Page,
 };
 
 #[derive(Debug)]
 pub struct PageManager {
     current_page: state::CurrentPage,
     containers: Arc<Mutex<dyn Page>>,
+    images: Arc<Mutex<dyn Page>>,
 }
 
 impl PageManager {
@@ -37,14 +29,45 @@ impl PageManager {
             .context("unable to connect to local docker daemon")?;
 
         let containers = Arc::new(Mutex::new(
-            Containers::new(true, docker)
+            Containers::new(docker.clone())
                 .await
                 .context("unable to create containers page")?,
         ));
-        Ok(PageManager {
+        let images = Arc::new(Mutex::new(
+            Images::new(docker)
+                .await
+                .context("unable to create containers page")?,
+        ));
+        let page_manager = Self {
             current_page: page,
             containers,
-        })
+            images,
+        };
+
+        page_manager
+            .get_current_page()
+            .lock()
+            .unwrap()
+            .set_visible()
+            .await?;
+
+        Ok(page_manager)
+    }
+
+    pub async fn transition(&mut self, transition: Transition) -> Result<MessageResponse> {
+        let result = match transition {
+            Transition::ToImagePage => {
+                self.set_current_page(state::CurrentPage::Images).await?;
+                MessageResponse::Consumed
+            }
+            Transition::ToContainerPage => {
+                self.set_current_page(state::CurrentPage::Containers)
+                    .await?;
+                MessageResponse::Consumed
+            }
+            _ => MessageResponse::NotConsumed,
+        };
+        Ok(result)
     }
 
     pub async fn update(&mut self, message: Key) -> Result<MessageResponse> {
@@ -55,9 +78,33 @@ impl PageManager {
             .await
     }
 
+    async fn set_current_page(&mut self, next_page: state::CurrentPage) -> Result<()> {
+        if next_page == self.current_page {
+            return Ok(());
+        }
+        self.get_current_page()
+            .lock()
+            .unwrap()
+            .set_invisible()
+            .await
+            .context("unable to close old page")?;
+
+        self.current_page = next_page;
+
+        self.get_current_page()
+            .lock()
+            .unwrap()
+            .set_visible()
+            .await
+            .context("unable to open new page")?;
+
+        Ok(())
+    }
+
     fn get_current_page(&self) -> Arc<Mutex<dyn Page>> {
         match self.current_page {
             state::CurrentPage::Containers => self.containers.clone(),
+            state::CurrentPage::Images => self.images.clone(),
         }
     }
 

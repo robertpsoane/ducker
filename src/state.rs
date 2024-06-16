@@ -17,4 +17,5 @@ pub enum Running {
 pub enum CurrentPage {
     #[default]
     Containers,
+    Images,
 }

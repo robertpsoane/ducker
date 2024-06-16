@@ -1,17 +1,12 @@
 use color_eyre::owo_colors::OwoColorize;
 use ratatui::{
-    layout::{self, Constraint, Layout, Rect},
+    layout::{self, Rect},
     style::{Color, Style},
-    text::Text,
-    widgets::{
-        canvas::{Canvas, Circle, Line, Map, MapResolution, Rectangle},
-        Block, Borders, Paragraph,
-    },
     Frame,
 };
 use tui_big_text::{BigText, PixelSize};
 
-use crate::component::Component;
+use crate::traits::Component;
 
 #[derive(Default, Debug)]
 pub struct Header {}

@@ -5,7 +5,7 @@ use ratatui::{
     widgets::{Paragraph, Wrap},
 };
 
-use crate::component::Component;
+use crate::traits::Component;
 
 #[derive(Debug, Clone)]
 pub struct PageHelp {
@@ -16,7 +16,7 @@ pub struct PageHelp {
 impl PageHelp {
     pub fn new(name: String) -> Self {
         Self {
-            name: name,
+            name,
             inputs: vec![],
         }
     }
@@ -37,7 +37,8 @@ impl Component for PageHelp {
             .inputs
             .iter()
             .flat_map(|(key, desc)| {
-                let line = Line::from(vec![
+                
+                Line::from(vec![
                     Span::styled(
                         format!(" <{key}> = "),
                         Style::new().fg(Color::Red).add_modifier(Modifier::ITALIC),
@@ -46,8 +47,7 @@ impl Component for PageHelp {
                         format!("{desc} "),
                         Style::new().fg(Color::Red).add_modifier(Modifier::ITALIC),
                     ),
-                ]);
-                line
+                ])
             })
             .collect_vec();
 

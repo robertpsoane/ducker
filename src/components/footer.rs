@@ -6,7 +6,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::component::Component;
+use crate::traits::Component;
 
 #[derive(Default, Debug)]
 pub struct Footer {}

@@ -6,17 +6,16 @@ use ratatui::{
 use tokio::sync::mpsc::Sender;
 
 use crate::{
-    component::Component,
     components::{footer::Footer, header::Header, input_field::InputField},
     events::{key::Key, message::MessageResponse, Message, Transition},
     state,
+    traits::Component,
     ui::page_manager::PageManager,
 };
 
 #[derive(Debug)]
 pub struct App {
     pub running: state::Running,
-    pub page: state::CurrentPage,
     mode: state::Mode,
     title: Header,
     page_manager: PageManager,
@@ -34,7 +33,6 @@ impl App {
 
         let app = Self {
             running: state::Running::default(),
-            page,
             mode: state::Mode::default(),
             title: Header::default(),
             page_manager: body,
@@ -57,6 +55,15 @@ impl App {
                 self.running = state::Running::Done;
                 MessageResponse::Consumed
             }
+            Transition::ToViewMode => {
+                self.set_mode(state::Mode::View);
+                MessageResponse::Consumed
+            }
+            _ => self
+                .page_manager
+                .transition(transition)
+                .await
+                .context("page manager failed to transition")?,
         };
         Ok(result)
     }

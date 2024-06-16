@@ -1,4 +1,7 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 use bollard::Docker;
 use color_eyre::eyre::{bail, Context, Result};
@@ -11,22 +14,19 @@ use ratatui::{
 };
 
 use crate::{
-    components::{
-        confirmation_modal::{BooleanOptions, ConfirmationModal, ModalState},
-        help::PageHelp,
-    },
-    docker::container::DockerContainer,
+    components::confirmation_modal::{BooleanOptions, ConfirmationModal, ModalState},
+    components::help::PageHelp,
+    docker::image::DockerImage,
     events::{message::MessageResponse, Key},
     traits::Component,
     traits::Page,
 };
 
-const NAME: &str = "Containers";
+const NAME: &str = "Images";
 
 const UP_KEY: Key = Key::Up;
 const DOWN_KEY: Key = Key::Down;
 
-const A_KEY: Key = Key::Char('a');
 const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
 const D_KEY: Key = Key::Char('d');
@@ -36,18 +36,18 @@ const G_KEY: Key = Key::Char('g');
 const SHIFT_G_KEY: Key = Key::Char('G');
 
 #[derive(Debug)]
-pub struct Containers {
+pub struct Images {
     pub name: String,
     pub visible: bool,
     page_help: Arc<Mutex<PageHelp>>,
     docker: Docker,
-    containers: Vec<DockerContainer>,
+    images: Vec<DockerImage>,
     list_state: TableState,
     delete_modal: ConfirmationModal<BooleanOptions>,
 }
 
 #[async_trait::async_trait]
-impl Page for Containers {
+impl Page for Images {
     async fn update(&mut self, message: Key) -> Result<MessageResponse> {
         if !self.visible {
             return Ok(MessageResponse::NotConsumed);
@@ -84,44 +84,41 @@ impl Page for Containers {
                     MessageResponse::Consumed
                 }
                 D_KEY => {
-                    if let Ok(container) = self.get_container() {
-                        let container_id = container.id.clone();
-                        let image = container.image.clone();
-                        self.delete_modal.initialise(format!(
-                            "Are you sure you wish to delete container {container_id}, running {image}?"
-                        ));
+                    if let Ok(image) = self.get_image() {
+                        let name = image.get_full_name();
+                        self.delete_modal
+                            .initialise(format!("Are you sure you wish to delete image {name}?"));
                         MessageResponse::Consumed
                     } else {
                         MessageResponse::NotConsumed
                     }
                 }
-                R_KEY => {
-                    self.start_container()
-                        .await
-                        .context("could not start container")?;
-                    MessageResponse::Consumed
-                }
-                S_KEY => {
-                    self.stop_container()
-                        .await
-                        .context("could not stop container")?;
-                    MessageResponse::Consumed
-                }
+                // R_KEY => {
+                //     self.start_container()
+                //         .await
+                //         .context("could not start container")?;
+                //     MessageResponse::Consumed
+                // }
+                // S_KEY => {
+                //     self.stop_container()
+                //         .await
+                //         .context("could not stop container")?;
+                //     MessageResponse::Consumed
+                // }
                 // A_KEY => {
                 //     self.attach_container()
                 //         .await
                 //         .context("could not attach to container")?;
                 //     MessageResponse::Consumed
                 // }
-                G_KEY => {
-                    self.list_state.select(Some(0));
-                    MessageResponse::Consumed
-                }
-                SHIFT_G_KEY => {
-                    self.list_state.select(Some(self.containers.len() - 1));
-                    MessageResponse::Consumed
-                }
-
+                // G_KEY => {
+                //     self.list_state.select(Some(0));
+                //     MessageResponse::Consumed
+                // }
+                // SHIFT_G_KEY => {
+                //     self.list_state.select(Some(self.image_summary.len() - 1));
+                //     MessageResponse::Consumed
+                // }
                 _ => MessageResponse::NotConsumed,
             },
             ModalState::Waiting(_) => {
@@ -130,16 +127,16 @@ impl Page for Containers {
                     if let ModalState::Complete(res) = self.delete_modal.state.clone() {
                         match res {
                             BooleanOptions::Yes => {
-                                self.delete_container()
+                                self.delete_image()
                                     .await
-                                    .context("could not delete current container")?;
+                                    .context("could not delete current image")?;
                                 self.delete_modal.reset();
                             }
                             BooleanOptions::No => self.delete_modal.reset(),
                         }
                     }
                 }
-                update_res
+                MessageResponse::NotConsumed
             }
             ModalState::Complete(_) => {
                 self.delete_modal.reset();
@@ -175,7 +172,7 @@ impl Page for Containers {
     }
 }
 
-impl Containers {
+impl Images {
     pub async fn new(docker: Docker) -> Result<Self> {
         let page_help = PageHelp::new(NAME.into())
             // .add_input(format!("{}", A_KEY), "attach".into())
@@ -190,14 +187,19 @@ impl Containers {
             page_help: Arc::new(Mutex::new(page_help)),
             visible: false,
             docker,
-            containers: vec![],
+            images: vec![],
             list_state: TableState::default(),
             delete_modal: ConfirmationModal::<BooleanOptions>::new("Delete".into()),
         })
     }
 
     async fn refresh(&mut self) -> Result<(), color_eyre::eyre::Error> {
-        self.containers = DockerContainer::list(&self.docker).await?;
+        let mut filters: HashMap<String, Vec<String>> = HashMap::new();
+        filters.insert("dangling".into(), vec!["false".into()]);
+
+        self.images = DockerImage::list(&self.docker)
+            .await
+            .context("unable to retrieve list of images")?;
         Ok(())
     }
 
@@ -206,7 +208,7 @@ impl Containers {
         match current_idx {
             None => self.list_state.select(Some(0)),
             Some(current_idx) => {
-                if !self.containers.is_empty() && current_idx < self.containers.len() - 1 {
+                if !self.images.is_empty() && current_idx < self.images.len() - 1 {
                     self.list_state.select(Some(current_idx + 1))
                 }
             }
@@ -225,42 +227,50 @@ impl Containers {
         }
     }
 
-    fn get_container(&self) -> Result<&DockerContainer> {
-        if let Some(container_idx) = self.list_state.selected() {
-            if let Some(container) = self.containers.get(container_idx) {
-                return Ok(container);
+    fn get_image(&self) -> Result<&DockerImage> {
+        if let Some(image_idx) = self.list_state.selected() {
+            if let Some(image) = self.images.get(image_idx) {
+                return Ok(image);
             }
         }
         bail!("no container id found");
     }
 
-    async fn delete_container(&mut self) -> Result<Option<()>> {
-        if let Ok(container) = self.get_container() {
-            container.delete(&self.docker).await?;
-            self.refresh().await?;
-            return Ok(Some(()));
-        }
+    async fn delete_image(&mut self) -> Result<Option<()>> {
+        self.get_image()?.delete(&self.docker).await?;
+
         Ok(None)
     }
 
-    async fn start_container(&mut self) -> Result<Option<()>> {
-        if let Ok(container) = self.get_container() {
-            container.start(&self.docker).await?;
-            self.refresh().await?;
-            return Ok(Some(()));
-        }
-        Ok(None)
-    }
+    // async fn start_container(&mut self) -> Result<Option<()>> {
+    //     if let Ok(container) = self.get_container() {
+    //         if let Some(container_id) = container.id.clone() {
+    //             self.docker
+    //                 .start_container::<String>(&container_id, None)
+    //                 .await
+    //                 .context("failed to start container")?;
+    //         }
 
-    async fn stop_container(&mut self) -> Result<Option<()>> {
-        if let Ok(container) = self.get_container() {
-            container.stop(&self.docker).await?;
+    //         self.refresh().await?;
+    //         return Ok(Some(()));
+    //     }
+    //     Ok(None)
+    // }
 
-            self.refresh().await?;
-            return Ok(Some(()));
-        }
-        Ok(None)
-    }
+    // async fn stop_container(&mut self) -> Result<Option<()>> {
+    //     if let Ok(container) = self.get_container() {
+    //         if let Some(container_id) = container.id.clone() {
+    //             self.docker
+    //                 .stop_container(&container_id, None)
+    //                 .await
+    //                 .context("failed to start container")?;
+    //         }
+
+    //         self.refresh().await?;
+    //         return Ok(Some(()));
+    //     }
+    //     Ok(None)
+    // }
 
     // async fn attach_container(&mut self) -> Result<Option<()>> {
     //     if let Ok(container) = self.get_container() {
@@ -278,20 +288,11 @@ impl Containers {
     // }
 }
 
-impl Component for Containers {
+impl Component for Images {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
-        let rows = self.containers.clone().into_iter().map(|c| {
-            let style = match c.state.as_str() {
-                "running" => Style::default().fg(Color::Green),
-                _ => Style::default(),
-            };
-            Row::new(vec![
-                c.id, c.image, c.command, c.created, c.status, c.ports, c.names,
-            ])
-            .style(style)
-        });
+        let rows = get_image_rows(&self.images);
         let columns = Row::new(vec![
-            "ID", "Image", "Command", "Created", "Status", "Ports", "Names",
+            "ID", "Name", "Tag", //, "Command", "Created", "Status", "Ports", "Names",
         ]);
 
         let widths = [
@@ -315,4 +316,12 @@ impl Component for Containers {
             _ => {}
         }
     }
+}
+
+fn get_image_rows(containers: &[DockerImage]) -> Vec<Row> {
+    let rows = containers
+        .iter()
+        .map(|c| Row::new(vec![c.id.clone(), c.name.clone(), c.tag.clone()]))
+        .collect::<Vec<Row>>();
+    rows
 }

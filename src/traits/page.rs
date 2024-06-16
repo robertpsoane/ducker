@@ -1,7 +1,6 @@
 use std::{
     any::Any,
     fmt::Debug,
-    rc::Rc,
     sync::{Arc, Mutex},
 };
 
@@ -9,9 +8,9 @@ use async_trait::async_trait;
 use color_eyre::eyre::Result;
 
 use crate::{
-    component::Component,
     components::help::PageHelp,
     events::{message::MessageResponse, Key},
+    traits::Component,
 };
 
 #[async_trait]

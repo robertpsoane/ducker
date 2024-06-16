@@ -1,18 +1,17 @@
 use itertools::Itertools;
-use std::default;
 
 use color_eyre::eyre::Result;
 use ratatui::{
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    layout::{Alignment, Constraint, Layout, Rect},
+    style::{Modifier, Style},
     text::{Line, Span, Text},
-    widgets::{block::Title, Block, Borders, Clear, Paragraph, Wrap},
+    widgets::{block::Title, Block, Clear, Paragraph, Wrap},
     Frame,
 };
 
 use crate::{
-    component::Component,
     events::{message::MessageResponse, Key},
+    traits::Component,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -39,7 +38,7 @@ impl<T> ConfirmationModal<T> {
     pub fn new(title: String) -> Self {
         Self {
             state: ModalState::default(),
-            title: title,
+            title,
         }
     }
 
@@ -68,7 +67,7 @@ impl<T> ConfirmationModal<T> {
 }
 
 impl ConfirmationModal<BooleanOptions> {
-    pub async fn update(&mut self, message: Key) -> Result<(MessageResponse)> {
+    pub async fn update(&mut self, message: Key) -> Result<MessageResponse> {
         match message {
             Key::Esc | Key::Char('n') | Key::Char('N') => {
                 self.state = ModalState::Complete(BooleanOptions::No);
@@ -87,9 +86,9 @@ impl ConfirmationModal<BooleanOptions> {
 
 impl Component for ConfirmationModal<BooleanOptions> {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
-        let message: String;
-        match &self.state {
-            ModalState::Waiting(v) => message = v.clone(),
+        
+        let message: String = match &self.state {
+            ModalState::Waiting(v) => v.clone(),
             _ => return,
         };
 

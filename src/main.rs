@@ -2,9 +2,8 @@ use clap::Parser;
 use color_eyre::eyre::Context;
 use events::{EventLoop, Key, Message};
 use ui::App;
-mod component;
 
-mod page;
+mod autocomplete;
 mod state;
 mod util;
 mod ui {
@@ -12,6 +11,13 @@ mod ui {
     pub mod page_manager;
 
     pub use app::App;
+}
+mod traits {
+    mod component;
+    mod page;
+
+    pub use component::Component;
+    pub use page::Page;
 }
 mod events {
     pub mod event_loop;
@@ -24,8 +30,13 @@ mod events {
     pub use message::Message;
     pub use transition::Transition;
 }
+mod docker {
+    pub mod container;
+    pub mod image;
+}
 mod pages {
     pub mod containers;
+    pub mod images;
 }
 mod components {
     pub mod confirmation_modal;

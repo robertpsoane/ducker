@@ -1,26 +1,36 @@
 use color_eyre::eyre::{Context, Result};
 use ratatui::{
     layout::{Margin, Rect},
+    prelude::*,
     style::Style,
     text::{Line, Span},
     widgets::{Block, Padding, Paragraph},
     Frame,
 };
 
-use ratatui::prelude::*;
 use tokio::sync::mpsc::Sender;
 
 use crate::{
-    component::Component,
+    autocomplete::Autocomplete,
     events::{message::MessageResponse, Key, Message, Transition},
+    traits::Component,
     util::send_transition,
 };
+
+const QUIT: &str = "quit";
+const Q: &str = "q";
+const IMAGE: &str = "image";
+const IMAGES: &str = "images";
+const CONTAINER: &str = "container";
+const CONTAINERS: &str = "containers";
 
 #[derive(Debug)]
 pub struct InputField {
     input: String,
     prompt: char,
     tx: Sender<Message<Key, Transition>>,
+    candidate: Option<String>,
+    ac: Autocomplete<'static>,
 }
 
 impl InputField {
@@ -29,16 +39,28 @@ impl InputField {
             input: String::new(),
             prompt: '>',
             tx,
+            candidate: None,
+            ac: Autocomplete::from(vec![QUIT, Q, IMAGE, IMAGES, CONTAINER, CONTAINERS]),
         }
     }
 
     pub fn initialise(&mut self) {
         self.input = String::new();
+        self.candidate = None;
     }
 
     pub async fn update(&mut self, message: Key) -> Result<MessageResponse> {
         match message {
-            Key::Char(c) => self.input.push(c),
+            Key::Char(c) => {
+                self.input.push(c);
+                let input = &self.input;
+                self.candidate = self.ac.get_completion(input);
+            }
+            Key::Tab => {
+                if let Some(candidate) = &self.candidate {
+                    self.input.clone_from(candidate)
+                }
+            }
             Key::Backspace => {
                 self.input.pop();
             }
@@ -54,14 +76,21 @@ impl InputField {
 
     async fn submit(&mut self) -> Result<()> {
         let transition = match &*self.input {
-            "quit" => Some(Transition::Quit),
+            Q | QUIT => Some(Transition::Quit),
+            IMAGE | IMAGES => Some(Transition::ToImagePage),
+            CONTAINER | CONTAINERS => Some(Transition::ToContainerPage),
             _ => None,
         };
 
         if let Some(t) = transition {
+            send_transition(self.tx.clone(), Transition::ToViewMode)
+                .await
+                .context("unable to send transition")?;
             send_transition(self.tx.clone(), t)
                 .await
                 .context("unable to send transition")?;
+        } else {
+            panic!("")
         }
 
         self.initialise();
@@ -80,12 +109,18 @@ impl Component for InputField {
         let inner_body_margin = Margin::new(2, 1);
         let body_inner = area.inner(&inner_body_margin);
 
-        let text = Line::from(vec![
-            Span::styled::<String, Style>(self.prompt.into(), Style::new().green()),
-            Span::raw::<String>(' '.into()),
+        let mut input_text = vec![
+            Span::styled::<String, Style>(format!("{} ", self.prompt), Style::new().green()),
             Span::raw(self.input.clone()),
-        ]);
-        let p = Paragraph::new(text);
+        ];
+
+        if let Some(candidate) = &self.candidate {
+            if let Some(delta) = candidate.strip_prefix(&self.input as &str) {
+                input_text.push(Span::raw(delta).style(Style::default().fg(Color::DarkGray)))
+            }
+        }
+
+        let p = Paragraph::new(Line::from(input_text));
         f.render_widget(p, body_inner)
     }
 }

@@ -27,3 +27,9 @@ tui-big-text = "0.4.4"
 #     "ratatui",
 #     "crossterm",
 # ] }
+
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
