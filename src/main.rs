@@ -12,10 +12,16 @@ mod ui {
 
     pub use app::App;
 }
+mod callbacks {
+    pub mod delete_container;
+
+    pub use delete_container::DeleteContainer;
+}
 mod traits {
+    mod callback;
     mod component;
     mod page;
-
+    pub use callback::Callback;
     pub use component::Component;
     pub use page::Page;
 }

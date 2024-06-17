@@ -14,7 +14,7 @@ use crate::{
 };
 
 #[async_trait]
-pub trait Page: Component + Debug + Any {
+pub trait Page: Component + Debug + Send + Sync {
     async fn update(&mut self, message: Key) -> Result<MessageResponse>;
     async fn initialise(&mut self) -> Result<()>;
     async fn set_visible(&mut self) -> Result<()>;

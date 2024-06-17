@@ -1,3 +1,6 @@
+use std::sync::Arc;
+
+use futures::lock::Mutex;
 use itertools::Itertools;
 
 use color_eyre::eyre::Result;
@@ -11,7 +14,7 @@ use ratatui::{
 
 use crate::{
     events::{message::MessageResponse, Key},
-    traits::Component,
+    traits::{Callback, Component},
 };
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -32,6 +35,7 @@ pub enum ModalState<T> {
 pub struct ConfirmationModal<T> {
     pub state: ModalState<T>,
     title: String,
+    callback: Option<Arc<Mutex<dyn Callback>>>,
 }
 
 impl<T> ConfirmationModal<T> {
@@ -39,14 +43,17 @@ impl<T> ConfirmationModal<T> {
         Self {
             state: ModalState::default(),
             title,
+            callback: None,
         }
     }
 
-    pub fn initialise(&mut self, message: String) {
+    pub fn initialise(&mut self, message: String, cb: Arc<Mutex<dyn Callback>>) {
+        self.callback = Some(cb);
         self.state = ModalState::Waiting(message)
     }
 
     pub fn reset(&mut self) {
+        self.callback = None;
         self.state = ModalState::Invisible
     }
 
@@ -75,6 +82,9 @@ impl ConfirmationModal<BooleanOptions> {
             }
             Key::Char('y') | Key::Char('Y') | Key::Enter => {
                 self.state = ModalState::Complete(BooleanOptions::Yes);
+                if let Some(cb) = self.callback.clone() {
+                    cb.lock().await.call().await;
+                }
                 Ok(MessageResponse::Consumed)
             }
             // We don't want Q/q to be able to quit here
@@ -86,7 +96,6 @@ impl ConfirmationModal<BooleanOptions> {
 
 impl Component for ConfirmationModal<BooleanOptions> {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
-        
         let message: String = match &self.state {
             ModalState::Waiting(v) => v.clone(),
             _ => return,

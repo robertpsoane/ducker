@@ -1,7 +1,6 @@
-use std::sync::{Arc, Mutex};
-
 use bollard::Docker;
 use color_eyre::eyre::{bail, Context, Result};
+use futures::lock::Mutex as FutureMutex;
 use ratatui::{
     layout::Rect,
     prelude::*,
@@ -9,16 +8,17 @@ use ratatui::{
     widgets::{Row, Table, TableState},
     Frame,
 };
+use std::sync::{Arc, Mutex};
 
 use crate::{
+    callbacks::DeleteContainer,
     components::{
         confirmation_modal::{BooleanOptions, ConfirmationModal, ModalState},
         help::PageHelp,
     },
     docker::container::DockerContainer,
     events::{message::MessageResponse, Key},
-    traits::Component,
-    traits::Page,
+    traits::{Component, Page},
 };
 
 const NAME: &str = "Containers";
@@ -53,8 +53,6 @@ impl Page for Containers {
             return Ok(MessageResponse::NotConsumed);
         }
 
-        self.refresh().await?;
-
         // TODO: The validator should take a callback on initialisation that manages the delete
         // or on instantiation with extra variables passed on on init - probabyl
         // makes more sense on init
@@ -73,7 +71,8 @@ impl Page for Containers {
         // to allow multiple implementations for different types, but to a certain extent
         // that is abusing generics to create some sort of inheritance type structure
         let delete_modal_state = self.delete_modal.state.clone();
-        let result = match delete_modal_state {
+
+        let result: MessageResponse = match delete_modal_state {
             ModalState::Invisible => match message {
                 UP_KEY | K_KEY => {
                     self.decrement_list();
@@ -87,9 +86,14 @@ impl Page for Containers {
                     if let Ok(container) = self.get_container() {
                         let container_id = container.id.clone();
                         let image = container.image.clone();
+                        let cb = Arc::new(FutureMutex::new(DeleteContainer::new(
+                            self.docker.clone(),
+                            container.clone(),
+                        )));
                         self.delete_modal.initialise(format!(
                             "Are you sure you wish to delete container {container_id}, running {image}?"
-                        ));
+                        ),cb);
+
                         MessageResponse::Consumed
                     } else {
                         MessageResponse::NotConsumed
@@ -130,9 +134,9 @@ impl Page for Containers {
                     if let ModalState::Complete(res) = self.delete_modal.state.clone() {
                         match res {
                             BooleanOptions::Yes => {
-                                self.delete_container()
-                                    .await
-                                    .context("could not delete current container")?;
+                                // self.delete_container()
+                                //     .await
+                                //     .context("could not delete current container")?;
                                 self.delete_modal.reset();
                             }
                             BooleanOptions::No => self.delete_modal.reset(),
@@ -146,6 +150,8 @@ impl Page for Containers {
                 MessageResponse::NotConsumed
             }
         };
+
+        self.refresh().await?;
         Ok(result)
     }
 
@@ -234,15 +240,6 @@ impl Containers {
         bail!("no container id found");
     }
 
-    async fn delete_container(&mut self) -> Result<Option<()>> {
-        if let Ok(container) = self.get_container() {
-            container.delete(&self.docker).await?;
-            self.refresh().await?;
-            return Ok(Some(()));
-        }
-        Ok(None)
-    }
-
     async fn start_container(&mut self) -> Result<Option<()>> {
         if let Ok(container) = self.get_container() {
             container.start(&self.docker).await?;
@@ -261,21 +258,6 @@ impl Containers {
         }
         Ok(None)
     }
-
-    // async fn attach_container(&mut self) -> Result<Option<()>> {
-    //     if let Ok(container) = self.get_container() {
-    //         if let Some(container_id) = container.id.clone() {
-    //             self.docker
-    //                 .stop_container(&container_id, None)
-    //                 .await
-    //                 .context("failed to start container")?;
-    //         }
-
-    //         self.refresh().await?;
-    //         return Ok(Some(()));
-    //     }
-    //     Ok(None)
-    // }
 }
 
 impl Component for Containers {

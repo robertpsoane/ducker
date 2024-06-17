@@ -86,8 +86,8 @@ impl Page for Images {
                 D_KEY => {
                     if let Ok(image) = self.get_image() {
                         let name = image.get_full_name();
-                        self.delete_modal
-                            .initialise(format!("Are you sure you wish to delete image {name}?"));
+                        // self.delete_modal
+                        //     .initialise(format!("Are you sure you wish to delete image {name}?"));
                         MessageResponse::Consumed
                     } else {
                         MessageResponse::NotConsumed
