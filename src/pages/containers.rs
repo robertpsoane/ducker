@@ -53,104 +53,74 @@ impl Page for Containers {
             return Ok(MessageResponse::NotConsumed);
         }
 
-        // TODO: The validator should take a callback on initialisation that manages the delete
-        // or on instantiation with extra variables passed on on init - probabyl
-        // makes more sense on init
-        //
-        // Then the ModalState should have Open(message) and Closed, Complete;
-        // when closed, it is in effect dead.
-        //
-        // In the ModalState::Closed, it is possible that the modal can become
-        // Open, however once it becomes Open, it will stay open until it migrates to
-        // Closed
-        // When it is Open the branch should check if the state has changed to Complete, at
-        // which point it should be reset from outside
-        // The Complete branch should also close the modal from outside
-        //
-        // Potentially there is still value in keeping the generic type for the modal state
-        // to allow multiple implementations for different types, but to a certain extent
-        // that is abusing generics to create some sort of inheritance type structure
+        // If the delete modal is open, we process it; if it is open or complete, and the
+        // result is Consumed, we exit early with the Consumed result
         let delete_modal_state = self.delete_modal.state.clone();
-
-        let result: MessageResponse = match delete_modal_state {
-            ModalState::Invisible => match message {
-                UP_KEY | K_KEY => {
-                    self.decrement_list();
-                    MessageResponse::Consumed
-                }
-                DOWN_KEY | J_KEY => {
-                    self.increment_list();
-                    MessageResponse::Consumed
-                }
-                D_KEY => {
-                    if let Ok(container) = self.get_container() {
-                        let container_id = container.id.clone();
-                        let image = container.image.clone();
-                        let cb = Arc::new(FutureMutex::new(DeleteContainer::new(
-                            self.docker.clone(),
-                            container.clone(),
-                        )));
-                        self.delete_modal.initialise(format!(
-                            "Are you sure you wish to delete container {container_id}, running {image}?"
-                        ),cb);
-
-                        MessageResponse::Consumed
-                    } else {
-                        MessageResponse::NotConsumed
-                    }
-                }
-                R_KEY => {
-                    self.start_container()
-                        .await
-                        .context("could not start container")?;
-                    MessageResponse::Consumed
-                }
-                S_KEY => {
-                    self.stop_container()
-                        .await
-                        .context("could not stop container")?;
-                    MessageResponse::Consumed
-                }
-                // A_KEY => {
-                //     self.attach_container()
-                //         .await
-                //         .context("could not attach to container")?;
-                //     MessageResponse::Consumed
-                // }
-                G_KEY => {
-                    self.list_state.select(Some(0));
-                    MessageResponse::Consumed
-                }
-                SHIFT_G_KEY => {
-                    self.list_state.select(Some(self.containers.len() - 1));
-                    MessageResponse::Consumed
-                }
-
-                _ => MessageResponse::NotConsumed,
-            },
-            ModalState::Waiting(_) => {
-                let update_res = self.delete_modal.update(message).await?;
-                if update_res == MessageResponse::Consumed {
-                    if let ModalState::Complete(res) = self.delete_modal.state.clone() {
-                        match res {
-                            BooleanOptions::Yes => {
-                                // self.delete_container()
-                                //     .await
-                                //     .context("could not delete current container")?;
-                                self.delete_modal.reset();
-                            }
-                            BooleanOptions::No => self.delete_modal.reset(),
-                        }
-                    }
-                }
-                update_res
+        if let ModalState::Open(_) = delete_modal_state {
+            let delete_modal_res = self.delete_modal.update(message).await?;
+            if delete_modal_res == MessageResponse::Consumed {
+                return Ok(delete_modal_res);
             }
-            ModalState::Complete(_) => {
-                self.delete_modal.reset();
-                MessageResponse::NotConsumed
+        }
+
+        let result = match message {
+            UP_KEY | K_KEY => {
+                self.decrement_list();
+                MessageResponse::Consumed
             }
+            DOWN_KEY | J_KEY => {
+                self.increment_list();
+                MessageResponse::Consumed
+            }
+            D_KEY => {
+                if let Ok(container) = self.get_container() {
+                    let container_id = container.id.clone();
+                    let image = container.image.clone();
+                    let cb = Arc::new(FutureMutex::new(DeleteContainer::new(
+                        self.docker.clone(),
+                        container.clone(),
+                    )));
+                    self.delete_modal.initialise(
+                        format!(
+                        "Are you sure you wish to delete container {container_id}, running {image}?"
+                    ),
+                        cb,
+                    );
+
+                    MessageResponse::Consumed
+                } else {
+                    MessageResponse::NotConsumed
+                }
+            }
+            R_KEY => {
+                self.start_container()
+                    .await
+                    .context("could not start container")?;
+                MessageResponse::Consumed
+            }
+            S_KEY => {
+                self.stop_container()
+                    .await
+                    .context("could not stop container")?;
+                MessageResponse::Consumed
+            }
+            // A_KEY => {
+            //     self.attach_container()
+            //         .await
+            //         .context("could not attach to container")?;
+            //     MessageResponse::Consumed
+            // }
+            G_KEY => {
+                self.list_state.select(Some(0));
+                MessageResponse::Consumed
+            }
+            SHIFT_G_KEY => {
+                self.list_state.select(Some(self.containers.len() - 1));
+                MessageResponse::Consumed
+            }
+
+            _ => MessageResponse::NotConsumed,
         };
-
         self.refresh().await?;
         Ok(result)
     }
@@ -293,7 +263,7 @@ impl Component for Containers {
         f.render_stateful_widget(table, area, &mut self.list_state);
 
         match self.delete_modal.state {
-            ModalState::Waiting(_) => self.delete_modal.draw(f, area),
+            ModalState::Open(_) => self.delete_modal.draw(f, area),
             _ => {}
         }
     }

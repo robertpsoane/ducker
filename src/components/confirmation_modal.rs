@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{marker::PhantomData, sync::Arc};
 
 use futures::lock::Mutex;
 use itertools::Itertools;
@@ -24,18 +24,18 @@ pub enum BooleanOptions {
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
-pub enum ModalState<T> {
+pub enum ModalState {
     #[default]
-    Invisible,
-    Waiting(String),
-    Complete(T),
+    Closed,
+    Open(String),
 }
 
 #[derive(Default, Debug)]
 pub struct ConfirmationModal<T> {
-    pub state: ModalState<T>,
+    pub state: ModalState,
     title: String,
     callback: Option<Arc<Mutex<dyn Callback>>>,
+    phantom: PhantomData<T>,
 }
 
 impl<T> ConfirmationModal<T> {
@@ -44,17 +44,18 @@ impl<T> ConfirmationModal<T> {
             state: ModalState::default(),
             title,
             callback: None,
+            phantom: PhantomData,
         }
     }
 
     pub fn initialise(&mut self, message: String, cb: Arc<Mutex<dyn Callback>>) {
         self.callback = Some(cb);
-        self.state = ModalState::Waiting(message)
+        self.state = ModalState::Open(message)
     }
 
     pub fn reset(&mut self) {
         self.callback = None;
-        self.state = ModalState::Invisible
+        self.state = ModalState::Closed
     }
 
     pub fn get_area(&self, area: Rect) -> Rect {
@@ -77,14 +78,14 @@ impl ConfirmationModal<BooleanOptions> {
     pub async fn update(&mut self, message: Key) -> Result<MessageResponse> {
         match message {
             Key::Esc | Key::Char('n') | Key::Char('N') => {
-                self.state = ModalState::Complete(BooleanOptions::No);
+                self.reset();
                 Ok(MessageResponse::Consumed)
             }
             Key::Char('y') | Key::Char('Y') | Key::Enter => {
-                self.state = ModalState::Complete(BooleanOptions::Yes);
                 if let Some(cb) = self.callback.clone() {
                     cb.lock().await.call().await;
                 }
+                self.reset();
                 Ok(MessageResponse::Consumed)
             }
             // We don't want Q/q to be able to quit here
@@ -97,7 +98,7 @@ impl ConfirmationModal<BooleanOptions> {
 impl Component for ConfirmationModal<BooleanOptions> {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         let message: String = match &self.state {
-            ModalState::Waiting(v) => v.clone(),
+            ModalState::Open(v) => v.clone(),
             _ => return,
         };
 

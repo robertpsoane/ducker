@@ -1,10 +1,6 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-};
-
 use bollard::Docker;
 use color_eyre::eyre::{bail, Context, Result};
+use futures::lock::Mutex as FutureMutex;
 use ratatui::{
     layout::Rect,
     prelude::*,
@@ -12,14 +8,20 @@ use ratatui::{
     widgets::{Row, Table, TableState},
     Frame,
 };
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 use crate::{
-    components::confirmation_modal::{BooleanOptions, ConfirmationModal, ModalState},
-    components::help::PageHelp,
+    callbacks::delete_image::DeleteImage,
+    components::{
+        confirmation_modal::{BooleanOptions, ConfirmationModal, ModalState},
+        help::PageHelp,
+    },
     docker::image::DockerImage,
     events::{message::MessageResponse, Key},
-    traits::Component,
-    traits::Page,
+    traits::{Component, Page},
 };
 
 const NAME: &str = "Images";
@@ -55,93 +57,64 @@ impl Page for Images {
 
         self.refresh().await?;
 
-        // TODO: The validator should take a callback on initialisation that manages the delete
-        // or on instantiation with extra variables passed on on init - probabyl
-        // makes more sense on init
-        //
-        // Then the ModalState should have Open(message) and Closed, Complete;
-        // when closed, it is in effect dead.
-        //
-        // In the ModalState::Closed, it is possible that the modal can become
-        // Open, however once it becomes Open, it will stay open until it migrates to
-        // Closed
-        // When it is Open the branch should check if the state has changed to Complete, at
-        // which point it should be reset from outside
-        // The Complete branch should also close the modal from outside
-        //
-        // Potentially there is still value in keeping the generic type for the modal state
-        // to allow multiple implementations for different types, but to a certain extent
-        // that is abusing generics to create some sort of inheritance type structure
         let delete_modal_state = self.delete_modal.state.clone();
-        let result = match delete_modal_state {
-            ModalState::Invisible => match message {
-                UP_KEY | K_KEY => {
-                    self.decrement_list();
-                    MessageResponse::Consumed
-                }
-                DOWN_KEY | J_KEY => {
-                    self.increment_list();
-                    MessageResponse::Consumed
-                }
-                D_KEY => {
-                    if let Ok(image) = self.get_image() {
-                        let name = image.get_full_name();
-                        // self.delete_modal
-                        //     .initialise(format!("Are you sure you wish to delete image {name}?"));
-                        MessageResponse::Consumed
-                    } else {
-                        MessageResponse::NotConsumed
-                    }
-                }
-                // R_KEY => {
-                //     self.start_container()
-                //         .await
-                //         .context("could not start container")?;
-                //     MessageResponse::Consumed
-                // }
-                // S_KEY => {
-                //     self.stop_container()
-                //         .await
-                //         .context("could not stop container")?;
-                //     MessageResponse::Consumed
-                // }
-                // A_KEY => {
-                //     self.attach_container()
-                //         .await
-                //         .context("could not attach to container")?;
-                //     MessageResponse::Consumed
-                // }
-                // G_KEY => {
-                //     self.list_state.select(Some(0));
-                //     MessageResponse::Consumed
-                // }
-                // SHIFT_G_KEY => {
-                //     self.list_state.select(Some(self.image_summary.len() - 1));
-                //     MessageResponse::Consumed
-                // }
-                _ => MessageResponse::NotConsumed,
-            },
-            ModalState::Waiting(_) => {
-                let update_res = self.delete_modal.update(message).await?;
-                if update_res == MessageResponse::Consumed {
-                    if let ModalState::Complete(res) = self.delete_modal.state.clone() {
-                        match res {
-                            BooleanOptions::Yes => {
-                                self.delete_image()
-                                    .await
-                                    .context("could not delete current image")?;
-                                self.delete_modal.reset();
-                            }
-                            BooleanOptions::No => self.delete_modal.reset(),
-                        }
-                    }
-                }
-                MessageResponse::NotConsumed
+        if let ModalState::Open(_) = delete_modal_state {
+            let delete_modal_res = self.delete_modal.update(message).await?;
+            if delete_modal_res == MessageResponse::Consumed {
+                return Ok(delete_modal_res);
             }
-            ModalState::Complete(_) => {
-                self.delete_modal.reset();
-                MessageResponse::NotConsumed
+        }
+
+        let result = match message {
+            UP_KEY | K_KEY => {
+                self.decrement_list();
+                MessageResponse::Consumed
             }
+            DOWN_KEY | J_KEY => {
+                self.increment_list();
+                MessageResponse::Consumed
+            }
+            D_KEY => {
+                if let Ok(image) = self.get_image() {
+                    let name = image.get_full_name();
+                    let cb = Arc::new(FutureMutex::new(DeleteImage::new(
+                        self.docker.clone(),
+                        image.clone(),
+                    )));
+                    self.delete_modal
+                        .initialise(format!("Are you sure you wish to delete image {name}?"), cb);
+                    MessageResponse::Consumed
+                } else {
+                    MessageResponse::NotConsumed
+                }
+            }
+            // R_KEY => {
+            //     self.start_container()
+            //         .await
+            //         .context("could not start container")?;
+            //     MessageResponse::Consumed
+            // }
+            // S_KEY => {
+            //     self.stop_container()
+            //         .await
+            //         .context("could not stop container")?;
+            //     MessageResponse::Consumed
+            // }
+            // A_KEY => {
+            //     self.attach_container()
+            //         .await
+            //         .context("could not attach to container")?;
+            //     MessageResponse::Consumed
+            // }
+            // G_KEY => {
+            //     self.list_state.select(Some(0));
+            //     MessageResponse::Consumed
+            // }
+            // SHIFT_G_KEY => {
+            //     self.list_state.select(Some(self.image_summary.len() - 1));
+            //     MessageResponse::Consumed
+            // }
+            _ => MessageResponse::NotConsumed,
         };
         Ok(result)
     }
@@ -236,12 +209,6 @@ impl Images {
         bail!("no container id found");
     }
 
-    async fn delete_image(&mut self) -> Result<Option<()>> {
-        self.get_image()?.delete(&self.docker).await?;
-
-        Ok(None)
-    }
-
     // async fn start_container(&mut self) -> Result<Option<()>> {
     //     if let Ok(container) = self.get_container() {
     //         if let Some(container_id) = container.id.clone() {
@@ -312,7 +279,7 @@ impl Component for Images {
         f.render_stateful_widget(table, area, &mut self.list_state);
 
         match self.delete_modal.state {
-            ModalState::Waiting(_) => self.delete_modal.draw(f, area),
+            ModalState::Open(_) => self.delete_modal.draw(f, area),
             _ => {}
         }
     }
