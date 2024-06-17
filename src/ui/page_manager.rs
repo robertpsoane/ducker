@@ -3,7 +3,6 @@ use std::sync::{Arc, Mutex};
 use color_eyre::eyre::{Context, Result};
 use ratatui::{
     layout::{Alignment, Margin, Rect},
-    prelude::*,
     widgets::{block::Title, Block, Padding},
     Frame,
 };

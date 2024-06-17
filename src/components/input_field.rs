@@ -116,7 +116,13 @@ impl Component for InputField {
 
         if let Some(candidate) = &self.candidate {
             if let Some(delta) = candidate.strip_prefix(&self.input as &str) {
-                input_text.push(Span::raw(delta).style(Style::default().fg(Color::DarkGray)))
+                input_text.push(
+                    Span::raw(delta).style(
+                        Style::default()
+                            .fg(Color::DarkGray)
+                            .add_modifier(Modifier::DIM),
+                    ),
+                )
             }
         }
 

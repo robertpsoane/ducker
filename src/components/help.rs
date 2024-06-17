@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use ratatui::{
     style::{Color, Modifier, Style},
-    text::{Line, Span, Text},
+    text::{Line, Span},
     widgets::{Paragraph, Wrap},
 };
 

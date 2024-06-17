@@ -69,15 +69,14 @@ impl App {
     }
 
     async fn update_view_mode(&mut self, message: Key) -> Result<MessageResponse> {
-        match self
+        if let MessageResponse::Consumed = self
             .page_manager
             .update(message)
             .await
             .context("unable to update body")?
         {
-            MessageResponse::Consumed => return Ok(MessageResponse::Consumed),
-            _ => {}
-        };
+            return Ok(MessageResponse::Consumed);
+        }
 
         match message {
             Key::Char('q') | Key::Char('Q') => {
@@ -139,7 +138,7 @@ impl App {
             }
         }
 
-        let [left_space, title, right_space] = Layout::horizontal(vec![
+        let [_left_space, title, right_space] = Layout::horizontal(vec![
             Constraint::Percentage(30),
             Constraint::Percentage(40),
             Constraint::Percentage(30),

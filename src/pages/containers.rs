@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 use crate::{
     callbacks::DeleteContainer,
     components::{
-        confirmation_modal::{BooleanOptions, ConfirmationModal, ModalState},
+        confirmation_modal::{ConfirmationModal, ModalState},
         help::PageHelp,
     },
     docker::container::DockerContainer,
@@ -26,7 +26,7 @@ const NAME: &str = "Containers";
 const UP_KEY: Key = Key::Up;
 const DOWN_KEY: Key = Key::Down;
 
-const A_KEY: Key = Key::Char('a');
+const _A_KEY: Key = Key::Char('a');
 const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
 const D_KEY: Key = Key::Char('d');
@@ -43,7 +43,7 @@ pub struct Containers {
     docker: Docker,
     containers: Vec<DockerContainer>,
     list_state: TableState,
-    delete_modal: ConfirmationModal<BooleanOptions>,
+    delete_modal: ConfirmationModal<bool>,
 }
 
 #[async_trait::async_trait]
@@ -168,7 +168,7 @@ impl Containers {
             docker,
             containers: vec![],
             list_state: TableState::default(),
-            delete_modal: ConfirmationModal::<BooleanOptions>::new("Delete".into()),
+            delete_modal: ConfirmationModal::<bool>::new("Delete".into()),
         })
     }
 

@@ -2,7 +2,6 @@ use bollard::container::ListContainersOptions;
 use chrono::prelude::DateTime;
 use chrono::Local;
 use color_eyre::eyre::{Context, Result};
-use itertools::Itertools;
 use std::time::{Duration, UNIX_EPOCH};
 
 use bollard::secret::ContainerSummary;

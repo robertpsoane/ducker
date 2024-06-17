@@ -17,12 +17,6 @@ use crate::{
     traits::{Callback, Component},
 };
 
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub enum BooleanOptions {
-    Yes,
-    No,
-}
-
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
 pub enum ModalState {
     #[default]
@@ -74,7 +68,7 @@ impl<T> ConfirmationModal<T> {
     }
 }
 
-impl ConfirmationModal<BooleanOptions> {
+impl ConfirmationModal<bool> {
     pub async fn update(&mut self, message: Key) -> Result<MessageResponse> {
         match message {
             Key::Esc | Key::Char('n') | Key::Char('N') => {
@@ -95,7 +89,7 @@ impl ConfirmationModal<BooleanOptions> {
     }
 }
 
-impl Component for ConfirmationModal<BooleanOptions> {
+impl Component for ConfirmationModal<bool> {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         let message: String = match &self.state {
             ModalState::Open(v) => v.clone(),

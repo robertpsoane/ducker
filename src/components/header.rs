@@ -1,4 +1,3 @@
-use color_eyre::owo_colors::OwoColorize;
 use ratatui::{
     layout::{self, Rect},
     style::{Color, Style},

@@ -16,7 +16,7 @@ use std::{
 use crate::{
     callbacks::delete_image::DeleteImage,
     components::{
-        confirmation_modal::{BooleanOptions, ConfirmationModal, ModalState},
+        confirmation_modal::{ConfirmationModal, ModalState},
         help::PageHelp,
     },
     docker::image::DockerImage,
@@ -45,7 +45,7 @@ pub struct Images {
     docker: Docker,
     images: Vec<DockerImage>,
     list_state: TableState,
-    delete_modal: ConfirmationModal<BooleanOptions>,
+    delete_modal: ConfirmationModal<bool>,
 }
 
 #[async_trait::async_trait]
@@ -162,7 +162,7 @@ impl Images {
             docker,
             images: vec![],
             list_state: TableState::default(),
-            delete_modal: ConfirmationModal::<BooleanOptions>::new("Delete".into()),
+            delete_modal: ConfirmationModal::<bool>::new("Delete".into()),
         })
     }
 
@@ -258,18 +258,14 @@ impl Images {
 impl Component for Images {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         let rows = get_image_rows(&self.images);
-        let columns = Row::new(vec![
-            "ID", "Name", "Tag", //, "Command", "Created", "Status", "Ports", "Names",
-        ]);
+        let columns = Row::new(vec!["ID", "Name", "Tag", "Created", "Size"]);
 
         let widths = [
-            Constraint::Percentage(12),
             Constraint::Percentage(20),
             Constraint::Percentage(20),
-            Constraint::Percentage(10),
-            Constraint::Percentage(13),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
+            Constraint::Percentage(20),
+            Constraint::Percentage(20),
+            Constraint::Percentage(20),
         ];
 
         let table = Table::new(rows.clone(), widths)
@@ -288,7 +284,15 @@ impl Component for Images {
 fn get_image_rows(containers: &[DockerImage]) -> Vec<Row> {
     let rows = containers
         .iter()
-        .map(|c| Row::new(vec![c.id.clone(), c.name.clone(), c.tag.clone()]))
+        .map(|c| {
+            Row::new(vec![
+                c.id.clone(),
+                c.name.clone(),
+                c.tag.clone(),
+                c.created.clone(),
+                c.size.clone(),
+            ])
+        })
         .collect::<Vec<Row>>();
     rows
 }
