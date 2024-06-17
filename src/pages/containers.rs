@@ -72,26 +72,10 @@ impl Page for Containers {
                 self.increment_list();
                 MessageResponse::Consumed
             }
-            D_KEY => {
-                if let Ok(container) = self.get_container() {
-                    let container_id = container.id.clone();
-                    let image = container.image.clone();
-                    let cb = Arc::new(FutureMutex::new(DeleteContainer::new(
-                        self.docker.clone(),
-                        container.clone(),
-                    )));
-                    self.delete_modal.initialise(
-                        format!(
-                        "Are you sure you wish to delete container {container_id}, running {image}?"
-                    ),
-                        cb,
-                    );
-
-                    MessageResponse::Consumed
-                } else {
-                    MessageResponse::NotConsumed
-                }
-            }
+            D_KEY => match self.delete_container() {
+                Ok(_) => MessageResponse::Consumed,
+                Err(_) => MessageResponse::NotConsumed,
+            },
             R_KEY => {
                 self.start_container()
                     .await
@@ -228,15 +212,42 @@ impl Containers {
         }
         Ok(None)
     }
+
+    fn delete_container(&mut self) -> Result<()> {
+        if let Ok(container) = self.get_container() {
+            let name = container.names.clone();
+            let image = container.image.clone();
+
+            let message = match container.running {
+                true => {
+                    format!("Are you sure you wish to delete container {name} (image {image})?  This container is currently running; this will result in a force deletion.")
+                }
+                false => {
+                    format!("Are you sure you wish to delete container {name} (image {image})?")
+                }
+            };
+
+            let cb = Arc::new(FutureMutex::new(DeleteContainer::new(
+                self.docker.clone(),
+                container.clone(),
+                container.running,
+            )));
+            self.delete_modal.initialise(message, cb);
+        } else {
+            bail!("Ahhh")
+        }
+        Ok(())
+    }
 }
 
 impl Component for Containers {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         let rows = self.containers.clone().into_iter().map(|c| {
-            let style = match c.state.as_str() {
-                "running" => Style::default().fg(Color::Green),
-                _ => Style::default(),
+            let style = match c.running {
+                true => Style::default().fg(Color::Green),
+                false => Style::default(),
             };
+
             Row::new(vec![
                 c.id, c.image, c.command, c.created, c.status, c.ports, c.names,
             ])

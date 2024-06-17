@@ -27,8 +27,6 @@ impl DockerImage {
         .format("%Y-%m-%d %H:%M:%S");
         let b = Byte::from_u64(bollard_image.size as u64).get_appropriate_unit(UnitType::Binary);
 
-        println!("{}", bollard_image.containers);
-
         for repo_tag in bollard_image.repo_tags {
             let split_tag = repo_tag.split(':').collect::<Vec<&str>>();
 

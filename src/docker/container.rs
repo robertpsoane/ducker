@@ -1,4 +1,4 @@
-use bollard::container::ListContainersOptions;
+use bollard::container::{ListContainersOptions, RemoveContainerOptions};
 use chrono::prelude::DateTime;
 use chrono::Local;
 use color_eyre::eyre::{Context, Result};
@@ -15,7 +15,7 @@ pub struct DockerContainer {
     pub status: String,
     pub ports: String,
     pub names: String,
-    pub state: String,
+    pub running: bool,
 }
 
 impl DockerContainer {
@@ -47,6 +47,12 @@ impl DockerContainer {
         )
         .format("%Y-%m-%d %H:%M:%S")
         .to_string();
+
+        let running = match c.state.unwrap_or_default().as_str() {
+            "running" => true,
+            _ => false,
+        };
+
         Self {
             id: c.id.clone().unwrap_or_default(),
             image: c.image.clone().unwrap_or_default(),
@@ -55,7 +61,7 @@ impl DockerContainer {
             status: c.status.clone().unwrap_or_default(),
             ports,
             names: c.names.clone().unwrap_or_default().join(", "),
-            state: c.state.clone().unwrap_or_default(),
+            running: running,
         }
     }
 
@@ -74,8 +80,12 @@ impl DockerContainer {
         Ok(containrs)
     }
 
-    pub async fn delete(&self, docker: &bollard::Docker) -> Result<()> {
-        docker.remove_container(&self.id, None).await?;
+    pub async fn delete(&self, docker: &bollard::Docker, force: bool) -> Result<()> {
+        let opt = RemoveContainerOptions {
+            force: force,
+            ..Default::default()
+        };
+        docker.remove_container(&self.id, Some(opt)).await?;
         Ok(())
     }
 

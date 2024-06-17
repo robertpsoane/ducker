@@ -1,5 +1,6 @@
 use crate::{docker::image::DockerImage, traits::Callback};
 use async_trait::async_trait;
+use color_eyre::eyre::Result;
 
 #[derive(Debug)]
 pub struct DeleteImage {
@@ -12,9 +13,11 @@ impl DeleteImage {
         Self { docker, image }
     }
 }
+
 #[async_trait]
 impl Callback for DeleteImage {
-    async fn call(&self) {
-        let _ = self.image.delete(&self.docker).await;
+    async fn call(&self) -> Result<()> {
+        let _ = self.image.delete(&self.docker).await?;
+        Ok(())
     }
 }

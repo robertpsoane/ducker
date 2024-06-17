@@ -77,7 +77,7 @@ impl ConfirmationModal<bool> {
             }
             Key::Char('y') | Key::Char('Y') | Key::Enter => {
                 if let Some(cb) = self.callback.clone() {
-                    cb.lock().await.call().await;
+                    cb.lock().await.call().await?;
                 }
                 self.reset();
                 Ok(MessageResponse::Consumed)

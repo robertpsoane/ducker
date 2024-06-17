@@ -74,20 +74,10 @@ impl Page for Images {
                 self.increment_list();
                 MessageResponse::Consumed
             }
-            D_KEY => {
-                if let Ok(image) = self.get_image() {
-                    let name = image.get_full_name();
-                    let cb = Arc::new(FutureMutex::new(DeleteImage::new(
-                        self.docker.clone(),
-                        image.clone(),
-                    )));
-                    self.delete_modal
-                        .initialise(format!("Are you sure you wish to delete image {name}?"), cb);
-                    MessageResponse::Consumed
-                } else {
-                    MessageResponse::NotConsumed
-                }
-            }
+            D_KEY => match self.delete_image() {
+                Ok(_) => MessageResponse::Consumed,
+                Err(_) => MessageResponse::NotConsumed,
+            },
             // R_KEY => {
             //     self.start_container()
             //         .await
@@ -253,6 +243,25 @@ impl Images {
     //     }
     //     Ok(None)
     // }
+
+    fn delete_image(&mut self) -> Result<()> {
+        if let Ok(image) = self.get_image() {
+            let name = image.name.clone();
+            let tag = image.tag.clone();
+
+            let cb = Arc::new(FutureMutex::new(DeleteImage::new(
+                self.docker.clone(),
+                image.clone(),
+            )));
+            self.delete_modal.initialise(
+                format!("Are you sure you wish to delete container {name}:{tag})?"),
+                cb,
+            );
+        } else {
+            bail!("Ahhh")
+        }
+        Ok(())
+    }
 }
 
 impl Component for Images {
