@@ -26,11 +26,15 @@ impl Component for Footer {
             .flat_map(|(key, desc)| {
                 let key = Span::styled(
                     format!(" <{key}> = "),
-                    Style::new().fg(Color::Cyan).add_modifier(Modifier::ITALIC),
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::ITALIC),
                 );
                 let desc = Span::styled(
                     format!("{desc} "),
-                    Style::new().fg(Color::Cyan).add_modifier(Modifier::ITALIC),
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::ITALIC),
                 );
                 [key, desc]
             })

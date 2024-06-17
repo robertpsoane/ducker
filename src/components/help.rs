@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use ratatui::{
     style::{Color, Modifier, Style},
-    text::{Line, Span},
+    text::{Line, Span, Text},
     widgets::{Paragraph, Wrap},
 };
 
@@ -36,18 +36,14 @@ impl Component for PageHelp {
         let spans = self
             .inputs
             .iter()
-            .flat_map(|(key, desc)| {
-                
-                Line::from(vec![
-                    Span::styled(
-                        format!(" <{key}> = "),
-                        Style::new().fg(Color::Red).add_modifier(Modifier::ITALIC),
-                    ),
-                    Span::styled(
-                        format!("{desc} "),
-                        Style::new().fg(Color::Red).add_modifier(Modifier::ITALIC),
-                    ),
-                ])
+            .map(|(key, desc)| {
+                // let t = Text::from();
+
+                Span::from(format!(" <{key}> = {desc} ")).style(
+                    Style::default()
+                        .add_modifier(Modifier::ITALIC)
+                        .fg(Color::Red),
+                )
             })
             .collect_vec();
 
