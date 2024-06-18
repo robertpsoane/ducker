@@ -27,7 +27,7 @@ impl App {
     pub async fn new(tx: Sender<Message<Key, Transition>>) -> Result<Self> {
         let page = state::CurrentPage::default();
 
-        let body = PageManager::new(page.clone())
+        let body = PageManager::new(page.clone(), tx.clone())
             .await
             .context("unable to create new body component")?;
 

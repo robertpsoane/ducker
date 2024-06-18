@@ -21,6 +21,7 @@ use crate::{
     },
     docker::image::DockerImage,
     events::{message::MessageResponse, Key},
+    state::CurrentPage,
     traits::{Component, Page},
 };
 
@@ -78,32 +79,7 @@ impl Page for Images {
                 Ok(_) => MessageResponse::Consumed,
                 Err(_) => MessageResponse::NotConsumed,
             },
-            // R_KEY => {
-            //     self.start_container()
-            //         .await
-            //         .context("could not start container")?;
-            //     MessageResponse::Consumed
-            // }
-            // S_KEY => {
-            //     self.stop_container()
-            //         .await
-            //         .context("could not stop container")?;
-            //     MessageResponse::Consumed
-            // }
-            // A_KEY => {
-            //     self.attach_container()
-            //         .await
-            //         .context("could not attach to container")?;
-            //     MessageResponse::Consumed
-            // }
-            // G_KEY => {
-            //     self.list_state.select(Some(0));
-            //     MessageResponse::Consumed
-            // }
-            // SHIFT_G_KEY => {
-            //     self.list_state.select(Some(self.image_summary.len() - 1));
-            //     MessageResponse::Consumed
-            // }
+
             _ => MessageResponse::NotConsumed,
         };
         Ok(result)
@@ -117,7 +93,7 @@ impl Page for Images {
         Ok(())
     }
 
-    async fn set_visible(&mut self) -> Result<()> {
+    async fn set_visible(&mut self, _: CurrentPage) -> Result<()> {
         self.visible = true;
         self.initialise()
             .await
@@ -139,11 +115,11 @@ impl Images {
     pub async fn new(docker: Docker) -> Result<Self> {
         let page_help = PageHelp::new(NAME.into())
             // .add_input(format!("{}", A_KEY), "attach".into())
-            .add_input(format!("{}", D_KEY), "delete".into())
-            .add_input(format!("{}", R_KEY), "run".into())
-            .add_input(format!("{}", S_KEY), "stop".into())
-            .add_input(format!("{}", G_KEY), "to-top".into())
-            .add_input(format!("{}", SHIFT_G_KEY), "to-bottom".into());
+            .add_input(format!("{D_KEY}"), "delete".into())
+            .add_input(format!("{R_KEY}"), "run".into())
+            .add_input(format!("{S_KEY}"), "stop".into())
+            .add_input(format!("{G_KEY}"), "to-top".into())
+            .add_input(format!("{SHIFT_G_KEY}"), "to-bottom".into());
 
         Ok(Self {
             name: String::from(NAME),
@@ -198,51 +174,6 @@ impl Images {
         }
         bail!("no container id found");
     }
-
-    // async fn start_container(&mut self) -> Result<Option<()>> {
-    //     if let Ok(container) = self.get_container() {
-    //         if let Some(container_id) = container.id.clone() {
-    //             self.docker
-    //                 .start_container::<String>(&container_id, None)
-    //                 .await
-    //                 .context("failed to start container")?;
-    //         }
-
-    //         self.refresh().await?;
-    //         return Ok(Some(()));
-    //     }
-    //     Ok(None)
-    // }
-
-    // async fn stop_container(&mut self) -> Result<Option<()>> {
-    //     if let Ok(container) = self.get_container() {
-    //         if let Some(container_id) = container.id.clone() {
-    //             self.docker
-    //                 .stop_container(&container_id, None)
-    //                 .await
-    //                 .context("failed to start container")?;
-    //         }
-
-    //         self.refresh().await?;
-    //         return Ok(Some(()));
-    //     }
-    //     Ok(None)
-    // }
-
-    // async fn attach_container(&mut self) -> Result<Option<()>> {
-    //     if let Ok(container) = self.get_container() {
-    //         if let Some(container_id) = container.id.clone() {
-    //             self.docker
-    //                 .stop_container(&container_id, None)
-    //                 .await
-    //                 .context("failed to start container")?;
-    //         }
-
-    //         self.refresh().await?;
-    //         return Ok(Some(()));
-    //     }
-    //     Ok(None)
-    // }
 
     fn delete_image(&mut self) -> Result<()> {
         if let Ok(image) = self.get_image() {

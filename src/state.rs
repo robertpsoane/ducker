@@ -1,3 +1,5 @@
+use crate::docker::container::DockerContainer;
+
 // TODO: Merge mode and running to State { View, TextInput, Finishing ... }
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub enum Mode {
@@ -18,4 +20,5 @@ pub enum CurrentPage {
     #[default]
     Containers,
     Images,
+    Logs(DockerContainer),
 }

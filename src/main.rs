@@ -22,6 +22,7 @@ mod traits {
     mod callback;
     mod component;
     mod page;
+
     pub use callback::Callback;
     pub use component::Component;
     pub use page::Page;
@@ -40,10 +41,12 @@ mod events {
 mod docker {
     pub mod container;
     pub mod image;
+    pub mod logs;
 }
 mod pages {
     pub mod containers;
     pub mod images;
+    pub mod logs;
 }
 mod components {
     pub mod confirmation_modal;

@@ -9,6 +9,7 @@ use ratatui::{
     Frame,
 };
 use std::sync::{Arc, Mutex};
+use tokio::sync::mpsc::Sender;
 
 use crate::{
     callbacks::DeleteContainer,
@@ -16,8 +17,9 @@ use crate::{
         confirmation_modal::{ConfirmationModal, ModalState},
         help::PageHelp,
     },
-    docker::container::DockerContainer,
-    events::{message::MessageResponse, Key},
+    docker::container::{self, DockerContainer},
+    events::{message::MessageResponse, Key, Message, Transition},
+    state::CurrentPage,
     traits::{Component, Page},
 };
 
@@ -33,12 +35,14 @@ const D_KEY: Key = Key::Char('d');
 const R_KEY: Key = Key::Char('r');
 const S_KEY: Key = Key::Char('s');
 const G_KEY: Key = Key::Char('g');
+const L_KEY: Key = Key::Char('l');
 const SHIFT_G_KEY: Key = Key::Char('G');
 
 #[derive(Debug)]
 pub struct Containers {
     pub name: String,
     pub visible: bool,
+    tx: Sender<Message<Key, Transition>>,
     page_help: Arc<Mutex<PageHelp>>,
     docker: Docker,
     containers: Vec<DockerContainer>,
@@ -88,12 +92,6 @@ impl Page for Containers {
                     .context("could not stop container")?;
                 MessageResponse::Consumed
             }
-            // A_KEY => {
-            //     self.attach_container()
-            //         .await
-            //         .context("could not attach to container")?;
-            //     MessageResponse::Consumed
-            // }
             G_KEY => {
                 self.list_state.select(Some(0));
                 MessageResponse::Consumed
@@ -102,7 +100,15 @@ impl Page for Containers {
                 self.list_state.select(Some(self.containers.len() - 1));
                 MessageResponse::Consumed
             }
-
+            L_KEY => {
+                let container = self.get_container()?;
+                self.tx
+                    .send(Message::Transition(Transition::ToLogPage(
+                        container.clone(),
+                    )))
+                    .await?;
+                MessageResponse::Consumed
+            }
             _ => MessageResponse::NotConsumed,
         };
         self.refresh().await?;
@@ -117,7 +123,7 @@ impl Page for Containers {
         Ok(())
     }
 
-    async fn set_visible(&mut self) -> Result<()> {
+    async fn set_visible(&mut self, _: CurrentPage) -> Result<()> {
         self.visible = true;
         self.initialise()
             .await
@@ -136,18 +142,20 @@ impl Page for Containers {
 }
 
 impl Containers {
-    pub async fn new(docker: Docker) -> Result<Self> {
+    pub async fn new(docker: Docker, tx: Sender<Message<Key, Transition>>) -> Result<Self> {
         let page_help = PageHelp::new(NAME.into())
             // .add_input(format!("{}", A_KEY), "attach".into())
-            .add_input(format!("{}", D_KEY), "delete".into())
-            .add_input(format!("{}", R_KEY), "run".into())
-            .add_input(format!("{}", S_KEY), "stop".into())
-            .add_input(format!("{}", G_KEY), "to-top".into())
-            .add_input(format!("{}", SHIFT_G_KEY), "to-bottom".into());
+            .add_input(format!("{D_KEY}"), "delete".into())
+            .add_input(format!("{R_KEY}"), "run".into())
+            .add_input(format!("{S_KEY}"), "stop".into())
+            .add_input(format!("{G_KEY}"), "to-top".into())
+            .add_input(format!("{SHIFT_G_KEY}"), "to-bottom".into())
+            .add_input(format!("{L_KEY}"), "logs".into());
 
         Ok(Self {
             name: String::from(NAME),
             page_help: Arc::new(Mutex::new(page_help)),
+            tx,
             visible: false,
             docker,
             containers: vec![],

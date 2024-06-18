@@ -6,13 +6,17 @@ use ratatui::{
     widgets::{block::Title, Block, Padding},
     Frame,
 };
+use tokio::sync::mpsc::Sender;
 
 use crate::{
-    events::{message::MessageResponse, Key, Transition},
-    pages::{containers::Containers, images::Images},
+    events::{message::MessageResponse, Key, Message, Transition},
+    pages::{
+        containers::Containers,
+        images::Images,
+        logs::{self, Logs},
+    },
     state,
-    traits::Component,
-    traits::Page,
+    traits::{Component, Page},
 };
 
 #[derive(Debug)]
@@ -20,37 +24,55 @@ pub struct PageManager {
     current_page: state::CurrentPage,
     containers: Arc<Mutex<dyn Page>>,
     images: Arc<Mutex<dyn Page>>,
+    logs: Arc<Mutex<dyn Page>>,
 }
 
 impl PageManager {
-    pub async fn new(page: state::CurrentPage) -> Result<Self> {
+    pub async fn new(
+        page: state::CurrentPage,
+        tx: Sender<Message<Key, Transition>>,
+    ) -> Result<Self> {
         let docker = bollard::Docker::connect_with_socket_defaults()
             .context("unable to connect to local docker daemon")?;
 
         let containers = Arc::new(Mutex::new(
-            Containers::new(docker.clone())
+            Containers::new(docker.clone(), tx.clone())
                 .await
                 .context("unable to create containers page")?,
         ));
         let images = Arc::new(Mutex::new(
-            Images::new(docker)
+            Images::new(docker.clone())
                 .await
                 .context("unable to create containers page")?,
         ));
+        let logs = Arc::new(Mutex::new(
+            Logs::new(docker, tx.clone())
+                .await
+                .context("unable to create containers page")?,
+        ));
+
         let page_manager = Self {
             current_page: page,
             containers,
             images,
+            logs,
         };
 
         page_manager
-            .get_current_page()
-            .lock()
-            .unwrap()
-            .set_visible()
-            .await?;
+            .init()
+            .await
+            .context("failed to initialise page manager")?;
 
         Ok(page_manager)
+    }
+
+    pub async fn init(&self) -> Result<()> {
+        self.get_current_page()
+            .lock()
+            .unwrap()
+            .set_visible(self.current_page.clone())
+            .await?;
+        Ok(())
     }
 
     pub async fn transition(&mut self, transition: Transition) -> Result<MessageResponse> {
@@ -61,6 +83,11 @@ impl PageManager {
             }
             Transition::ToContainerPage => {
                 self.set_current_page(state::CurrentPage::Containers)
+                    .await?;
+                MessageResponse::Consumed
+            }
+            Transition::ToLogPage(container) => {
+                self.set_current_page(state::CurrentPage::Logs(container))
                     .await?;
                 MessageResponse::Consumed
             }
@@ -88,12 +115,12 @@ impl PageManager {
             .await
             .context("unable to close old page")?;
 
-        self.current_page = next_page;
+        self.current_page = next_page.clone();
 
         self.get_current_page()
             .lock()
             .unwrap()
-            .set_visible()
+            .set_visible(next_page)
             .await
             .context("unable to open new page")?;
 
@@ -104,6 +131,7 @@ impl PageManager {
         match self.current_page {
             state::CurrentPage::Containers => self.containers.clone(),
             state::CurrentPage::Images => self.images.clone(),
+            state::CurrentPage::Logs(_) => self.logs.clone(),
         }
     }
 

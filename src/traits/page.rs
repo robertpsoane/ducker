@@ -9,6 +9,7 @@ use color_eyre::eyre::Result;
 use crate::{
     components::help::PageHelp,
     events::{message::MessageResponse, Key},
+    state::CurrentPage,
     traits::Component,
 };
 
@@ -16,7 +17,7 @@ use crate::{
 pub trait Page: Component + Debug + Send + Sync {
     async fn update(&mut self, message: Key) -> Result<MessageResponse>;
     async fn initialise(&mut self) -> Result<()>;
-    async fn set_visible(&mut self) -> Result<()>;
+    async fn set_visible(&mut self, initial_state: CurrentPage) -> Result<()>;
     async fn set_invisible(&mut self) -> Result<()>;
     fn get_help(&self) -> Arc<Mutex<PageHelp>>;
 }

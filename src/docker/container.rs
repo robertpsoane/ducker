@@ -1,4 +1,4 @@
-use bollard::container::{ListContainersOptions, RemoveContainerOptions};
+use bollard::container::{ListContainersOptions, LogsOptions, RemoveContainerOptions};
 use chrono::prelude::DateTime;
 use chrono::Local;
 use color_eyre::eyre::{Context, Result};
@@ -6,7 +6,7 @@ use std::time::{Duration, UNIX_EPOCH};
 
 use bollard::secret::ContainerSummary;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DockerContainer {
     pub id: String,
     pub image: String,
@@ -105,6 +105,4 @@ impl DockerContainer {
             .context("failed to start container")?;
         Ok(())
     }
-
-    // pub async fn attach(&)
 }
