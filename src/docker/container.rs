@@ -105,4 +105,6 @@ impl DockerContainer {
             .context("failed to start container")?;
         Ok(())
     }
+
+    // pub async fn attach(&)
 }
