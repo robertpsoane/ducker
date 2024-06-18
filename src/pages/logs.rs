@@ -1,4 +1,7 @@
+use futures::{future, stream, Stream, StreamExt};
+use futures::{lock::Mutex as FutureMutex, FutureExt};
 use std::sync::{Arc, Mutex};
+use tokio::task::JoinHandle;
 
 use color_eyre::eyre::{bail, Ok, Result};
 use ratatui::{layout::Rect, Frame};
@@ -25,6 +28,8 @@ pub struct Logs {
     tx: Sender<Message<Key, Transition>>,
     logs: Option<DockerLogs>,
     page_help: Arc<Mutex<PageHelp>>,
+    log_messages: Arc<Mutex<Vec<String>>>,
+    log_streamer_handle: Option<JoinHandle<()>>,
 }
 
 impl Logs {
@@ -39,6 +44,8 @@ impl Logs {
             logs: None,
             tx,
             page_help: Arc::new(Mutex::new(page_help)),
+            log_messages: Arc::new(Mutex::new(vec![])),
+            log_streamer_handle: None,
         })
     }
 }
@@ -58,6 +65,21 @@ impl Page for Logs {
         Ok(res)
     }
     async fn initialise(&mut self) -> Result<()> {
+        if let Some(logs) = &self.logs {
+            let mut logs_stream = logs.get_log_stream(&self.docker, 10).await;
+            let tx = self.tx.clone();
+            let log_messages = self.log_messages.clone();
+            self.log_streamer_handle = Some(tokio::spawn(async move {
+                while let Some(v) = logs_stream.next().await {
+                    {
+                        log_messages.lock().unwrap().push(v);
+                    }
+                    let _ = tx.send(Message::Tick).await;
+                }
+            }));
+        } else {
+            bail!("unable to stream logs without logs to stream");
+        }
         Ok(())
     }
     async fn set_visible(&mut self, initial_state: CurrentPage) -> Result<()> {
@@ -65,9 +87,14 @@ impl Page for Logs {
             CurrentPage::Logs(container) => self.logs = Some(DockerLogs::from(container)),
             _ => bail!("Incorrect state passed to logs page"),
         }
+        self.initialise().await?;
         Ok(())
     }
     async fn set_invisible(&mut self) -> Result<()> {
+        if let Some(handle) = &self.log_streamer_handle {
+            handle.abort()
+        }
+        self.log_streamer_handle = None;
         self.logs = None;
         Ok(())
     }
@@ -77,5 +104,16 @@ impl Page for Logs {
 }
 
 impl Component for Logs {
-    fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {}
+    fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
+        let v: String;
+        {
+            let lock = self.log_messages.lock().unwrap();
+            if lock.len() > 1 {
+                v = lock[lock.len() - 1].clone()
+            } else {
+                return;
+            }
+        }
+        println!("{v}");
+    }
 }

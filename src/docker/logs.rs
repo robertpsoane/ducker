@@ -1,5 +1,8 @@
 use bollard::container::LogsOptions;
 use color_eyre::eyre::Result;
+use futures::{future, stream, Stream, StreamExt};
+
+use futures::stream::TryStreamExt;
 
 use super::container::DockerContainer;
 
@@ -17,14 +20,28 @@ impl DockerLogs {
         Self::new(container)
     }
 
-    pub async fn logs(&self, docker: &bollard::Docker) -> Result<()> {
-        let logstream = docker.logs(
-            &self.container.id,
-            Some(LogsOptions::<String> {
-                follow: true,
-                ..Default::default()
-            }),
-        );
-        Ok(())
+    pub async fn get_log_stream(
+        &self,
+        docker: &bollard::Docker,
+        tail: u8,
+    ) -> impl Stream<Item = String> {
+        let logstream = docker
+            .logs(
+                &self.container.id,
+                Some(LogsOptions::<String> {
+                    follow: true,
+                    stdout: true,
+                    tail: tail.to_string(),
+                    ..Default::default()
+                }),
+            )
+            .filter_map(|res| async move {
+                Some(match res {
+                    Ok(r) => format!("{r}"),
+                    Err(err) => format!("{err}"),
+                })
+            });
+
+        Box::pin(logstream)
     }
 }
