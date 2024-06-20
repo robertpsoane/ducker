@@ -42,3 +42,6 @@ rust-project.json
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/rust,rust-analyzer,visualstudiocode
+
+
+scratch/

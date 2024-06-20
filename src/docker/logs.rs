@@ -31,6 +31,7 @@ impl DockerLogs {
                 Some(LogsOptions::<String> {
                     follow: true,
                     stdout: true,
+                    stderr: true,
                     tail: tail.to_string(),
                     ..Default::default()
                 }),

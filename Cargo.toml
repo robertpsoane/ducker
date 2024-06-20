@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+ansi-to-tui = "4.0.1"
 async-trait = "0.1.80"
 bollard = "0.16.1"
 byte-unit = { version = "5.1.4", features = ["byte"] }
