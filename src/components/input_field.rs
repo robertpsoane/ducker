@@ -89,9 +89,11 @@ impl InputField {
             send_transition(self.tx.clone(), t)
                 .await
                 .context("unable to send transition")?;
-        } else {
-            panic!("")
         }
+        // At some point I want it to pop up a modal
+        // else {
+        //     panic!("")
+        // }
 
         self.initialise();
         Ok(())

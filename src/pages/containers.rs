@@ -28,10 +28,10 @@ const NAME: &str = "Containers";
 const UP_KEY: Key = Key::Up;
 const DOWN_KEY: Key = Key::Down;
 
-const _A_KEY: Key = Key::Char('a');
+const A_KEY: Key = Key::Char('a');
 const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
-const D_KEY: Key = Key::Char('d');
+const CTRL_D_KEY: Key = Key::Ctrl('d');
 const R_KEY: Key = Key::Char('r');
 const S_KEY: Key = Key::Char('s');
 const G_KEY: Key = Key::Char('g');
@@ -76,7 +76,7 @@ impl Page for Containers {
                 self.increment_list();
                 MessageResponse::Consumed
             }
-            D_KEY => match self.delete_container() {
+            CTRL_D_KEY => match self.delete_container() {
                 Ok(_) => MessageResponse::Consumed,
                 Err(_) => MessageResponse::NotConsumed,
             },
@@ -98,6 +98,13 @@ impl Page for Containers {
             }
             SHIFT_G_KEY => {
                 self.list_state.select(Some(self.containers.len() - 1));
+                MessageResponse::Consumed
+            }
+            A_KEY => {
+                let container = self.get_container()?;
+                self.tx
+                    .send(Message::Transition(Transition::ToAttach(container.clone())))
+                    .await?;
                 MessageResponse::Consumed
             }
             L_KEY => {
@@ -144,8 +151,8 @@ impl Page for Containers {
 impl Containers {
     pub async fn new(docker: Docker, tx: Sender<Message<Key, Transition>>) -> Result<Self> {
         let page_help = PageHelp::new(NAME.into())
-            // .add_input(format!("{}", A_KEY), "attach".into())
-            .add_input(format!("{D_KEY}"), "delete".into())
+            .add_input(format!("{}", A_KEY), "attach".into())
+            .add_input(format!("{CTRL_D_KEY}"), "delete".into())
             .add_input(format!("{R_KEY}"), "run".into())
             .add_input(format!("{S_KEY}"), "stop".into())
             .add_input(format!("{G_KEY}"), "to-top".into())
@@ -244,6 +251,12 @@ impl Containers {
         } else {
             bail!("Ahhh")
         }
+        Ok(())
+    }
+
+    async fn attach_container(&mut self) -> Result<()> {
+        let container = self.get_container()?;
+        container.attach("/bin/bash").await?;
         Ok(())
     }
 }

@@ -21,4 +21,5 @@ pub enum CurrentPage {
     Containers,
     Images,
     Logs(DockerContainer),
+    Attach(DockerContainer),
 }

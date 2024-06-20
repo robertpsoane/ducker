@@ -44,6 +44,7 @@ mod docker {
     pub mod logs;
 }
 mod pages {
+    pub mod attach;
     pub mod containers;
     pub mod images;
     pub mod logs;

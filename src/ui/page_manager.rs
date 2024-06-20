@@ -11,6 +11,7 @@ use tokio::sync::mpsc::Sender;
 use crate::{
     events::{message::MessageResponse, Key, Message, Transition},
     pages::{
+        attach::Attach,
         containers::Containers,
         images::Images,
         logs::{self, Logs},
@@ -25,6 +26,7 @@ pub struct PageManager {
     containers: Arc<Mutex<dyn Page>>,
     images: Arc<Mutex<dyn Page>>,
     logs: Arc<Mutex<dyn Page>>,
+    attach: Arc<Mutex<dyn Page>>,
 }
 
 impl PageManager {
@@ -46,7 +48,13 @@ impl PageManager {
                 .context("unable to create containers page")?,
         ));
         let logs = Arc::new(Mutex::new(
-            Logs::new(docker, tx.clone())
+            Logs::new(docker.clone(), tx.clone())
+                .await
+                .context("unable to create containers page")?,
+        ));
+
+        let attach = Arc::new(Mutex::new(
+            Attach::new(docker, tx.clone())
                 .await
                 .context("unable to create containers page")?,
         ));
@@ -56,6 +64,7 @@ impl PageManager {
             containers,
             images,
             logs,
+            attach,
         };
 
         page_manager
@@ -88,6 +97,11 @@ impl PageManager {
             }
             Transition::ToLogPage(container) => {
                 self.set_current_page(state::CurrentPage::Logs(container))
+                    .await?;
+                MessageResponse::Consumed
+            }
+            Transition::ToAttach(container) => {
+                self.set_current_page(state::CurrentPage::Attach(container))
                     .await?;
                 MessageResponse::Consumed
             }
@@ -132,6 +146,7 @@ impl PageManager {
             state::CurrentPage::Containers => self.containers.clone(),
             state::CurrentPage::Images => self.images.clone(),
             state::CurrentPage::Logs(_) => self.logs.clone(),
+            state::CurrentPage::Attach(_) => self.attach.clone(),
         }
     }
 

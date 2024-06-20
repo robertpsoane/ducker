@@ -3,8 +3,11 @@ use chrono::prelude::DateTime;
 use chrono::Local;
 use color_eyre::eyre::{Context, Result};
 use std::time::{Duration, UNIX_EPOCH};
+use tokio::process::Command;
 
 use bollard::secret::ContainerSummary;
+
+use crate::terminal;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DockerContainer {
@@ -103,6 +106,20 @@ impl DockerContainer {
             .stop_container(&self.id, None)
             .await
             .context("failed to start container")?;
+        Ok(())
+    }
+
+    pub async fn attach(&self, cmd: &str) -> Result<()> {
+        terminal::restore()?;
+
+        Command::new("docker")
+            .arg("exec")
+            .arg("-it")
+            .arg(&self.names)
+            .arg(cmd)
+            .status()
+            .await?;
+        terminal::init()?;
         Ok(())
     }
 }

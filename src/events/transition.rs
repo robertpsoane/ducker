@@ -10,4 +10,5 @@ pub enum Transition {
     ToImagePage,
     ToContainerPage,
     ToLogPage(DockerContainer),
+    ToAttach(DockerContainer),
 }
