@@ -18,7 +18,7 @@ impl Component for Footer {
         let keys = [
             ("K/↑", "Up"),
             ("J/↓", "Down"),
-            ("Q/q", "Quit"),
+            ("Q", "Quit"),
             (":", "Command"),
         ];
         let spans = keys

@@ -82,6 +82,8 @@ impl ConfirmationModal<bool> {
                 self.reset();
                 Ok(MessageResponse::Consumed)
             }
+            // We don't want Q to be able to quit here
+            Key::Char('Q') => Ok(MessageResponse::Consumed),
             _ => Ok(MessageResponse::NotConsumed),
         }
     }

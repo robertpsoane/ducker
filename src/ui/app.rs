@@ -8,7 +8,7 @@ use tokio::sync::mpsc::Sender;
 use crate::{
     components::{footer::Footer, header::Header, input_field::InputField},
     events::{key::Key, message::MessageResponse, Message, Transition},
-    state,
+    state::{self, Running},
     traits::Component,
     ui::page_manager::PageManager,
 };
@@ -81,6 +81,10 @@ impl App {
         match message {
             Key::Char(':') => {
                 self.set_mode(state::Mode::TextInput);
+                Ok(MessageResponse::Consumed)
+            }
+            Key::Char('Q') => {
+                self.running = Running::Done;
                 Ok(MessageResponse::Consumed)
             }
             _ => Ok(MessageResponse::NotConsumed),
