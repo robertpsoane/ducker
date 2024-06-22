@@ -2,7 +2,7 @@
 
 A terminal app for managing docker containers, inpired by [K9s](https://k9scli.io/)
 
-This is a work in progress; main aim is to get more to grips with rust.
+This is perhaps obviously very much a work in progress...
 
 ## Installation
 
