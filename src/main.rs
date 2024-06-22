@@ -26,6 +26,7 @@ mod traits {
 
     pub use callback::Callback;
     pub use component::Component;
+    pub use component::ModalComponent;
     pub use page::Page;
 }
 mod events {
@@ -54,11 +55,11 @@ mod pages {
     pub mod logs;
 }
 mod components {
-    pub mod confirmation_modal;
     pub mod footer;
     pub mod header;
     pub mod help;
     pub mod input_field;
+    pub mod modal;
     pub mod resize_notice;
 }
 pub mod terminal;

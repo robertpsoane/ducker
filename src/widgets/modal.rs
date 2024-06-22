@@ -8,7 +8,7 @@ use ratatui::{
 const UPPER_PAD_SIZE: u16 = 1;
 const MID_PAD_SIZE: u16 = 1;
 
-pub struct Modal<'a> {
+pub struct ModalWidget<'a> {
     title: Title<'a>,
     prompt: Paragraph<'a>,
     opts: Vec<Span<'a>>,
@@ -16,7 +16,7 @@ pub struct Modal<'a> {
     height: u16,
 }
 
-impl<'a> Modal<'a> {
+impl<'a> ModalWidget<'a> {
     pub fn new(title: Title<'a>, prompt: Paragraph<'a>, opts: Vec<Span<'a>>) -> Self {
         Self {
             title,
@@ -27,7 +27,7 @@ impl<'a> Modal<'a> {
     }
 }
 
-impl<'a> Default for Modal<'a> {
+impl<'a> Default for ModalWidget<'a> {
     fn default() -> Self {
         Self {
             title: Title::from(""),
@@ -39,7 +39,7 @@ impl<'a> Default for Modal<'a> {
     }
 }
 
-impl<'a> Widget for Modal<'a> {
+impl<'a> Widget for ModalWidget<'a> {
     fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer)
     where
         Self: Sized,

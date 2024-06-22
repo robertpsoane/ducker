@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, sync::Arc};
+use std::{fmt::Debug, sync::Arc};
 
 use futures::lock::Mutex;
 use itertools::Itertools;
@@ -14,8 +14,8 @@ use ratatui::{
 
 use crate::{
     events::{message::MessageResponse, Key},
-    traits::{Callback, Component},
-    widgets::modal::Modal,
+    traits::{Callback, Component, ModalComponent},
+    widgets::modal::ModalWidget,
 };
 
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
@@ -26,27 +26,25 @@ pub enum ModalState {
 }
 
 #[derive(Default, Debug)]
-pub struct ConfirmationModal<T, P> {
+pub struct Modal<P> {
     pub discriminator: P,
     pub state: ModalState,
     title: String,
     callback: Option<Arc<Mutex<dyn Callback>>>,
-    phantom: PhantomData<T>,
 }
 
-impl<T, P> ConfirmationModal<T, P> {
+impl<P> Modal<P> {
     pub fn new(title: String, discriminator: P) -> Self {
         Self {
             discriminator,
             state: ModalState::default(),
             title,
             callback: None,
-            phantom: PhantomData,
         }
     }
 
-    pub fn initialise(&mut self, message: String, cb: Arc<Mutex<dyn Callback>>) {
-        self.callback = Some(cb);
+    pub fn initialise(&mut self, message: String, cb: Option<Arc<Mutex<dyn Callback>>>) {
+        self.callback = cb;
         self.state = ModalState::Open(message)
     }
 
@@ -56,8 +54,12 @@ impl<T, P> ConfirmationModal<T, P> {
     }
 }
 
-impl<T, P> ConfirmationModal<T, P> {
-    pub async fn update(&mut self, message: Key) -> Result<MessageResponse> {
+#[async_trait::async_trait]
+impl<P> ModalComponent for Modal<P>
+where
+    P: Debug + Send,
+{
+    async fn update(&mut self, message: Key) -> Result<MessageResponse> {
         match message {
             Key::Esc | Key::Char('n') | Key::Char('N') => {
                 self.reset();
@@ -77,7 +79,7 @@ impl<T, P> ConfirmationModal<T, P> {
     }
 }
 
-impl<P> Component for ConfirmationModal<bool, P>
+impl<P> Component for Modal<P>
 where
     P: std::fmt::Debug,
 {
@@ -108,7 +110,7 @@ where
             })
             .collect_vec();
 
-        let modal = Modal::new(title, message, spans);
+        let modal = ModalWidget::new(title, message, spans);
 
         f.render_widget(modal, area);
     }

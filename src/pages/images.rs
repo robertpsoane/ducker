@@ -16,16 +16,16 @@ use std::{
 use crate::{
     callbacks::delete_image::DeleteImage,
     components::{
-        confirmation_modal::{ConfirmationModal, ModalState},
         help::PageHelp,
+        modal::{Modal, ModalState},
     },
     context::AppContext,
     docker::image::DockerImage,
     events::{
-        message::{self, MessageResponse},
+        message::{MessageResponse},
         Key,
     },
-    traits::{Component, Page},
+    traits::{Component, ModalComponent, Page},
 };
 
 const NAME: &str = "Images";
@@ -55,7 +55,7 @@ pub struct Images {
     docker: Docker,
     images: Vec<DockerImage>,
     list_state: TableState,
-    modal: Option<ConfirmationModal<bool, ModalTypes>>,
+    modal: Option<Modal<ModalTypes>>,
 }
 
 #[async_trait::async_trait]
@@ -219,17 +219,14 @@ impl Images {
                 force,
             )));
 
-            let mut modal = ConfirmationModal::<bool, ModalTypes>::new(
-                "Delete".into(),
-                ModalTypes::DeleteImage,
-            );
+            let mut modal = Modal::<ModalTypes>::new("Delete".into(), ModalTypes::DeleteImage);
 
             modal.initialise(
                 match message_override {
                     Some(m) => m,
                     None => format!("Are you sure you wish to delete container {name}:{tag})?"),
                 },
-                cb,
+                Some(cb),
             );
             self.modal = Some(modal);
         } else {

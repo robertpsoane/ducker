@@ -8,20 +8,19 @@ use ratatui::{
     widgets::{Row, Table, TableState},
     Frame,
 };
-use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::Sender;
 
 use crate::{
     callbacks::DeleteContainer,
     components::{
-        confirmation_modal::{ConfirmationModal, ModalState},
         help::PageHelp,
+        modal::{Modal, ModalState},
     },
     context::AppContext,
     docker::container::DockerContainer,
     events::{message::MessageResponse, Key, Message, Transition},
-    traits::{Component, Page},
+    traits::{Component, ModalComponent, Page},
 };
 
 const NAME: &str = "Containers";
@@ -53,7 +52,7 @@ pub struct Containers {
     docker: Docker,
     containers: Vec<DockerContainer>,
     list_state: TableState,
-    modal: Option<ConfirmationModal<bool, ModalTypes>>,
+    modal: Option<Modal<ModalTypes>>,
 }
 
 #[async_trait::async_trait]
@@ -270,11 +269,8 @@ impl Containers {
                 container.running,
             )));
 
-            let mut modal = ConfirmationModal::<bool, ModalTypes>::new(
-                "Delete".into(),
-                ModalTypes::DeleteContainer,
-            );
-            modal.initialise(message, cb);
+            let mut modal = Modal::<ModalTypes>::new("Delete".into(), ModalTypes::DeleteContainer);
+            modal.initialise(message, Some(cb));
             self.modal = Some(modal);
         } else {
             bail!("Ahhh")
