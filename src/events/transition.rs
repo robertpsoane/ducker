@@ -1,4 +1,4 @@
-use crate::docker::container::DockerContainer;
+use crate::{context::AppContext, docker::container::DockerContainer};
 
 /// A transition is a type of event that flows "in reverse" when compared
 /// with input events.  A transition can be emitted from a component
@@ -9,8 +9,8 @@ pub enum Transition {
     Quit,
     ToNewTerminal,
     ToViewMode,
-    ToImagePage,
-    ToContainerPage,
-    ToLogPage(DockerContainer),
-    ToAttach(DockerContainer),
+    ToImagePage(AppContext),
+    ToContainerPage(AppContext),
+    ToLogPage(AppContext),
+    ToAttach(AppContext),
 }

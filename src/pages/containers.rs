@@ -17,6 +17,7 @@ use crate::{
         confirmation_modal::{ConfirmationModal, ModalState},
         help::PageHelp,
     },
+    context::AppContext,
     docker::container::{self, DockerContainer},
     events::{message::MessageResponse, Key, Message, Transition},
     state::CurrentPage,
@@ -103,16 +104,20 @@ impl Page for Containers {
             A_KEY => {
                 let container = self.get_container()?;
                 self.tx
-                    .send(Message::Transition(Transition::ToAttach(container.clone())))
+                    .send(Message::Transition(Transition::ToAttach(AppContext {
+                        docker_container: Some(container.clone()),
+                        ..Default::default()
+                    })))
                     .await?;
                 MessageResponse::Consumed
             }
             L_KEY => {
                 let container = self.get_container()?;
                 self.tx
-                    .send(Message::Transition(Transition::ToLogPage(
-                        container.clone(),
-                    )))
+                    .send(Message::Transition(Transition::ToLogPage(AppContext {
+                        docker_container: Some(container.clone()),
+                        ..Default::default()
+                    })))
                     .await?;
                 MessageResponse::Consumed
             }
@@ -130,7 +135,7 @@ impl Page for Containers {
         Ok(())
     }
 
-    async fn set_visible(&mut self, _: CurrentPage) -> Result<()> {
+    async fn set_visible(&mut self, _: AppContext) -> Result<()> {
         self.visible = true;
         self.initialise()
             .await

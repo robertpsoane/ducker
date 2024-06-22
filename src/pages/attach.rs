@@ -21,6 +21,7 @@ use color_eyre::eyre::{bail, Ok, Result};
 use ratatui::{layout::Rect, Frame};
 use tokio::sync::mpsc::Sender;
 
+use crate::context::AppContext;
 use crate::terminal;
 use crate::{
     components::help::PageHelp,
@@ -76,7 +77,9 @@ impl Page for Attach {
             disable_raw_mode()?;
             container.attach("/bin/bash").await?;
             self.tx
-                .send(Message::Transition(Transition::ToContainerPage))
+                .send(Message::Transition(Transition::ToContainerPage(
+                    AppContext::default(),
+                )))
                 .await?;
             self.tx
                 .send(Message::Transition(Transition::ToNewTerminal))
@@ -85,10 +88,11 @@ impl Page for Attach {
         Ok(())
     }
 
-    async fn set_visible(&mut self, initial_state: CurrentPage) -> Result<()> {
-        match initial_state {
-            CurrentPage::Attach(container) => self.container = Some(container),
-            _ => bail!("Incorrect state passed to logs page"),
+    async fn set_visible(&mut self, cx: AppContext) -> Result<()> {
+        if let Some(container) = cx.docker_container {
+            self.container = Some(container)
+        } else {
+            bail!("no docker container")
         }
         self.initialise().await?;
         Ok(())

@@ -79,10 +79,6 @@ impl App {
         }
 
         match message {
-            Key::Char('q') | Key::Char('Q') => {
-                self.running = state::Running::Done;
-                Ok(MessageResponse::Consumed)
-            }
             Key::Char(':') => {
                 self.set_mode(state::Mode::TextInput);
                 Ok(MessageResponse::Consumed)

@@ -10,6 +10,7 @@ use color_eyre::eyre::{bail, Ok, Result};
 use ratatui::{layout::Rect, Frame};
 use tokio::sync::mpsc::Sender;
 
+use crate::context::AppContext;
 use crate::{
     components::help::PageHelp,
     docker::{container::DockerContainer, logs::DockerLogs},
@@ -115,7 +116,9 @@ impl Page for Logs {
         let res = match message {
             Key::Esc => {
                 self.tx
-                    .send(Message::Transition(Transition::ToContainerPage))
+                    .send(Message::Transition(Transition::ToContainerPage(
+                        AppContext::default(),
+                    )))
                     .await?;
                 MessageResponse::Consumed
             }
@@ -164,10 +167,11 @@ impl Page for Logs {
         Ok(())
     }
 
-    async fn set_visible(&mut self, initial_state: CurrentPage) -> Result<()> {
-        match initial_state {
-            CurrentPage::Logs(container) => self.logs = Some(DockerLogs::from(container)),
-            _ => bail!("Incorrect state passed to logs page"),
+    async fn set_visible(&mut self, cx: AppContext) -> Result<()> {
+        if let Some(container) = cx.docker_container {
+            self.logs = Some(DockerLogs::from(container));
+        } else {
+            bail!("no docker container")
         }
         self.initialise().await?;
         Ok(())

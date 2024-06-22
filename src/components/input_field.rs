@@ -12,6 +12,7 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{
     autocomplete::Autocomplete,
+    context::AppContext,
     events::{message::MessageResponse, Key, Message, Transition},
     traits::Component,
     util::send_transition,
@@ -77,8 +78,8 @@ impl InputField {
     async fn submit(&mut self) -> Result<()> {
         let transition = match &*self.input {
             Q | QUIT => Some(Transition::Quit),
-            IMAGE | IMAGES => Some(Transition::ToImagePage),
-            CONTAINER | CONTAINERS => Some(Transition::ToContainerPage),
+            IMAGE | IMAGES => Some(Transition::ToImagePage(AppContext::default())),
+            CONTAINER | CONTAINERS => Some(Transition::ToContainerPage(AppContext::default())),
             _ => None,
         };
 

@@ -9,6 +9,7 @@ use ratatui::{
 use tokio::sync::mpsc::Sender;
 
 use crate::{
+    context::AppContext,
     events::{message::MessageResponse, Key, Message, Transition},
     pages::{
         attach::Attach,
@@ -79,29 +80,29 @@ impl PageManager {
         self.get_current_page()
             .lock()
             .unwrap()
-            .set_visible(self.current_page.clone())
+            .set_visible(AppContext::default())
             .await?;
         Ok(())
     }
 
     pub async fn transition(&mut self, transition: Transition) -> Result<MessageResponse> {
         let result = match transition {
-            Transition::ToImagePage => {
-                self.set_current_page(state::CurrentPage::Images).await?;
-                MessageResponse::Consumed
-            }
-            Transition::ToContainerPage => {
-                self.set_current_page(state::CurrentPage::Containers)
+            Transition::ToImagePage(cx) => {
+                self.set_current_page(state::CurrentPage::Images, cx)
                     .await?;
                 MessageResponse::Consumed
             }
-            Transition::ToLogPage(container) => {
-                self.set_current_page(state::CurrentPage::Logs(container))
+            Transition::ToContainerPage(cx) => {
+                self.set_current_page(state::CurrentPage::Containers, cx)
                     .await?;
                 MessageResponse::Consumed
             }
-            Transition::ToAttach(container) => {
-                self.set_current_page(state::CurrentPage::Attach(container))
+            Transition::ToLogPage(cx) => {
+                self.set_current_page(state::CurrentPage::Logs, cx).await?;
+                MessageResponse::Consumed
+            }
+            Transition::ToAttach(cx) => {
+                self.set_current_page(state::CurrentPage::Attach, cx)
                     .await?;
                 MessageResponse::Consumed
             }
@@ -118,7 +119,11 @@ impl PageManager {
             .await
     }
 
-    async fn set_current_page(&mut self, next_page: state::CurrentPage) -> Result<()> {
+    async fn set_current_page(
+        &mut self,
+        next_page: state::CurrentPage,
+        cx: AppContext,
+    ) -> Result<()> {
         if next_page == self.current_page {
             return Ok(());
         }
@@ -134,7 +139,7 @@ impl PageManager {
         self.get_current_page()
             .lock()
             .unwrap()
-            .set_visible(next_page)
+            .set_visible(cx)
             .await
             .context("unable to open new page")?;
 
@@ -145,8 +150,8 @@ impl PageManager {
         match self.current_page {
             state::CurrentPage::Containers => self.containers.clone(),
             state::CurrentPage::Images => self.images.clone(),
-            state::CurrentPage::Logs(_) => self.logs.clone(),
-            state::CurrentPage::Attach(_) => self.attach.clone(),
+            state::CurrentPage::Logs => self.logs.clone(),
+            state::CurrentPage::Attach => self.attach.clone(),
         }
     }
 

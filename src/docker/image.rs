@@ -8,7 +8,7 @@ use std::time::{Duration, UNIX_EPOCH};
 
 use bollard::{image::ListImagesOptions, secret::ImageSummary};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct DockerImage {
     pub id: String,
     pub name: String,

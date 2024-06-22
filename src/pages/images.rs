@@ -19,6 +19,7 @@ use crate::{
         confirmation_modal::{ConfirmationModal, ModalState},
         help::PageHelp,
     },
+    context::AppContext,
     docker::image::DockerImage,
     events::{message::MessageResponse, Key},
     state::CurrentPage,
@@ -93,7 +94,7 @@ impl Page for Images {
         Ok(())
     }
 
-    async fn set_visible(&mut self, _: CurrentPage) -> Result<()> {
+    async fn set_visible(&mut self, _: AppContext) -> Result<()> {
         self.visible = true;
         self.initialise()
             .await
