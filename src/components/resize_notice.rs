@@ -1,12 +1,14 @@
+use color_eyre::owo_colors::OwoColorize;
 use ratatui::{
-    layout::{Constraint, Layout},
+    layout::{self, Constraint, Layout},
     style::Style,
     text::{Line, Span, Text},
+    widgets::{block::Title, Block},
 };
 
 use crate::traits::Component;
 
-const MIN_ROWS: u16 = 24;
+const MIN_ROWS: u16 = 20;
 const MIN_COLS: u16 = 80;
 
 #[derive(Debug)]
@@ -26,6 +28,20 @@ impl Default for ResizeScreen {
 
 impl Component for ResizeScreen {
     fn draw(&mut self, f: &mut ratatui::Frame<'_>, area: ratatui::prelude::Rect) {
+        let [_, area, _] = Layout::horizontal(vec![
+            Constraint::Min(0),
+            Constraint::Max(40),
+            Constraint::Min(0),
+        ])
+        .areas(area);
+
+        let [_, area, _] = Layout::vertical(vec![
+            Constraint::Min(0),
+            Constraint::Max(9),
+            Constraint::Min(0),
+        ])
+        .areas(area);
+
         let size = f.size();
 
         let height = size.height;
@@ -51,7 +67,7 @@ impl Component for ResizeScreen {
             Line::from(vec![
                 Span::from("Width = "),
                 width_span,
-                Span::from(format!(",")),
+                Span::from(format!(", ")),
                 Span::from("Height = "),
                 height_span,
             ]),
@@ -59,20 +75,26 @@ impl Component for ResizeScreen {
             Line::from("Required dimensions:"),
             Line::from(vec![
                 Span::from(format!("Width = {}", self.min_width)),
-                Span::from(format!(",")),
+                Span::from(format!(", ")),
                 Span::from(format!("Height = {}", self.min_height)),
             ]),
         ];
 
-        let [_, area, _] = Layout::vertical(vec![
+        let info = Text::from(messages).alignment(ratatui::layout::Alignment::Center);
+
+        let block = Block::bordered()
+            .title(Title::from("< Terminal Too Small >").alignment(layout::Alignment::Center))
+            .border_style(Style::default().fg(ratatui::style::Color::Magenta));
+
+        let [_, inner_area, _] = Layout::vertical(vec![
             Constraint::Min(0),
             Constraint::Max(5),
             Constraint::Min(0),
         ])
         .areas(area);
 
-        let info = Text::from(messages).alignment(ratatui::layout::Alignment::Center);
+        f.render_widget(block, area);
 
-        f.render_widget(info, area)
+        f.render_widget(info, inner_area)
     }
 }

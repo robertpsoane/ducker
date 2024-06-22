@@ -6,18 +6,23 @@ use color_eyre::eyre::Result;
 pub struct DeleteImage {
     docker: bollard::Docker,
     image: DockerImage,
+    force: bool,
 }
 
 impl DeleteImage {
-    pub fn new(docker: bollard::Docker, image: DockerImage) -> Self {
-        Self { docker, image }
+    pub fn new(docker: bollard::Docker, image: DockerImage, force: bool) -> Self {
+        Self {
+            docker,
+            image,
+            force,
+        }
     }
 }
 
 #[async_trait]
 impl Callback for DeleteImage {
     async fn call(&self) -> Result<()> {
-        let _ = self.image.delete(&self.docker).await?;
+        let _ = self.image.delete(&self.docker, self.force).await?;
         Ok(())
     }
 }

@@ -1,3 +1,4 @@
+use bollard::image::RemoveImageOptions;
 use byte_unit::{Byte, UnitType};
 use chrono::prelude::DateTime;
 use chrono::Local;
@@ -60,9 +61,16 @@ impl DockerImage {
         Ok(images)
     }
 
-    pub async fn delete(&self, docker: &bollard::Docker) -> Result<()> {
+    pub async fn delete(&self, docker: &bollard::Docker, force: bool) -> Result<()> {
         docker
-            .remove_image(&self.get_full_name(), None, None)
+            .remove_image(
+                &self.get_full_name(),
+                Some(RemoveImageOptions {
+                    force: force,
+                    ..Default::default()
+                }),
+                None,
+            )
             .await?;
         Ok(())
     }

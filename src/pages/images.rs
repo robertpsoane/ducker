@@ -1,5 +1,5 @@
 use bollard::Docker;
-use color_eyre::eyre::{bail, Context, Result};
+use color_eyre::eyre::{bail, Context, ContextCompat, Result};
 use futures::lock::Mutex as FutureMutex;
 use ratatui::{
     layout::Rect,
@@ -21,7 +21,10 @@ use crate::{
     },
     context::AppContext,
     docker::image::DockerImage,
-    events::{message::MessageResponse, Key},
+    events::{
+        message::{self, MessageResponse},
+        Key,
+    },
     traits::{Component, Page},
 };
 
@@ -64,11 +67,7 @@ impl Page for Images {
 
         self.refresh().await?;
 
-        if let Some(m) = self.modal.as_mut() {
-            if let ModalState::Open(_) = m.state {
-                return m.update(message).await;
-            }
-        }
+        self.update_modal(message).await?;
 
         let result = match message {
             UP_KEY | K_KEY => {
@@ -79,7 +78,7 @@ impl Page for Images {
                 self.increment_list();
                 MessageResponse::Consumed
             }
-            CTRL_D_KEY => match self.delete_image() {
+            CTRL_D_KEY => match self.delete_image(false, None) {
                 Ok(_) => MessageResponse::Consumed,
                 Err(_) => MessageResponse::NotConsumed,
             },
@@ -146,6 +145,36 @@ impl Images {
         Ok(())
     }
 
+    async fn update_modal(&mut self, message: Key) -> Result<MessageResponse> {
+        // Due to the fact only 1 thing should be operating at a time, we can do this to reduce unnecessary nesting
+        if !self.modal.is_some() {
+            return Ok(MessageResponse::NotConsumed);
+        }
+        let m = self.modal.as_mut().context(
+            "a modal magically vanished between the check that it exists and the operation on it",
+        )?;
+
+        if let ModalState::Open(_) = m.state {
+            match m.update(message).await {
+                Ok(_) => {
+                    if let ModalState::Closed = m.state {
+                        self.modal = None
+                    }
+                }
+                Err(e) => {
+                    if let ModalTypes::DeleteImage = m.discriminator {
+                        self.delete_image(true, Some(format!("An error occurred deleting this image; would you like to try to force remove?")))?
+                    } else {
+                        todo!("generic error occurred modal")
+                    }
+                }
+            }
+            Ok(MessageResponse::Consumed)
+        } else {
+            Ok(MessageResponse::NotConsumed)
+        }
+    }
+
     fn increment_list(&mut self) {
         let current_idx = self.list_state.selected();
         match current_idx {
@@ -179,7 +208,7 @@ impl Images {
         bail!("no container id found");
     }
 
-    fn delete_image(&mut self) -> Result<()> {
+    fn delete_image(&mut self, force: bool, message_override: Option<String>) -> Result<()> {
         if let Ok(image) = self.get_image() {
             let name = image.name.clone();
             let tag = image.tag.clone();
@@ -187,6 +216,7 @@ impl Images {
             let cb = Arc::new(FutureMutex::new(DeleteImage::new(
                 self.docker.clone(),
                 image.clone(),
+                force,
             )));
 
             let mut modal = ConfirmationModal::<bool, ModalTypes>::new(
@@ -195,7 +225,10 @@ impl Images {
             );
 
             modal.initialise(
-                format!("Are you sure you wish to delete container {name}:{tag})?"),
+                match message_override {
+                    Some(m) => m,
+                    None => format!("Are you sure you wish to delete container {name}:{tag})?"),
+                },
                 cb,
             );
             self.modal = Some(modal);
