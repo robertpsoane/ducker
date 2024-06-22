@@ -5,6 +5,9 @@
 - New Image
 - Tag Image
 
+# Logs
+- Choose log time range
+
 # In Depth View
 - Ability to see description of a resource in depth
 

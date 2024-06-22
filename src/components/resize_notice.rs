@@ -1,4 +1,3 @@
-use color_eyre::owo_colors::OwoColorize;
 use ratatui::{
     layout::{self, Constraint, Layout},
     style::Style,
@@ -67,7 +66,7 @@ impl Component for ResizeScreen {
             Line::from(vec![
                 Span::from("Width = "),
                 width_span,
-                Span::from(format!(", ")),
+                Span::from(", ".to_string()),
                 Span::from("Height = "),
                 height_span,
             ]),
@@ -75,7 +74,7 @@ impl Component for ResizeScreen {
             Line::from("Required dimensions:"),
             Line::from(vec![
                 Span::from(format!("Width = {}", self.min_width)),
-                Span::from(format!(", ")),
+                Span::from(", ".to_string()),
                 Span::from(format!("Height = {}", self.min_height)),
             ]),
         ];

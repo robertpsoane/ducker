@@ -55,11 +55,12 @@ mod pages {
     pub mod logs;
 }
 mod components {
+    pub mod alert_modal;
+    pub mod boolean_modal;
     pub mod footer;
     pub mod header;
     pub mod help;
     pub mod input_field;
-    pub mod modal;
     pub mod resize_notice;
 }
 pub mod terminal;
@@ -94,7 +95,7 @@ async fn main() -> color_eyre::Result<()> {
             .context("unable to receive next event")?
         {
             Message::Input(k) => {
-                let res = app.update(k).await.context("failed to update")?;
+                let res = app.update(k).await;
                 if !res.is_consumed() {
                     // If in system quit events
                     if k == Key::Ctrl('c') || k == Key::Ctrl('d') {
@@ -106,15 +107,12 @@ async fn main() -> color_eyre::Result<()> {
                 if t == events::Transition::ToNewTerminal {
                     terminal = terminal::init().context("failed to initialise terminal")?;
                 } else {
-                    let _ = &app
-                        .transition(t)
-                        .await
-                        .context("unable to execute transition")?;
+                    let _ = &app.transition(t).await;
                 }
             }
 
             Message::Tick => {
-                app.update(Key::Null).await.context("failed to update")?;
+                app.update(Key::Null).await;
             }
         }
     }

@@ -66,7 +66,7 @@ impl DockerImage {
             .remove_image(
                 &self.get_full_name(),
                 Some(RemoveImageOptions {
-                    force: force,
+                    force,
                     ..Default::default()
                 }),
                 None,

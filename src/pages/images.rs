@@ -16,15 +16,12 @@ use std::{
 use crate::{
     callbacks::delete_image::DeleteImage,
     components::{
+        boolean_modal::{BooleanModal, ModalState},
         help::PageHelp,
-        modal::{Modal, ModalState},
     },
     context::AppContext,
     docker::image::DockerImage,
-    events::{
-        message::{MessageResponse},
-        Key,
-    },
+    events::{message::MessageResponse, Key},
     traits::{Component, ModalComponent, Page},
 };
 
@@ -55,7 +52,7 @@ pub struct Images {
     docker: Docker,
     images: Vec<DockerImage>,
     list_state: TableState,
-    modal: Option<Modal<ModalTypes>>,
+    modal: Option<BooleanModal<ModalTypes>>,
 }
 
 #[async_trait::async_trait]
@@ -67,7 +64,10 @@ impl Page for Images {
 
         self.refresh().await?;
 
-        self.update_modal(message).await?;
+        let res = self.update_modal(message).await?;
+        if res == MessageResponse::Consumed {
+            return Ok(res);
+        }
 
         let result = match message {
             UP_KEY | K_KEY => {
@@ -78,7 +78,7 @@ impl Page for Images {
                 self.increment_list();
                 MessageResponse::Consumed
             }
-            CTRL_D_KEY => match self.delete_image(false, None) {
+            CTRL_D_KEY => match self.delete_image(false, None, None) {
                 Ok(_) => MessageResponse::Consumed,
                 Err(_) => MessageResponse::NotConsumed,
             },
@@ -147,7 +147,7 @@ impl Images {
 
     async fn update_modal(&mut self, message: Key) -> Result<MessageResponse> {
         // Due to the fact only 1 thing should be operating at a time, we can do this to reduce unnecessary nesting
-        if !self.modal.is_some() {
+        if self.modal.is_none() {
             return Ok(MessageResponse::NotConsumed);
         }
         let m = self.modal.as_mut().context(
@@ -163,9 +163,14 @@ impl Images {
                 }
                 Err(e) => {
                     if let ModalTypes::DeleteImage = m.discriminator {
-                        self.delete_image(true, Some(format!("An error occurred deleting this image; would you like to try to force remove?")))?
+                        let msg = "An error occurred deleting this image; would you like to try to force remove?";
+                        self.delete_image(
+                            true,
+                            Some(msg.into()),
+                            Some(ModalTypes::ForceDeleteImage),
+                        )?
                     } else {
-                        todo!("generic error occurred modal")
+                        return Err(e);
                     }
                 }
             }
@@ -208,7 +213,12 @@ impl Images {
         bail!("no container id found");
     }
 
-    fn delete_image(&mut self, force: bool, message_override: Option<String>) -> Result<()> {
+    fn delete_image(
+        &mut self,
+        force: bool,
+        message_override: Option<String>,
+        type_override: Option<ModalTypes>,
+    ) -> Result<()> {
         if let Ok(image) = self.get_image() {
             let name = image.name.clone();
             let tag = image.tag.clone();
@@ -219,7 +229,13 @@ impl Images {
                 force,
             )));
 
-            let mut modal = Modal::<ModalTypes>::new("Delete".into(), ModalTypes::DeleteImage);
+            let mut modal = BooleanModal::<ModalTypes>::new(
+                "Delete".into(),
+                match type_override {
+                    Some(t) => t,
+                    None => ModalTypes::DeleteImage,
+                },
+            );
 
             modal.initialise(
                 match message_override {

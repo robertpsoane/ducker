@@ -1,4 +1,4 @@
-use color_eyre::eyre::{Context, Ok, Result};
+use color_eyre::eyre::{Context, Result};
 use ratatui::{
     layout::{Constraint, Layout, Rect},
     Frame,
@@ -7,13 +7,22 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{
     components::{
-        footer::Footer, header::Header, input_field::InputField, resize_notice::ResizeScreen,
+        alert_modal::{AlertModal, ModalState},
+        footer::Footer,
+        header::Header,
+        input_field::InputField,
+        resize_notice::ResizeScreen,
     },
     events::{key::Key, message::MessageResponse, Message, Transition},
     state::{self, Running},
-    traits::Component,
+    traits::{Component, ModalComponent},
     ui::page_manager::PageManager,
 };
+
+#[derive(Debug)]
+enum ModalType {
+    AlertModal,
+}
 
 #[derive(Debug)]
 pub struct App {
@@ -25,6 +34,7 @@ pub struct App {
     page_manager: PageManager,
     footer: Footer,
     input_field: InputField,
+    modal: Option<AlertModal<ModalType>>,
 }
 
 impl App {
@@ -44,19 +54,48 @@ impl App {
             page_manager: body,
             footer: Footer::default(),
             input_field: InputField::new(tx),
+            modal: None,
         };
         Ok(app)
     }
 
-    pub async fn update(&mut self, message: Key) -> Result<MessageResponse> {
-        match self.mode {
+    pub async fn update(&mut self, message: Key) -> MessageResponse {
+        // Explicitly here and in transition, if there is an error modal, we don't
+        // want to allow any event get into the application until the modal is
+        // closed.
+        // This should be a catch all for any application errors
+        // TODO - add more specific modal calls at error-likely points
+        if let Some(m) = self.modal.as_mut() {
+            if let ModalState::Open(_) = m.state {
+                let res = match m.update(message).await {
+                    Ok(r) => r,
+                    Err(e) => panic!("failed to process failure modal; {e}"),
+                };
+                if let ModalState::Closed = m.state {
+                    self.modal = None;
+                }
+                return res;
+            }
+        }
+
+        let res = match self.mode {
             state::Mode::View => self.update_view_mode(message).await,
             state::Mode::TextInput => self.update_text_mode(message).await,
-        }
+        };
+
+        res.unwrap_or_else(|e| {
+            self.handle_error("Error".into(), format!("{e}"));
+            MessageResponse::NotConsumed
+        })
     }
 
-    pub async fn transition(&mut self, transition: Transition) -> Result<MessageResponse> {
-        let result = match transition {
+    pub async fn transition(&mut self, transition: Transition) -> MessageResponse {
+        if let Some(m) = self.modal.as_mut() {
+            if let ModalState::Open(_) = m.state {
+                return MessageResponse::NotConsumed;
+            }
+        }
+        match transition {
             Transition::Quit => {
                 self.running = state::Running::Done;
                 MessageResponse::Consumed
@@ -69,9 +108,11 @@ impl App {
                 .page_manager
                 .transition(transition)
                 .await
-                .context("page manager failed to transition")?,
-        };
-        Ok(result)
+                .unwrap_or_else(|e| {
+                    self.handle_error("Error".into(), format!("{e}"));
+                    MessageResponse::NotConsumed
+                }),
+        }
     }
 
     async fn update_view_mode(&mut self, message: Key) -> Result<MessageResponse> {
@@ -114,6 +155,12 @@ impl App {
             state::Mode::TextInput => self.input_field.initialise(),
             state::Mode::View => {}
         }
+    }
+
+    fn handle_error(&mut self, title: String, msg: String) {
+        let mut modal = AlertModal::new(title, ModalType::AlertModal);
+        modal.initialise(msg);
+        self.modal = Some(modal)
     }
 
     pub fn draw(&mut self, f: &mut Frame<'_>) {
@@ -165,6 +212,12 @@ impl App {
         self.title.draw(f, title);
         self.page_manager.draw(f, page);
         self.page_manager.draw_help(f, right_space);
-        self.footer.draw(f, footer)
+        self.footer.draw(f, footer);
+
+        if let Some(m) = self.modal.as_mut() {
+            if let ModalState::Open(_) = m.state {
+                m.draw(f, area)
+            }
+        }
     }
 }

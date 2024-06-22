@@ -26,14 +26,14 @@ pub enum ModalState {
 }
 
 #[derive(Default, Debug)]
-pub struct Modal<P> {
+pub struct BooleanModal<P> {
     pub discriminator: P,
     pub state: ModalState,
     title: String,
     callback: Option<Arc<Mutex<dyn Callback>>>,
 }
 
-impl<P> Modal<P> {
+impl<P> BooleanModal<P> {
     pub fn new(title: String, discriminator: P) -> Self {
         Self {
             discriminator,
@@ -55,7 +55,7 @@ impl<P> Modal<P> {
 }
 
 #[async_trait::async_trait]
-impl<P> ModalComponent for Modal<P>
+impl<P> ModalComponent for BooleanModal<P>
 where
     P: Debug + Send,
 {
@@ -79,7 +79,7 @@ where
     }
 }
 
-impl<P> Component for Modal<P>
+impl<P> Component for BooleanModal<P>
 where
     P: std::fmt::Debug,
 {

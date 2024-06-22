@@ -1,7 +1,6 @@
 use bollard::container::LogsOptions;
 use futures::{Stream, StreamExt};
 
-
 use super::container::DockerContainer;
 
 #[derive(Debug, Clone)]

@@ -14,8 +14,8 @@ use tokio::sync::mpsc::Sender;
 use crate::{
     callbacks::DeleteContainer,
     components::{
+        boolean_modal::{BooleanModal, ModalState},
         help::PageHelp,
-        modal::{Modal, ModalState},
     },
     context::AppContext,
     docker::container::DockerContainer,
@@ -52,7 +52,7 @@ pub struct Containers {
     docker: Docker,
     containers: Vec<DockerContainer>,
     list_state: TableState,
-    modal: Option<Modal<ModalTypes>>,
+    modal: Option<BooleanModal<ModalTypes>>,
 }
 
 #[async_trait::async_trait]
@@ -66,7 +66,11 @@ impl Page for Containers {
         // result is Consumed, we exit early with the Consumed result
         if let Some(m) = self.modal.as_mut() {
             if let ModalState::Open(_) = m.state {
-                return m.update(message).await;
+                let res = m.update(message).await;
+                if let ModalState::Closed = m.state {
+                    self.modal = None;
+                }
+                return res;
             }
         }
 
@@ -269,7 +273,8 @@ impl Containers {
                 container.running,
             )));
 
-            let mut modal = Modal::<ModalTypes>::new("Delete".into(), ModalTypes::DeleteContainer);
+            let mut modal =
+                BooleanModal::<ModalTypes>::new("Delete".into(), ModalTypes::DeleteContainer);
             modal.initialise(message, Some(cb));
             self.modal = Some(modal);
         } else {
