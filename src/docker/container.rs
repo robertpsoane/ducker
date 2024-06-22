@@ -1,4 +1,6 @@
-use bollard::container::{ListContainersOptions, LogsOptions, RemoveContainerOptions};
+use bollard::container::{
+    AttachContainerOptions, ListContainersOptions, LogsOptions, RemoveContainerOptions,
+};
 use chrono::prelude::DateTime;
 use chrono::Local;
 use color_eyre::eyre::{Context, Result};
@@ -110,16 +112,18 @@ impl DockerContainer {
     }
 
     pub async fn attach(&self, cmd: &str) -> Result<()> {
-        terminal::restore()?;
+        Command::new("clear").spawn()?.wait().await?;
 
         Command::new("docker")
             .arg("exec")
             .arg("-it")
             .arg(&self.names)
             .arg(cmd)
-            .status()
+            .spawn()?
+            .wait()
             .await?;
-        terminal::init()?;
+
+        Command::new("clear").spawn()?.wait().await?;
         Ok(())
     }
 }

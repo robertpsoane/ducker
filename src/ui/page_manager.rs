@@ -54,7 +54,7 @@ impl PageManager {
         ));
 
         let attach = Arc::new(Mutex::new(
-            Attach::new(docker, tx.clone())
+            Attach::new(tx.clone())
                 .await
                 .context("unable to create containers page")?,
         ));

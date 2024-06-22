@@ -4,6 +4,7 @@ use events::{EventLoop, Key, Message};
 use ui::App;
 
 mod autocomplete;
+mod context;
 mod state;
 mod util;
 mod ui {
@@ -97,10 +98,14 @@ async fn main() -> color_eyre::Result<()> {
                 }
             }
             Message::Transition(t) => {
-                let _ = &app
-                    .transition(t)
-                    .await
-                    .context("unable to execute transition")?;
+                if t == events::Transition::ToNewTerminal {
+                    terminal = terminal::init().context("failed to initialise terminal")?;
+                } else {
+                    let _ = &app
+                        .transition(t)
+                        .await
+                        .context("unable to execute transition")?;
+                }
             }
 
             Message::Tick => {

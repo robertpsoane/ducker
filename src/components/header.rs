@@ -1,6 +1,7 @@
 use ratatui::{
-    layout::{self, Rect},
+    layout::{self, Constraint, Layout, Rect},
     style::{Color, Style},
+    text::Text,
     Frame,
 };
 use tui_big_text::{BigText, PixelSize};
@@ -23,6 +24,6 @@ impl Component for Header {
             _ => panic!("Ahhhh!"),
         };
 
-        f.render_widget(big_text, area)
+        f.render_widget(big_text, area);
     }
 }

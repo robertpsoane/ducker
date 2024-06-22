@@ -37,7 +37,7 @@ impl InputField {
     pub fn new(tx: Sender<Message<Key, Transition>>) -> Self {
         Self {
             input: String::new(),
-            prompt: '>',
+            prompt: '🦆',
             tx,
             candidate: None,
             ac: Autocomplete::from(vec![QUIT, Q, IMAGE, IMAGES, CONTAINER, CONTAINERS]),

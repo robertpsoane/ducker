@@ -151,7 +151,7 @@ impl Page for Containers {
 impl Containers {
     pub async fn new(docker: Docker, tx: Sender<Message<Key, Transition>>) -> Result<Self> {
         let page_help = PageHelp::new(NAME.into())
-            .add_input(format!("{}", A_KEY), "attach".into())
+            .add_input(format!("{}", A_KEY), "exec".into())
             .add_input(format!("{CTRL_D_KEY}"), "delete".into())
             .add_input(format!("{R_KEY}"), "run".into())
             .add_input(format!("{S_KEY}"), "stop".into())
@@ -251,12 +251,6 @@ impl Containers {
         } else {
             bail!("Ahhh")
         }
-        Ok(())
-    }
-
-    async fn attach_container(&mut self) -> Result<()> {
-        let container = self.get_container()?;
-        container.attach("/bin/bash").await?;
         Ok(())
     }
 }

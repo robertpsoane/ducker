@@ -4,8 +4,10 @@ use crate::docker::container::DockerContainer;
 /// with input events.  A transition can be emitted from a component
 /// The transition will then be handled at a higher level (eg in the app
 /// or the page manager)
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Transition {
     Quit,
+    ToNewTerminal,
     ToViewMode,
     ToImagePage,
     ToContainerPage,
