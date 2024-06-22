@@ -66,7 +66,7 @@ impl Attach {
 impl Page for Attach {
     async fn update(&mut self, message: Key) -> Result<MessageResponse> {
         let res = match message {
-            _ => MessageResponse::NotConsumed,
+            _ => MessageResponse::Consumed,
         };
 
         Ok(res)
@@ -78,7 +78,10 @@ impl Page for Attach {
             container.attach("/bin/bash").await?;
             self.tx
                 .send(Message::Transition(Transition::ToContainerPage(
-                    AppContext::default(),
+                    AppContext {
+                        docker_container: Some(container),
+                        ..Default::default()
+                    },
                 )))
                 .await?;
             self.tx

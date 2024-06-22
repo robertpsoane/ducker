@@ -35,6 +35,7 @@ const SPACE_BAR: Key = Key::Char(' ');
 pub struct Logs {
     docker: bollard::Docker,
     tx: Sender<Message<Key, Transition>>,
+    container: Option<DockerContainer>,
     logs: Option<DockerLogs>,
     page_help: Arc<Mutex<PageHelp>>,
     log_messages: Arc<Mutex<Vec<String>>>,
@@ -52,6 +53,7 @@ impl Logs {
 
         Ok(Self {
             docker,
+            container: None,
             logs: None,
             tx,
             page_help: Arc::new(Mutex::new(page_help)),
@@ -117,7 +119,10 @@ impl Page for Logs {
             Key::Esc => {
                 self.tx
                     .send(Message::Transition(Transition::ToContainerPage(
-                        AppContext::default(),
+                        AppContext {
+                            docker_container: self.container.clone(),
+                            ..Default::default()
+                        },
                     )))
                     .await?;
                 MessageResponse::Consumed
@@ -169,7 +174,8 @@ impl Page for Logs {
 
     async fn set_visible(&mut self, cx: AppContext) -> Result<()> {
         if let Some(container) = cx.docker_container {
-            self.logs = Some(DockerLogs::from(container));
+            self.logs = Some(DockerLogs::from(container.clone()));
+            self.container = Some(container);
         } else {
             bail!("no docker container")
         }

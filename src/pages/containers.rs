@@ -135,11 +135,25 @@ impl Page for Containers {
         Ok(())
     }
 
-    async fn set_visible(&mut self, _: AppContext) -> Result<()> {
+    async fn set_visible(&mut self, cx: AppContext) -> Result<()> {
         self.visible = true;
         self.initialise()
             .await
             .context("unable to set containers as visible")?;
+
+        // If a context has been passed in, choose that item in list
+        // this ist to allo logs, attach etc to appear to revert to previous
+        // state
+        // I'm sure there is a more sensible way of doing this...
+        if let Some(container) = cx.docker_container {
+            let container_id = container.id;
+            for (idx, c) in self.containers.iter().enumerate() {
+                if c.id == container_id {
+                    self.list_state.select(Some(idx));
+                    break;
+                }
+            }
+        }
         Ok(())
     }
 
