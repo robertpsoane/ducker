@@ -1,18 +1,30 @@
 #! /bin/bash
 
-# A convenience script for building and installing ducker
-# Pulls head of master, builds & places in /usr/local/bin
+# A convenience script for pulling, building and
+# installing ducker;
+# Relies on an installation of rust.
+# Can also be used for updates
+
+mkdir -p ~/.ducker
+
+cd ~/.ducker
+
+if [ ! -d ./.git ];
+then
+    git clone --depth 1 https://github.com/robertpsoane/ducker ~/.ducker
+fi
 
 
-
-
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-
-pushd $SCRIPT_DIR
-
+git checkout master
+git reset --hard origin/master
 git pull
+
 cargo build -r
 sudo cp target/release/ducker /usr/local/bin/ducker
 
-popd
+clear
 
+echo "🦆🦆🦆🦆🦆🦆🦆🦆🦆🦆🦆🦆"
+echo "🦆 Ducker Installed! 🦆"
+echo "🦆  Happy Quacking!  🦆"
+echo "🦆🦆🦆🦆🦆🦆🦆🦆🦆🦆🦆🦆"

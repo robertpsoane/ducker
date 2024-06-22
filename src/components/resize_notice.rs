@@ -46,18 +46,20 @@ impl Component for ResizeScreen {
         let height = size.height;
         let mut height_span = Span::from(format!("{}", size.height));
 
-        let height_style = match height >= self.min_height {
-            true => Style::default().fg(ratatui::style::Color::Green),
-            false => Style::default().fg(ratatui::style::Color::Red),
+        let height_style = if height >= self.min_height {
+            Style::default().fg(ratatui::style::Color::Green)
+        } else {
+            Style::default().fg(ratatui::style::Color::Red)
         };
         height_span = height_span.style(height_style);
 
         let width = size.width;
         let mut width_span = Span::from(format!("{}", size.width));
 
-        let width_style = match width >= self.min_width {
-            true => Style::default().fg(ratatui::style::Color::Green),
-            false => Style::default().fg(ratatui::style::Color::Red),
+        let width_style = if width >= self.min_width {
+            Style::default().fg(ratatui::style::Color::Green)
+        } else {
+            Style::default().fg(ratatui::style::Color::Red)
         };
         width_span = width_span.style(width_style);
 

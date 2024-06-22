@@ -31,7 +31,7 @@ impl PageManager {
         let docker = bollard::Docker::connect_with_socket_defaults()
             .context("unable to connect to local docker daemon")?;
 
-        let containers = Box::new(Containers::new(docker.clone(), tx.clone()).await);
+        let containers = Box::new(Containers::new(docker.clone(), tx.clone()));
 
         let mut page_manager = Self {
             current_page: page,
@@ -99,15 +99,13 @@ impl PageManager {
         self.current_page = next_page.clone();
 
         match next_page {
-            state::CurrentPage::Attach => self.page = Box::new(Attach::new(self.tx.clone()).await),
+            state::CurrentPage::Attach => self.page = Box::new(Attach::new(self.tx.clone())),
             state::CurrentPage::Containers => {
-                self.page = Box::new(Containers::new(self.docker.clone(), self.tx.clone()).await)
+                self.page = Box::new(Containers::new(self.docker.clone(), self.tx.clone()))
             }
-            state::CurrentPage::Images => {
-                self.page = Box::new(Images::new(self.docker.clone()).await)
-            }
+            state::CurrentPage::Images => self.page = Box::new(Images::new(self.docker.clone())),
             state::CurrentPage::Logs => {
-                self.page = Box::new(Logs::new(self.docker.clone(), self.tx.clone()).await)
+                self.page = Box::new(Logs::new(self.docker.clone(), self.tx.clone()))
             }
         };
 

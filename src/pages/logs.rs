@@ -40,7 +40,7 @@ pub struct Logs {
 }
 
 impl Logs {
-    pub async fn new(docker: bollard::Docker, tx: Sender<Message<Key, Transition>>) -> Self {
+    pub fn new(docker: bollard::Docker, tx: Sender<Message<Key, Transition>>) -> Self {
         let page_help = Self::build_page_help();
 
         Self {
@@ -146,7 +146,7 @@ impl Page for Logs {
     async fn initialise(&mut self) -> Result<()> {
         self.auto_scroll = true;
         if let Some(logs) = &self.logs {
-            let mut logs_stream = logs.get_log_stream(&self.docker, 50).await;
+            let mut logs_stream = logs.get_log_stream(&self.docker, 50);
             let tx = self.tx.clone();
             let log_messages = self.log_messages.clone();
             self.log_streamer_handle = Some(tokio::spawn(async move {

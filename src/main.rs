@@ -1,3 +1,4 @@
+#![warn(clippy::all, clippy::pedantic)]
 use clap::Parser;
 use color_eyre::eyre::Context;
 use events::{EventLoop, Key, Message};
@@ -77,7 +78,7 @@ async fn main() -> color_eyre::Result<()> {
     let mut terminal = terminal::init().context("failed to initialise terminal")?;
 
     let mut events = EventLoop::new();
-    let events_tx = events.get_tx().await;
+    let events_tx = events.get_tx();
     let mut app = App::new(events_tx).await.context("failed to create app")?;
 
     events.start().context("failed to start event loop")?;

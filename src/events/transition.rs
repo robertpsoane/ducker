@@ -1,4 +1,4 @@
-use crate::{context::AppContext};
+use crate::context::AppContext;
 
 /// A transition is a type of event that flows "in reverse" when compared
 /// with input events.  A transition can be emitted from a component

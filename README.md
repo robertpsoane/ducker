@@ -4,9 +4,20 @@ A terminal app for managing docker containers, inpired by [K9s](https://k9scli.i
 
 This is a work in progress; main aim is to get more to grips with rust.
 
-## Build/Run
+## Installation
 
-This is built with cargo (`cargo build`)
+There isn't currently a downloadable build; to install you will need rustc & cargo installed.
+
+Clone the repo, build with cargo (`cargo build -r`) and put the resultant binary on your path.
+
+For convenience, the `install.sh` script does just this:
+
+```bash
+curl -sS https://raw.githubusercontent.com/robertpsoane/ducker/master/install.sh | sh
+```
+
+
+## Tmux
 
 To fix in tmux:
 add to tmux.conf

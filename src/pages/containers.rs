@@ -174,7 +174,7 @@ impl Page for Containers {
 }
 
 impl Containers {
-    pub async fn new(docker: Docker, tx: Sender<Message<Key, Transition>>) -> Self {
+    pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>) -> Self {
         let page_help = PageHelp::new(NAME.into())
             .add_input(format!("{}", A_KEY), "exec".into())
             .add_input(format!("{CTRL_D_KEY}"), "delete".into())

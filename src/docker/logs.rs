@@ -17,11 +17,7 @@ impl DockerLogs {
         Self::new(container)
     }
 
-    pub async fn get_log_stream(
-        &self,
-        docker: &bollard::Docker,
-        tail: u8,
-    ) -> impl Stream<Item = String> {
+    pub fn get_log_stream(&self, docker: &bollard::Docker, tail: u8) -> impl Stream<Item = String> {
         let logstream = docker
             .logs(
                 &self.container.id,

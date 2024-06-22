@@ -26,7 +26,7 @@ pub struct Attach {
 }
 
 impl Attach {
-    pub async fn new(tx: Sender<Message<Key, Transition>>) -> Self {
+    pub fn new(tx: Sender<Message<Key, Transition>>) -> Self {
         let page_help = PageHelp::new(NAME.into()).add_input(format!("{ESC_KEY}"), "back".into());
 
         Self {

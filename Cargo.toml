@@ -1,5 +1,6 @@
 [package]
 name = "ducker"
+description = "A slightly quackers Docker TUI based on "
 version = "0.1.0"
 edition = "2021"
 
@@ -17,7 +18,11 @@ itertools = "0.13.0"
 openssl-sys = "0.9.102"
 ratatui = { version = "0.26.3", features = ["serde"] }
 serde = "1.0.203"
-tokio = { version = "1.38.0", features = ["full"] }
+tokio = { version = "1.38.0", features = [
+    "rt-multi-thread",
+    "macros",
+    "process",
+] }
 tui-big-text = "0.4.4"
 
 [profile.release]

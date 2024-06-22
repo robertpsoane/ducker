@@ -59,7 +59,7 @@ impl EventLoop {
         Ok(event)
     }
 
-    pub async fn get_tx(&self) -> Sender<Message<Key, Transition>> {
+    pub fn get_tx(&self) -> Sender<Message<Key, Transition>> {
         self.inbound_tx.clone()
     }
 

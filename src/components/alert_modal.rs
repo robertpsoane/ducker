@@ -1,5 +1,4 @@
-use std::{fmt::Debug};
-
+use std::fmt::Debug;
 
 use color_eyre::eyre::Result;
 use ratatui::{

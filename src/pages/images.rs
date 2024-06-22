@@ -115,7 +115,7 @@ impl Page for Images {
 }
 
 impl Images {
-    pub async fn new(docker: Docker) -> Self {
+    pub fn new(docker: Docker) -> Self {
         let page_help = PageHelp::new(NAME.into())
             // .add_input(format!("{}", A_KEY), "attach".into())
             .add_input(format!("{CTRL_D_KEY}"), "delete".into())
