@@ -22,7 +22,6 @@ use crate::{
     context::AppContext,
     docker::image::DockerImage,
     events::{message::MessageResponse, Key},
-    state::CurrentPage,
     traits::{Component, Page},
 };
 
@@ -33,11 +32,17 @@ const DOWN_KEY: Key = Key::Down;
 
 const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
-const D_KEY: Key = Key::Char('d');
+const CTRL_D_KEY: Key = Key::Ctrl('d');
 const R_KEY: Key = Key::Char('r');
 const S_KEY: Key = Key::Char('s');
 const G_KEY: Key = Key::Char('g');
 const SHIFT_G_KEY: Key = Key::Char('G');
+
+#[derive(Debug)]
+enum ModalTypes {
+    DeleteImage,
+    ForceDeleteImage,
+}
 
 #[derive(Debug)]
 pub struct Images {
@@ -47,7 +52,7 @@ pub struct Images {
     docker: Docker,
     images: Vec<DockerImage>,
     list_state: TableState,
-    delete_modal: ConfirmationModal<bool>,
+    modal: Option<ConfirmationModal<bool, ModalTypes>>,
 }
 
 #[async_trait::async_trait]
@@ -59,11 +64,9 @@ impl Page for Images {
 
         self.refresh().await?;
 
-        let delete_modal_state = self.delete_modal.state.clone();
-        if let ModalState::Open(_) = delete_modal_state {
-            let delete_modal_res = self.delete_modal.update(message).await?;
-            if delete_modal_res == MessageResponse::Consumed {
-                return Ok(delete_modal_res);
+        if let Some(m) = self.modal.as_mut() {
+            if let ModalState::Open(_) = m.state {
+                return m.update(message).await;
             }
         }
 
@@ -76,7 +79,7 @@ impl Page for Images {
                 self.increment_list();
                 MessageResponse::Consumed
             }
-            D_KEY => match self.delete_image() {
+            CTRL_D_KEY => match self.delete_image() {
                 Ok(_) => MessageResponse::Consumed,
                 Err(_) => MessageResponse::NotConsumed,
             },
@@ -113,24 +116,24 @@ impl Page for Images {
 }
 
 impl Images {
-    pub async fn new(docker: Docker) -> Result<Self> {
+    pub async fn new(docker: Docker) -> Self {
         let page_help = PageHelp::new(NAME.into())
             // .add_input(format!("{}", A_KEY), "attach".into())
-            .add_input(format!("{D_KEY}"), "delete".into())
+            .add_input(format!("{CTRL_D_KEY}"), "delete".into())
             .add_input(format!("{R_KEY}"), "run".into())
             .add_input(format!("{S_KEY}"), "stop".into())
             .add_input(format!("{G_KEY}"), "to-top".into())
             .add_input(format!("{SHIFT_G_KEY}"), "to-bottom".into());
 
-        Ok(Self {
+        Self {
             name: String::from(NAME),
             page_help: Arc::new(Mutex::new(page_help)),
             visible: false,
             docker,
             images: vec![],
             list_state: TableState::default(),
-            delete_modal: ConfirmationModal::<bool>::new("Delete".into()),
-        })
+            modal: None,
+        }
     }
 
     async fn refresh(&mut self) -> Result<(), color_eyre::eyre::Error> {
@@ -185,10 +188,17 @@ impl Images {
                 self.docker.clone(),
                 image.clone(),
             )));
-            self.delete_modal.initialise(
+
+            let mut modal = ConfirmationModal::<bool, ModalTypes>::new(
+                "Delete".into(),
+                ModalTypes::DeleteImage,
+            );
+
+            modal.initialise(
                 format!("Are you sure you wish to delete container {name}:{tag})?"),
                 cb,
             );
+            self.modal = Some(modal);
         } else {
             bail!("Ahhh")
         }
@@ -215,9 +225,10 @@ impl Component for Images {
 
         f.render_stateful_widget(table, area, &mut self.list_state);
 
-        match self.delete_modal.state {
-            ModalState::Open(_) => self.delete_modal.draw(f, area),
-            _ => {}
+        if let Some(m) = self.modal.as_mut() {
+            if let ModalState::Open(_) = m.state {
+                m.draw(f, area)
+            }
         }
     }
 }

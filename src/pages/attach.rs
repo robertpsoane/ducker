@@ -1,47 +1,22 @@
-use ansi_to_tui::IntoText;
-use futures::{future, stream, Stream, StreamExt};
-use futures::{lock::Mutex as FutureMutex, FutureExt};
-use ratatui::text::Text;
-use ratatui::widgets::{List, ListState};
 use std::sync::{Arc, Mutex};
 
-use crossterm::{
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    ExecutableCommand,
-};
-use ratatui::prelude::*;
-use std::{
-    io::stdout,
-    panic::{set_hook, take_hook},
-};
-
-use tokio::task::JoinHandle;
+use crossterm::terminal::disable_raw_mode;
 
 use color_eyre::eyre::{bail, Ok, Result};
 use ratatui::{layout::Rect, Frame};
 use tokio::sync::mpsc::Sender;
 
 use crate::context::AppContext;
-use crate::terminal;
 use crate::{
     components::help::PageHelp,
-    docker::{container::DockerContainer, logs::DockerLogs},
-    events::{
-        message::{self, MessageResponse},
-        Key, Message, Transition,
-    },
-    state::CurrentPage,
+    docker::container::DockerContainer,
+    events::{message::MessageResponse, Key, Message, Transition},
     traits::{Component, Page},
 };
 
 const NAME: &str = "Attach";
 
 const ESC_KEY: Key = Key::Esc;
-const J_KEY: Key = Key::Char('j');
-const UP_KEY: Key = Key::Up;
-const K_KEY: Key = Key::Char('k');
-const DOWN_KEY: Key = Key::Down;
-const SPACE_BAR: Key = Key::Char(' ');
 
 #[derive(Debug)]
 pub struct Attach {
@@ -51,23 +26,21 @@ pub struct Attach {
 }
 
 impl Attach {
-    pub async fn new(tx: Sender<Message<Key, Transition>>) -> Result<Self> {
+    pub async fn new(tx: Sender<Message<Key, Transition>>) -> Self {
         let page_help = PageHelp::new(NAME.into()).add_input(format!("{ESC_KEY}"), "back".into());
 
-        Ok(Self {
+        Self {
             container: None,
             tx,
             page_help: Arc::new(Mutex::new(page_help)),
-        })
+        }
     }
 }
 
 #[async_trait::async_trait]
 impl Page for Attach {
-    async fn update(&mut self, message: Key) -> Result<MessageResponse> {
-        let res = match message {
-            _ => MessageResponse::Consumed,
-        };
+    async fn update(&mut self, _message: Key) -> Result<MessageResponse> {
+        let res = MessageResponse::Consumed;
 
         Ok(res)
     }
@@ -111,5 +84,5 @@ impl Page for Attach {
 }
 
 impl Component for Attach {
-    fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {}
+    fn draw(&mut self, _f: &mut Frame<'_>, _area: Rect) {}
 }

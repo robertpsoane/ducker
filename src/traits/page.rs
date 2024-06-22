@@ -10,7 +10,6 @@ use crate::{
     components::help::PageHelp,
     context::AppContext,
     events::{message::MessageResponse, Key},
-    state::CurrentPage,
     traits::Component,
 };
 

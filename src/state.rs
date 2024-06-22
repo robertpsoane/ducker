@@ -1,7 +1,3 @@
-use std::default;
-
-use crate::{context::AppContext, docker::container::DockerContainer};
-
 // TODO: Merge mode and running to State { View, TextInput, Finishing ... }
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub enum Mode {

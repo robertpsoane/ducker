@@ -1,6 +1,5 @@
 use ansi_to_tui::IntoText;
-use futures::{future, stream, Stream, StreamExt};
-use futures::{lock::Mutex as FutureMutex, FutureExt};
+use futures::StreamExt;
 use ratatui::text::Text;
 use ratatui::widgets::{List, ListState};
 use std::sync::{Arc, Mutex};
@@ -14,11 +13,7 @@ use crate::context::AppContext;
 use crate::{
     components::help::PageHelp,
     docker::{container::DockerContainer, logs::DockerLogs},
-    events::{
-        message::{self, MessageResponse},
-        Key, Message, Transition,
-    },
-    state::CurrentPage,
+    events::{message::MessageResponse, Key, Message, Transition},
     traits::{Component, Page},
 };
 
@@ -45,13 +40,10 @@ pub struct Logs {
 }
 
 impl Logs {
-    pub async fn new(
-        docker: bollard::Docker,
-        tx: Sender<Message<Key, Transition>>,
-    ) -> Result<Self> {
+    pub async fn new(docker: bollard::Docker, tx: Sender<Message<Key, Transition>>) -> Self {
         let page_help = Self::build_page_help();
 
-        Ok(Self {
+        Self {
             docker,
             container: None,
             logs: None,
@@ -61,7 +53,7 @@ impl Logs {
             log_streamer_handle: None,
             list_state: ListState::default(),
             auto_scroll: true,
-        })
+        }
     }
 
     fn build_page_help() -> PageHelp {

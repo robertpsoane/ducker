@@ -1,6 +1,4 @@
-use bollard::container::{
-    AttachContainerOptions, ListContainersOptions, LogsOptions, RemoveContainerOptions,
-};
+use bollard::container::{ListContainersOptions, RemoveContainerOptions};
 use chrono::prelude::DateTime;
 use chrono::Local;
 use color_eyre::eyre::{Context, Result};
@@ -8,8 +6,6 @@ use std::time::{Duration, UNIX_EPOCH};
 use tokio::process::Command;
 
 use bollard::secret::ContainerSummary;
-
-use crate::terminal;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DockerContainer {
@@ -53,10 +49,7 @@ impl DockerContainer {
         .format("%Y-%m-%d %H:%M:%S")
         .to_string();
 
-        let running = match c.state.unwrap_or_default().as_str() {
-            "running" => true,
-            _ => false,
-        };
+        let running = matches!(c.state.unwrap_or_default().as_str(), "running");
 
         Self {
             id: c.id.clone().unwrap_or_default(),
@@ -66,7 +59,7 @@ impl DockerContainer {
             status: c.status.clone().unwrap_or_default(),
             ports,
             names: c.names.clone().unwrap_or_default().join(", "),
-            running: running,
+            running,
         }
     }
 
@@ -87,7 +80,7 @@ impl DockerContainer {
 
     pub async fn delete(&self, docker: &bollard::Docker, force: bool) -> Result<()> {
         let opt = RemoveContainerOptions {
-            force: force,
+            force,
             ..Default::default()
         };
         docker.remove_container(&self.id, Some(opt)).await?;

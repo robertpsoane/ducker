@@ -8,6 +8,7 @@ use ratatui::{
     widgets::{Row, Table, TableState},
     Frame,
 };
+use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::Sender;
 
@@ -18,9 +19,8 @@ use crate::{
         help::PageHelp,
     },
     context::AppContext,
-    docker::container::{self, DockerContainer},
+    docker::container::DockerContainer,
     events::{message::MessageResponse, Key, Message, Transition},
-    state::CurrentPage,
     traits::{Component, Page},
 };
 
@@ -39,6 +39,11 @@ const G_KEY: Key = Key::Char('g');
 const L_KEY: Key = Key::Char('l');
 const SHIFT_G_KEY: Key = Key::Char('G');
 
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+enum ModalTypes {
+    DeleteContainer,
+}
+
 #[derive(Debug)]
 pub struct Containers {
     pub name: String,
@@ -48,7 +53,7 @@ pub struct Containers {
     docker: Docker,
     containers: Vec<DockerContainer>,
     list_state: TableState,
-    delete_modal: ConfirmationModal<bool>,
+    modal: Option<ConfirmationModal<bool, ModalTypes>>,
 }
 
 #[async_trait::async_trait]
@@ -58,13 +63,11 @@ impl Page for Containers {
             return Ok(MessageResponse::NotConsumed);
         }
 
-        // If the delete modal is open, we process it; if it is open or complete, and the
+        // If a modal is open, we process it; if it is open or complete, and the
         // result is Consumed, we exit early with the Consumed result
-        let delete_modal_state = self.delete_modal.state.clone();
-        if let ModalState::Open(_) = delete_modal_state {
-            let delete_modal_res = self.delete_modal.update(message).await?;
-            if delete_modal_res == MessageResponse::Consumed {
-                return Ok(delete_modal_res);
+        if let Some(m) = self.modal.as_mut() {
+            if let ModalState::Open(_) = m.state {
+                return m.update(message).await;
             }
         }
 
@@ -168,7 +171,7 @@ impl Page for Containers {
 }
 
 impl Containers {
-    pub async fn new(docker: Docker, tx: Sender<Message<Key, Transition>>) -> Result<Self> {
+    pub async fn new(docker: Docker, tx: Sender<Message<Key, Transition>>) -> Self {
         let page_help = PageHelp::new(NAME.into())
             .add_input(format!("{}", A_KEY), "exec".into())
             .add_input(format!("{CTRL_D_KEY}"), "delete".into())
@@ -178,7 +181,7 @@ impl Containers {
             .add_input(format!("{SHIFT_G_KEY}"), "to-bottom".into())
             .add_input(format!("{L_KEY}"), "logs".into());
 
-        Ok(Self {
+        Self {
             name: String::from(NAME),
             page_help: Arc::new(Mutex::new(page_help)),
             tx,
@@ -186,8 +189,8 @@ impl Containers {
             docker,
             containers: vec![],
             list_state: TableState::default(),
-            delete_modal: ConfirmationModal::<bool>::new("Delete".into()),
-        })
+            modal: None,
+        }
     }
 
     async fn refresh(&mut self) -> Result<(), color_eyre::eyre::Error> {
@@ -254,10 +257,10 @@ impl Containers {
 
             let message = match container.running {
                 true => {
-                    format!("Are you sure you wish to delete container {name} (image {image})?  This container is currently running; this will result in a force deletion.")
+                    format!("Are you sure you wish to delete container {name} (image = {image})?  This container is currently running; this will result in a force deletion.")
                 }
                 false => {
-                    format!("Are you sure you wish to delete container {name} (image {image})?")
+                    format!("Are you sure you wish to delete container {name} (image = {image})?")
                 }
             };
 
@@ -266,7 +269,13 @@ impl Containers {
                 container.clone(),
                 container.running,
             )));
-            self.delete_modal.initialise(message, cb);
+
+            let mut modal = ConfirmationModal::<bool, ModalTypes>::new(
+                "Delete".into(),
+                ModalTypes::DeleteContainer,
+            );
+            modal.initialise(message, cb);
+            self.modal = Some(modal);
         } else {
             bail!("Ahhh")
         }
@@ -307,9 +316,10 @@ impl Component for Containers {
 
         f.render_stateful_widget(table, area, &mut self.list_state);
 
-        match self.delete_modal.state {
-            ModalState::Open(_) => self.delete_modal.draw(f, area),
-            _ => {}
+        if let Some(m) = self.modal.as_mut() {
+            if let ModalState::Open(_) = m.state {
+                m.draw(f, area)
+            }
         }
     }
 }

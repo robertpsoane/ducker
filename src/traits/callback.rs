@@ -1,4 +1,4 @@
-use std::fmt::{Debug, Error};
+use std::fmt::{Debug};
 
 use async_trait::async_trait;
 use color_eyre::eyre::Result;

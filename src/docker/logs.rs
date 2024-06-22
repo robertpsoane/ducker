@@ -1,8 +1,6 @@
 use bollard::container::LogsOptions;
-use color_eyre::eyre::Result;
-use futures::{future, stream, Stream, StreamExt};
+use futures::{Stream, StreamExt};
 
-use futures::stream::TryStreamExt;
 
 use super::container::DockerContainer;
 

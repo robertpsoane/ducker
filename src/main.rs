@@ -39,6 +39,9 @@ mod events {
     pub use message::Message;
     pub use transition::Transition;
 }
+mod widgets {
+    pub mod modal;
+}
 mod docker {
     pub mod container;
     pub mod image;
@@ -56,6 +59,7 @@ mod components {
     pub mod header;
     pub mod help;
     pub mod input_field;
+    pub mod resize_notice;
 }
 pub mod terminal;
 

@@ -6,7 +6,9 @@ use ratatui::{
 use tokio::sync::mpsc::Sender;
 
 use crate::{
-    components::{footer::Footer, header::Header, input_field::InputField},
+    components::{
+        footer::Footer, header::Header, input_field::InputField, resize_notice::ResizeScreen,
+    },
     events::{key::Key, message::MessageResponse, Message, Transition},
     state::{self, Running},
     traits::Component,
@@ -17,6 +19,8 @@ use crate::{
 pub struct App {
     pub running: state::Running,
     mode: state::Mode,
+    blocked: bool,
+    resize_screen: ResizeScreen,
     title: Header,
     page_manager: PageManager,
     footer: Footer,
@@ -34,6 +38,8 @@ impl App {
         let app = Self {
             running: state::Running::default(),
             mode: state::Mode::default(),
+            blocked: true,
+            resize_screen: ResizeScreen::default(),
             title: Header::default(),
             page_manager: body,
             footer: Footer::default(),
@@ -83,7 +89,7 @@ impl App {
                 self.set_mode(state::Mode::TextInput);
                 Ok(MessageResponse::Consumed)
             }
-            Key::Char('Q') => {
+            Key::Char('Q') | Key::Char('q') => {
                 self.running = Running::Done;
                 Ok(MessageResponse::Consumed)
             }
@@ -111,6 +117,17 @@ impl App {
     }
 
     pub fn draw(&mut self, f: &mut Frame<'_>) {
+        // Short circuits drawing the app if the frame is too small;
+        let area: Rect = f.size();
+        if area.height < self.resize_screen.min_height || area.width < self.resize_screen.min_width
+        {
+            self.blocked = true;
+            self.resize_screen.draw(f, area);
+            return;
+        } else {
+            self.blocked = false
+        }
+
         let layout: Layout;
         let top: Rect;
 
