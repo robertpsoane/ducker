@@ -51,10 +51,14 @@ impl<P> ModalComponent for AlertModal<P>
 where
     P: Debug + Send,
 {
-    async fn update(&mut self, _: Key) -> Result<MessageResponse> {
-        // "Press any key to continue"
-        self.reset();
-        Ok(MessageResponse::Consumed)
+    async fn update(&mut self, key: Key) -> Result<MessageResponse> {
+        if let Key::Null = key {
+            Ok(MessageResponse::Consumed)
+        } else {
+            // "Press any key to continue"
+            self.reset();
+            Ok(MessageResponse::Consumed)
+        }
     }
 }
 
