@@ -1,6 +1,7 @@
-use std::fmt::Debug;
+use core::fmt;
 
 use color_eyre::eyre::Result;
+
 use ratatui::{
     layout::{Alignment, Rect},
     text::{Span, Text},
@@ -49,7 +50,7 @@ impl<P> AlertModal<P> {
 #[async_trait::async_trait]
 impl<P> ModalComponent for AlertModal<P>
 where
-    P: Debug + Send,
+    P: fmt::Debug + Send,
 {
     async fn update(&mut self, key: Key) -> Result<MessageResponse> {
         if let Key::Null = key {

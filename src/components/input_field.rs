@@ -1,4 +1,5 @@
 use color_eyre::eyre::{Context, Result};
+use itertools::min;
 use ratatui::{
     layout::{Margin, Rect},
     prelude::*,
@@ -7,6 +8,7 @@ use ratatui::{
     widgets::{Block, Padding, Paragraph},
     Frame,
 };
+use std::{collections::VecDeque, fmt::Debug};
 
 use tokio::sync::mpsc::Sender;
 
@@ -32,6 +34,7 @@ pub struct InputField {
     tx: Sender<Message<Key, Transition>>,
     candidate: Option<String>,
     ac: Autocomplete<'static>,
+    history: History,
 }
 
 impl InputField {
@@ -42,17 +45,20 @@ impl InputField {
             tx,
             candidate: None,
             ac: Autocomplete::from(vec![QUIT, Q, IMAGE, IMAGES, CONTAINER, CONTAINERS]),
+            history: History::new(),
         }
     }
 
     pub fn initialise(&mut self) {
         self.input = String::new();
         self.candidate = None;
+        self.history.reset_idx();
     }
 
     pub async fn update(&mut self, message: Key) -> Result<MessageResponse> {
         match message {
             Key::Char(c) => {
+                self.history.reset_idx();
                 self.input.push(c);
                 let input = &self.input;
                 self.candidate = self.ac.get_completion(input);
@@ -62,13 +68,28 @@ impl InputField {
                     self.input.clone_from(candidate)
                 }
             }
+            Key::Up => {
+                self.history.conditional_set_working_buffer(&self.input);
+                if let Some(v) = &self.history.next() {
+                    self.input.clone_from(v);
+                }
+            }
+            Key::Down => {
+                if let Some(v) = &self.history.previous() {
+                    self.input.clone_from(v);
+                }
+            }
             Key::Backspace => {
                 self.input.pop();
             }
-            Key::Enter => self
-                .submit()
-                .await
-                .context("unable to submit user command")?,
+            Key::Enter => {
+                self.history.add_value(&self.input);
+                self.history.reset_idx();
+                self.submit()
+                    .await
+                    .context("unable to submit user command")?;
+            }
+
             _ => return Ok(MessageResponse::NotConsumed),
         }
 
@@ -131,5 +152,109 @@ impl Component for InputField {
 
         let p = Paragraph::new(Line::from(input_text));
         f.render_widget(p, body_inner)
+    }
+}
+
+const MAX_HISTORY_SIZE: usize = 100;
+
+#[derive(Debug)]
+struct History {
+    values: VecDeque<String>,
+    working_buffer: Option<String>,
+    idx: Option<usize>,
+}
+
+impl Default for History {
+    fn default() -> Self {
+        Self {
+            values: VecDeque::with_capacity(MAX_HISTORY_SIZE),
+            working_buffer: None,
+            idx: None,
+        }
+    }
+}
+
+impl History {
+    pub fn new() -> Self {
+        let v = VecDeque::with_capacity(MAX_HISTORY_SIZE);
+        Self {
+            values: v,
+            working_buffer: None,
+            idx: None,
+        }
+    }
+
+    pub fn add_value(&mut self, v: &String) {
+        if v.trim().is_empty() {
+            return;
+        }
+        if self.values.len() == MAX_HISTORY_SIZE {
+            self.values.pop_back();
+        }
+        self.values.push_front(v.clone());
+    }
+
+    pub fn reset_idx(&mut self) {
+        self.idx = None;
+        self.working_buffer = None;
+    }
+
+    pub fn next(&mut self) -> Option<String> {
+        let mut next_idx = match self.idx {
+            Some(idx) => idx + 1,
+            None => 0,
+        };
+
+        let max_idx = self.values.len() - 1;
+
+        if max_idx < next_idx {
+            next_idx = max_idx
+        };
+
+        self.idx = Some(next_idx);
+        if let Some(v) = self.values.get(next_idx) {
+            Some(v.clone())
+        } else {
+            None
+        }
+    }
+
+    pub fn previous(&mut self) -> Option<String> {
+        let mut next_idx = match self.idx {
+            None => return self.working_buffer.clone(),
+            Some(idx) => {
+                if idx == 0 {
+                    self.idx = None;
+                    return self.working_buffer.clone();
+                } else {
+                    idx - 1
+                }
+            }
+        };
+
+        next_idx = min([next_idx, self.values.len()]).unwrap();
+
+        self.idx = Some(next_idx);
+        if let Some(v) = self.values.get(next_idx) {
+            Some(v.clone())
+        } else {
+            None
+        }
+    }
+
+    /// Sets a working buffer for the history; in essence the buffer prior to
+    /// querying the history.  Acts as a default when the index drops back "below zero"
+    pub fn conditional_set_working_buffer(&mut self, working_buffer: &String) {
+        // Only add to the working buffer if we're actually adding something
+        if let Some(buf) = &self.working_buffer {
+            if buf.trim().is_empty() {
+                return;
+            }
+        }
+        // Only add to the working buffer if we aren't reading history
+        if self.idx.is_some() {
+            return;
+        }
+        self.working_buffer = Some(working_buffer.clone())
     }
 }
