@@ -119,8 +119,8 @@ impl Images {
         let page_help = PageHelp::new(NAME.into())
             // .add_input(format!("{}", A_KEY), "attach".into())
             .add_input(format!("{CTRL_D_KEY}"), "delete".into())
-            .add_input(format!("{R_KEY}"), "run".into())
-            .add_input(format!("{S_KEY}"), "stop".into())
+            // .add_input(format!("{R_KEY}"), "run".into())
+            // .add_input(format!("{S_KEY}"), "stop".into())
             .add_input(format!("{G_KEY}"), "to-top".into())
             .add_input(format!("{SHIFT_G_KEY}"), "to-bottom".into());
 
