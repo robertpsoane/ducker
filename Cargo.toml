@@ -7,7 +7,7 @@ edition = "2021"
 [dependencies]
 ansi-to-tui = "4.0.1"
 async-trait = "0.1.80"
-bollard = "0.16.1"
+bollard = { version = "0.16.1", features = ["ssl"] }
 byte-unit = { version = "5.1.4", features = ["byte"] }
 chrono = "0.4.38"
 clap = { version = "4.5.6", features = ["derive"] }
@@ -15,7 +15,6 @@ color-eyre = "0.6.3"
 crossterm = { version = "0.27", features = ["event-stream"] }
 futures = "0.3.30"
 itertools = "0.13.0"
-openssl-sys = "0.9.102"
 ratatui = { version = "0.26.3", features = ["serde"] }
 serde = "1.0.203"
 tokio = { version = "1.38.0", features = [
