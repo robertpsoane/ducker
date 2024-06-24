@@ -136,7 +136,7 @@ impl Component for PageManager {
         f.render_widget(block, area);
 
         let inner_body_margin = Margin::new(2, 1);
-        let body_inner = area.inner(&inner_body_margin);
+        let body_inner = area.inner(inner_body_margin);
 
         self.page.draw(f, body_inner);
     }

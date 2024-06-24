@@ -15,14 +15,14 @@ color-eyre = "0.6.3"
 crossterm = { version = "0.27", features = ["event-stream"] }
 futures = "0.3.30"
 itertools = "0.13.0"
-ratatui = { version = "0.26.3", features = ["serde"] }
+ratatui = { version = "0.27.0", features = ["serde"] }
 serde = "1.0.203"
 tokio = { version = "1.38.0", features = [
     "rt-multi-thread",
     "macros",
     "process",
 ] }
-tui-big-text = "0.4.4"
+tui-big-text = "0.4.5"
 
 [profile.release]
 strip = true

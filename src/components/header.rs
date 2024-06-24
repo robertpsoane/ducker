@@ -23,7 +23,7 @@ impl Component for Header {
             _ => panic!("Ahhhh!"),
         };
 
-        let area = area.inner(&Margin {
+        let area = area.inner(Margin {
             vertical: 0,
             horizontal: 2,
         });

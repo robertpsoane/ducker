@@ -5,6 +5,8 @@
 # Relies on an installation of rust.
 # Can also be used for updates
 
+# Slightly round-about as could just use cargo install, but allows for incremental builds
+
 mkdir -p ~/.ducker
 
 cd ~/.ducker

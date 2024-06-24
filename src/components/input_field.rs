@@ -131,7 +131,7 @@ impl Component for InputField {
         f.render_widget(block, area);
 
         let inner_body_margin = Margin::new(2, 1);
-        let body_inner = area.inner(&inner_body_margin);
+        let body_inner = area.inner(inner_body_margin);
 
         let mut input_text = vec![
             Span::styled::<String, Style>(format!("{} ", self.prompt), Style::new().green()),
