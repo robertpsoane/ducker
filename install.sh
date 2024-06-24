@@ -20,7 +20,7 @@ git reset --hard origin/master
 git pull
 
 cargo build -r
-sudo cp target/release/ducker /usr/local/bin/ducker
+cargo install --path .
 
 clear
 

@@ -8,7 +8,7 @@ use ratatui::{
 use crate::traits::Component;
 
 const MIN_ROWS: u16 = 20;
-const MIN_COLS: u16 = 80;
+const MIN_COLS: u16 = 100;
 
 #[derive(Debug)]
 pub struct ResizeScreen {

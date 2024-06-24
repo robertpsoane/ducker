@@ -202,7 +202,7 @@ impl App {
             }
         }
 
-        let [_left_space, title, right_space] = Layout::horizontal(vec![
+        let [_left, title, right_space] = Layout::horizontal(vec![
             Constraint::Min(0),
             Constraint::Length(50),
             Constraint::Min(0),
