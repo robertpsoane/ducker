@@ -202,12 +202,8 @@ impl App {
             }
         }
 
-        let [_left, title, right_space] = Layout::horizontal(vec![
-            Constraint::Min(0),
-            Constraint::Length(50),
-            Constraint::Min(0),
-        ])
-        .areas(top);
+        let [title, right_space] =
+            Layout::horizontal(vec![Constraint::Length(50), Constraint::Min(0)]).areas(top);
 
         self.title.draw(f, title);
         self.page_manager.draw(f, page);

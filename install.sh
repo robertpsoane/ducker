@@ -20,7 +20,7 @@ git reset --hard origin/master
 git pull
 
 cargo build -r
-cargo install --path .
+cargo install --locked --path .
 
 clear
 

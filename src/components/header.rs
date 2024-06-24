@@ -1,5 +1,5 @@
 use ratatui::{
-    layout::{self, Rect},
+    layout::{self, Margin, Rect},
     style::{Color, Style},
     Frame,
 };
@@ -22,6 +22,11 @@ impl Component for Header {
             Ok(b) => b,
             _ => panic!("Ahhhh!"),
         };
+
+        let area = area.inner(&Margin {
+            vertical: 0,
+            horizontal: 2,
+        });
 
         f.render_widget(big_text, area);
     }
