@@ -15,7 +15,7 @@ use crate::{
     callbacks::DeleteContainer,
     components::{
         boolean_modal::{BooleanModal, ModalState},
-        help::PageHelp,
+        help::{PageHelp, PageHelpBuilder},
     },
     context::AppContext,
     docker::container::DockerContainer,
@@ -175,7 +175,7 @@ impl Page for Containers {
 
 impl Containers {
     pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>) -> Self {
-        let page_help = PageHelp::new(NAME.into())
+        let page_help = PageHelpBuilder::new(NAME.into())
             .add_input(format!("{}", A_KEY), "exec".into())
             .add_input(format!("{CTRL_D_KEY}"), "delete".into())
             .add_input(format!("{R_KEY}"), "run".into())

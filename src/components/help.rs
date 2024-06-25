@@ -11,18 +11,21 @@ use crate::traits::Component;
 #[derive(Debug, Clone)]
 pub struct PageHelp {
     name: String,
-    inputs: Vec<(String, String)>,
-    displays: Option<Vec<String>>,
-    width: Option<usize>,
+    displays: Vec<String>,
+    width: usize,
 }
 
-impl PageHelp {
+#[derive(Debug, Clone)]
+pub struct PageHelpBuilder {
+    name: String,
+    inputs: Vec<(String, String)>,
+}
+
+impl PageHelpBuilder {
     pub fn new(name: String) -> Self {
         Self {
             name,
             inputs: vec![],
-            displays: None,
-            width: None,
         }
     }
 
@@ -31,28 +34,33 @@ impl PageHelp {
         self
     }
 
-    pub fn build(mut self) -> Self {
+    pub fn build(mut self) -> PageHelp {
         self.inputs.sort_by_key(|(first, _)| first.to_owned());
 
-        let mut max_width = 0;
+        let mut width = 0;
 
-        self.displays = Some(
-            self.inputs
-                .iter()
-                .map(|(key, desc)| {
-                    let disp = format!(" <{key}> = {desc} ");
-                    if disp.len() > max_width {
-                        max_width = disp.len();
-                    };
+        let displays = self
+            .inputs
+            .iter()
+            .map(|(key, desc)| {
+                let disp = format!(" <{key}> = {desc} ");
+                if disp.len() > width {
+                    width = disp.len();
+                };
 
-                    disp
-                })
-                .collect_vec(),
-        );
-        self.width = Some(max_width);
-        self
+                disp
+            })
+            .collect_vec();
+
+        PageHelp {
+            name: self.name.clone(),
+            displays,
+            width,
+        }
     }
+}
 
+impl PageHelp {
     pub fn get_name(&self) -> String {
         self.name.clone()
     }
@@ -65,11 +73,11 @@ impl Component for PageHelp {
         let group_height = area.height - 1;
 
         // Integer division - round up
-        let n_blocks = (self.inputs.len() + (group_height as usize) - 1) / (group_height as usize);
+        let n_blocks =
+            (self.displays.len() + (group_height as usize) - 1) / (group_height as usize);
 
-        // If unset at run, want program to crash
-        let displays = self.displays.clone().unwrap();
-        let width = self.width.unwrap();
+        let displays = self.displays.clone();
+        let width = self.width;
 
         let chunked_displays: Vec<&[String]> = displays.chunks(group_height as usize).collect();
 

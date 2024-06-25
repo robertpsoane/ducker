@@ -8,7 +8,7 @@ use tokio::sync::mpsc::Sender;
 
 use crate::context::AppContext;
 use crate::{
-    components::help::PageHelp,
+    components::help::{PageHelp, PageHelpBuilder},
     docker::container::DockerContainer,
     events::{message::MessageResponse, Key, Message, Transition},
     traits::{Component, Page},
@@ -27,7 +27,9 @@ pub struct Attach {
 
 impl Attach {
     pub fn new(tx: Sender<Message<Key, Transition>>) -> Self {
-        let page_help = PageHelp::new(NAME.into()).add_input(format!("{ESC_KEY}"), "back".into());
+        let page_help = PageHelpBuilder::new(NAME.into())
+            .add_input(format!("{ESC_KEY}"), "back".into())
+            .build();
 
         Self {
             container: None,

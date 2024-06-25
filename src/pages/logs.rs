@@ -11,7 +11,7 @@ use tokio::sync::mpsc::Sender;
 
 use crate::context::AppContext;
 use crate::{
-    components::help::PageHelp,
+    components::help::{PageHelp, PageHelpBuilder},
     docker::{container::DockerContainer, logs::DockerLogs},
     events::{message::MessageResponse, Key, Message, Transition},
     traits::{Component, Page},
@@ -41,7 +41,7 @@ pub struct Logs {
 
 impl Logs {
     pub fn new(docker: bollard::Docker, tx: Sender<Message<Key, Transition>>) -> Self {
-        let page_help = Self::build_page_help();
+        let page_help = Self::build_page_help().build();
 
         Self {
             docker,
@@ -56,8 +56,8 @@ impl Logs {
         }
     }
 
-    fn build_page_help() -> PageHelp {
-        PageHelp::new(NAME.into()).add_input(format!("{ESC_KEY}"), "back".into())
+    fn build_page_help() -> PageHelpBuilder {
+        PageHelpBuilder::new(NAME.into()).add_input(format!("{ESC_KEY}"), "back".into())
     }
 
     fn increment_list(&mut self) {
@@ -90,7 +90,7 @@ impl Logs {
             return;
         }
         self.auto_scroll = true;
-        self.page_help = Arc::new(Mutex::new(Self::build_page_help()));
+        self.page_help = Arc::new(Mutex::new(Self::build_page_help().build()));
     }
 
     fn deactivate_auto_scroll(&mut self) {
@@ -99,7 +99,9 @@ impl Logs {
         }
         self.auto_scroll = false;
         self.page_help = Arc::new(Mutex::new(
-            Self::build_page_help().add_input(format!("{SPACE_BAR}"), "auto-scroll".into()),
+            Self::build_page_help()
+                .add_input(format!("{SPACE_BAR}"), "auto-scroll".into())
+                .build(),
         ));
     }
 }
