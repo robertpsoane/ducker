@@ -4,13 +4,19 @@ A terminal app for managing docker containers, inpired by [K9s](https://k9scli.i
 
 This is perhaps obviously very much a work in progress...
 
+
+![](https://raw.githubusercontent.com/robertpsoane/ducker/master/demo.gif?raw=true)
+
+
 ## Installation
 
-There isn't currently a downloadable build; to install you will need rustc & cargo installed.
+There isn't currently a downloadable build; to install you will need cargo installed:
 
-Clone the repo, build with cargo (`cargo build -r`) and put the resultant binary on your path.
+```
+cargo install --git https://github.com/robertpsoane/ducker
+```
 
-For convenience, the `install.sh` script does just this:
+There is also a convenience script `install.sh` that in essence does just this, however this script clones the code to ~/.ducker to benefit from incremental build:
 
 ```bash
 curl -sS https://raw.githubusercontent.com/robertpsoane/ducker/master/install.sh | sh
