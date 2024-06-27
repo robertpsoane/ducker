@@ -1,17 +1,17 @@
 # .github/workflows/check.yml
 on:
-    push:
-      branches:
-        - master
-    pull_request:
-      branches:
-        - master
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 
-  jobs:
-    check:
-      permissions:
-        checks: write
-      uses: robertpsoane/github-workflows/.github/workflows/rust-check.yml@main
-      with:
-        msrv: 1.78.0 # this is optional defaults to 1.56.0
+jobs:
+  check:
+    permissions:
+      checks: write
+    uses: robertpsoane/github-workflows/.github/workflows/rust-check.yml@main
+    with:
+      msrv: 1.78.0 # this is optional defaults to 1.56.0
