@@ -16,6 +16,13 @@ There isn't currently a downloadable build; to install you will need cargo insta
 cargo install --locked ducker
 ```
 
+### AUR
+
+You can install `ducker` from the [AUR](https://aur.archlinux.org/packages/ducker) with using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers).
+
+```sh
+paru -S ducker
+```
 
 ## Tmux
 
