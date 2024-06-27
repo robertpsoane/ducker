@@ -12,14 +12,8 @@ This is perhaps obviously very much a work in progress...
 
 There isn't currently a downloadable build; to install you will need cargo installed:
 
-```
-cargo install --git https://github.com/robertpsoane/ducker
-```
-
-There is also a convenience script `install.sh` that in essence does just this, however this script clones the code to ~/.ducker to benefit from incremental build:
-
 ```bash
-curl -sS https://raw.githubusercontent.com/robertpsoane/ducker/master/install.sh | sh
+cargo install ducker
 ```
 
 
