@@ -184,14 +184,14 @@ impl History {
         }
     }
 
-    pub fn add_value(&mut self, v: &String) {
+    pub fn add_value(&mut self, v: &str) {
         if v.trim().is_empty() {
             return;
         }
         if self.values.len() == MAX_HISTORY_SIZE {
             self.values.pop_back();
         }
-        self.values.push_front(v.clone());
+        self.values.push_front(v.into());
     }
 
     pub fn reset_idx(&mut self) {
@@ -212,11 +212,7 @@ impl History {
         };
 
         self.idx = Some(next_idx);
-        if let Some(v) = self.values.get(next_idx) {
-            Some(v.clone())
-        } else {
-            None
-        }
+        self.values.get(next_idx).cloned()
     }
 
     pub fn previous(&mut self) -> Option<String> {
@@ -235,11 +231,7 @@ impl History {
         next_idx = min([next_idx, self.values.len()]).unwrap();
 
         self.idx = Some(next_idx);
-        if let Some(v) = self.values.get(next_idx) {
-            Some(v.clone())
-        } else {
-            None
-        }
+        self.values.get(next_idx).cloned()
     }
 
     /// Sets a working buffer for the history; in essence the buffer prior to
@@ -255,6 +247,6 @@ impl History {
         if self.idx.is_some() {
             return;
         }
-        self.working_buffer = Some(working_buffer.clone())
+        self.working_buffer = Some(working_buffer.to_owned())
     }
 }

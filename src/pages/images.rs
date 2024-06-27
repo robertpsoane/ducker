@@ -33,8 +33,6 @@ const DOWN_KEY: Key = Key::Down;
 const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
 const CTRL_D_KEY: Key = Key::Ctrl('d');
-const R_KEY: Key = Key::Char('r');
-const S_KEY: Key = Key::Char('s');
 const G_KEY: Key = Key::Char('g');
 const SHIFT_G_KEY: Key = Key::Char('G');
 

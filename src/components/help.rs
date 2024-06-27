@@ -1,9 +1,9 @@
-use itertools::{max, Itertools};
+use itertools::Itertools;
 use ratatui::{
     layout::{Constraint, Layout},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Paragraph, Wrap},
+    widgets::Paragraph,
 };
 
 use crate::traits::Component;

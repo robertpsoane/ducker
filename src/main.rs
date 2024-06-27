@@ -1,4 +1,3 @@
-#![warn(clippy::all, clippy::pedantic)]
 use clap::Parser;
 use color_eyre::eyre::Context;
 use events::{EventLoop, Key, Message};
