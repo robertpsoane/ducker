@@ -6,7 +6,7 @@ permissions:
   on:
     push:
       branches:
-        - main
+        - master
   jobs:
     release-plz:
       uses: robertpsoane/github-workflows/.github/workflows/rust-release-plz.yml@main

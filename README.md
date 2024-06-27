@@ -13,7 +13,7 @@ This is perhaps obviously very much a work in progress...
 There isn't currently a downloadable build; to install you will need cargo installed:
 
 ```bash
-cargo install ducker
+cargo install --locked ducker
 ```
 
 
