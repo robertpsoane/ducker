@@ -1,16 +1,15 @@
 [package]
 name = "ducker"
-description = "A slightly quackers Docker TUI based on k9s."
+description = "A slightly quackers Docker TUI based on k9s 🦆"
 authors = ["Robert Soane"]
 version = "0.0.2"
 homepage = "http://github.com/robertpsoane/ducker"
 repository = "http://github.com/robertpsoane/ducker"
 edition = "2021"
 readme = "README.md"
-license-file = "LICENSE"
+license-file = "LICENSE.txt"
 keywords = ["docker", "developer-tools", "ratatui", "terminal"]
 categories = ["command-line-utilities", "development-tools"]
-
 include = ["/src", "LICENSE", "README.md"]
 
 [dependencies]
@@ -32,6 +31,7 @@ tokio = { version = "1.38.0", features = [
     "process",
 ] }
 tui-big-text = "0.4.5"
+
 
 [profile.release]
 strip = true

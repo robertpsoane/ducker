@@ -66,13 +66,13 @@ mod components {
 pub mod terminal;
 
 #[derive(Parser, Debug)]
-struct Args {
-    #[arg(short, long, default_value_t = String::from("unix:///var/run/docker.sock"))]
-    docker_daemon: String,
-}
+#[command(version, about, long_about = None)]
+struct Args {}
 
 #[tokio::main]
 async fn main() -> color_eyre::Result<()> {
+    Args::parse();
+
     terminal::init_panic_hook();
     let mut terminal = terminal::init().context("failed to initialise terminal")?;
 
