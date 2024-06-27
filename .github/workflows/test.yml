@@ -1,0 +1,14 @@
+# .github/workflows/test.yml
+on:
+    push:
+      branches:
+        - master
+    pull_request:
+  
+  jobs:
+    test:
+      uses: robertpsoane/github-workflows/.github/workflows/rust-test.yml@main
+      with:
+        crate_type: bin # (optional) change to bin to avoid running cargo test --doc
+      secrets:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
