@@ -19,6 +19,7 @@ use crate::{
         boolean_modal::{BooleanModal, ModalState},
         help::{PageHelp, PageHelpBuilder},
     },
+    config::Config,
     context::AppContext,
     docker::image::DockerImage,
     events::{message::MessageResponse, Key},
@@ -113,8 +114,8 @@ impl Page for Images {
 }
 
 impl Images {
-    pub fn new(docker: Docker) -> Self {
-        let page_help = PageHelpBuilder::new(NAME.into())
+    pub fn new(docker: Docker, config: Box<Config>) -> Self {
+        let page_help = PageHelpBuilder::new(NAME.into(), config.clone())
             // .add_input(format!("{}", A_KEY), "attach".into())
             .add_input(format!("{CTRL_D_KEY}"), "delete".into())
             // .add_input(format!("{R_KEY}"), "run".into())

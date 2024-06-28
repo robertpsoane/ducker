@@ -1,16 +1,17 @@
 use itertools::Itertools;
 use ratatui::{
     layout::{Constraint, Layout},
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     text::{Line, Span},
     widgets::Paragraph,
 };
 
-use crate::traits::Component;
+use crate::{config::Config, traits::Component};
 
 #[derive(Debug, Clone)]
 pub struct PageHelp {
     name: String,
+    config: Box<Config>,
     displays: Vec<String>,
     width: usize,
 }
@@ -18,13 +19,15 @@ pub struct PageHelp {
 #[derive(Debug, Clone)]
 pub struct PageHelpBuilder {
     name: String,
+    config: Box<Config>,
     inputs: Vec<(String, String)>,
 }
 
 impl PageHelpBuilder {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: String, config: Box<Config>) -> Self {
         Self {
             name,
+            config,
             inputs: vec![],
         }
     }
@@ -54,6 +57,7 @@ impl PageHelpBuilder {
 
         PageHelp {
             name: self.name.clone(),
+            config: self.config.clone(),
             displays,
             width,
         }
@@ -99,7 +103,7 @@ impl Component for PageHelp {
                             Span::from(format!("{v}\n")).style(
                                 Style::default()
                                     .add_modifier(Modifier::ITALIC)
-                                    .fg(Color::Red),
+                                    .fg(self.config.theme.help()),
                             ),
                         )
                         .left_aligned()

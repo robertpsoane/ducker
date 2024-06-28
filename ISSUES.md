@@ -1,9 +1,12 @@
 
 # Images
-- Handle deletion of a running image
 - Run Image
 - New Image
 - Tag Image
+- Show dangling images
+
+# Exec
+- Add modal to provide exec command when exec-ing into a container
 
 # Logs
 - Choose log time range
@@ -19,7 +22,6 @@
 - Fix callbacks to use closures
 - Add filter widget/component (similar to vim searching)
 - General purpose modals for errors
-- Some sort of config system
 - Add tracing of some sort
 
 # Not currently in scope

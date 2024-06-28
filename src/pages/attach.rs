@@ -6,6 +6,7 @@ use color_eyre::eyre::{bail, Ok, Result};
 use ratatui::{layout::Rect, Frame};
 use tokio::sync::mpsc::Sender;
 
+use crate::config::Config;
 use crate::context::AppContext;
 use crate::{
     components::help::{PageHelp, PageHelpBuilder},
@@ -20,18 +21,20 @@ const ESC_KEY: Key = Key::Esc;
 
 #[derive(Debug)]
 pub struct Attach {
+    config: Box<Config>,
     container: Option<DockerContainer>,
     tx: Sender<Message<Key, Transition>>,
     page_help: Arc<Mutex<PageHelp>>,
 }
 
 impl Attach {
-    pub fn new(tx: Sender<Message<Key, Transition>>) -> Self {
-        let page_help = PageHelpBuilder::new(NAME.into())
+    pub fn new(tx: Sender<Message<Key, Transition>>, config: Box<Config>) -> Self {
+        let page_help = PageHelpBuilder::new(NAME.into(), config.clone())
             .add_input(format!("{ESC_KEY}"), "back".into())
             .build();
 
         Self {
+            config,
             container: None,
             tx,
             page_help: Arc::new(Mutex::new(page_help)),
@@ -50,7 +53,7 @@ impl Page for Attach {
     async fn initialise(&mut self) -> Result<()> {
         if let Some(container) = self.container.clone() {
             disable_raw_mode()?;
-            container.attach("/bin/bash").await?;
+            container.attach(&self.config.default_exec).await?;
             self.tx
                 .send(Message::Transition(Transition::ToContainerPage(
                     AppContext {

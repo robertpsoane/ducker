@@ -8,6 +8,7 @@ use ratatui::{
 use tokio::sync::mpsc::Sender;
 
 use crate::{
+    config::Config,
     context::AppContext,
     events::{message::MessageResponse, Key, Message, Transition},
     pages::{attach::Attach, containers::Containers, images::Images, logs::Logs},
@@ -17,6 +18,7 @@ use crate::{
 
 #[derive(Debug)]
 pub struct PageManager {
+    config: Box<Config>,
     current_page: state::CurrentPage,
     page: Box<dyn Page>,
     tx: Sender<Message<Key, Transition>>,
@@ -27,13 +29,15 @@ impl PageManager {
     pub async fn new(
         page: state::CurrentPage,
         tx: Sender<Message<Key, Transition>>,
+        config: Box<Config>,
     ) -> Result<Self> {
         let docker = bollard::Docker::connect_with_socket_defaults()
             .context("unable to connect to local docker daemon")?;
 
-        let containers = Box::new(Containers::new(docker.clone(), tx.clone()));
+        let containers = Box::new(Containers::new(docker.clone(), tx.clone(), config.clone()));
 
         let mut page_manager = Self {
+            config,
             current_page: page,
             page: containers,
             tx,
@@ -99,13 +103,25 @@ impl PageManager {
         self.current_page = next_page.clone();
 
         match next_page {
-            state::CurrentPage::Attach => self.page = Box::new(Attach::new(self.tx.clone())),
-            state::CurrentPage::Containers => {
-                self.page = Box::new(Containers::new(self.docker.clone(), self.tx.clone()))
+            state::CurrentPage::Attach => {
+                self.page = Box::new(Attach::new(self.tx.clone(), self.config.clone()))
             }
-            state::CurrentPage::Images => self.page = Box::new(Images::new(self.docker.clone())),
+            state::CurrentPage::Containers => {
+                self.page = Box::new(Containers::new(
+                    self.docker.clone(),
+                    self.tx.clone(),
+                    self.config.clone(),
+                ))
+            }
+            state::CurrentPage::Images => {
+                self.page = Box::new(Images::new(self.docker.clone(), self.config.clone()))
+            }
             state::CurrentPage::Logs => {
-                self.page = Box::new(Logs::new(self.docker.clone(), self.tx.clone()))
+                self.page = Box::new(Logs::new(
+                    self.docker.clone(),
+                    self.tx.clone(),
+                    self.config.clone(),
+                ))
             }
         };
 

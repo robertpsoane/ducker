@@ -9,6 +9,7 @@ use color_eyre::eyre::{bail, Ok, Result};
 use ratatui::{layout::Rect, Frame};
 use tokio::sync::mpsc::Sender;
 
+use crate::config::Config;
 use crate::context::AppContext;
 use crate::{
     components::help::{PageHelp, PageHelpBuilder},
@@ -28,6 +29,7 @@ const SPACE_BAR: Key = Key::Char(' ');
 
 #[derive(Debug)]
 pub struct Logs {
+    config: Box<Config>,
     docker: bollard::Docker,
     tx: Sender<Message<Key, Transition>>,
     container: Option<DockerContainer>,
@@ -40,10 +42,15 @@ pub struct Logs {
 }
 
 impl Logs {
-    pub fn new(docker: bollard::Docker, tx: Sender<Message<Key, Transition>>) -> Self {
-        let page_help = Self::build_page_help().build();
+    pub fn new(
+        docker: bollard::Docker,
+        tx: Sender<Message<Key, Transition>>,
+        config: Box<Config>,
+    ) -> Self {
+        let page_help = Self::build_page_help(config.clone()).build();
 
         Self {
+            config,
             docker,
             container: None,
             logs: None,
@@ -56,8 +63,8 @@ impl Logs {
         }
     }
 
-    fn build_page_help() -> PageHelpBuilder {
-        PageHelpBuilder::new(NAME.into()).add_input(format!("{ESC_KEY}"), "back".into())
+    fn build_page_help(config: Box<Config>) -> PageHelpBuilder {
+        PageHelpBuilder::new(NAME.into(), config).add_input(format!("{ESC_KEY}"), "back".into())
     }
 
     fn increment_list(&mut self) {
@@ -90,7 +97,9 @@ impl Logs {
             return;
         }
         self.auto_scroll = true;
-        self.page_help = Arc::new(Mutex::new(Self::build_page_help().build()));
+        self.page_help = Arc::new(Mutex::new(
+            Self::build_page_help(self.config.clone()).build(),
+        ));
     }
 
     fn deactivate_auto_scroll(&mut self) {
@@ -99,7 +108,7 @@ impl Logs {
         }
         self.auto_scroll = false;
         self.page_help = Arc::new(Mutex::new(
-            Self::build_page_help()
+            Self::build_page_help(self.config.clone())
                 .add_input(format!("{SPACE_BAR}"), "auto-scroll".into())
                 .build(),
         ));

@@ -1,9 +1,11 @@
 use clap::Parser;
 use color_eyre::eyre::Context;
+use config::Config;
 use events::{EventLoop, Key, Message};
 use ui::App;
 
 mod autocomplete;
+mod config;
 mod context;
 mod state;
 mod util;
@@ -67,18 +69,26 @@ pub mod terminal;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
-struct Args {}
+struct Args {
+    /// Export default config to default config directory
+    /// (usually ~/.config/ducker/config.yaml)
+    #[clap(long, short, action)]
+    export_default_config: bool,
+}
 
 #[tokio::main]
 async fn main() -> color_eyre::Result<()> {
-    Args::parse();
+    let args = Args::parse();
+    let config = Config::new(&args.export_default_config)?;
 
     terminal::init_panic_hook();
     let mut terminal = terminal::init().context("failed to initialise terminal")?;
 
     let mut events = EventLoop::new();
     let events_tx = events.get_tx();
-    let mut app = App::new(events_tx).await.context("failed to create app")?;
+    let mut app = App::new(events_tx, config)
+        .await
+        .context("failed to create app")?;
 
     events.start().context("failed to start event loop")?;
 
