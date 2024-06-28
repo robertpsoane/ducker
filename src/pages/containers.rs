@@ -17,6 +17,7 @@ use crate::{
         boolean_modal::{BooleanModal, ModalState},
         help::{PageHelp, PageHelpBuilder},
     },
+    config::Config,
     context::AppContext,
     docker::container::DockerContainer,
     events::{message::MessageResponse, Key, Message, Transition},
@@ -45,6 +46,7 @@ enum ModalTypes {
 
 #[derive(Debug)]
 pub struct Containers {
+    config: Box<Config>,
     pub name: String,
     pub visible: bool,
     tx: Sender<Message<Key, Transition>>,
@@ -174,8 +176,8 @@ impl Page for Containers {
 }
 
 impl Containers {
-    pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>) -> Self {
-        let page_help = PageHelpBuilder::new(NAME.into())
+    pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Box<Config>) -> Self {
+        let page_help = PageHelpBuilder::new(NAME.into(), config.clone())
             .add_input(format!("{}", A_KEY), "exec".into())
             .add_input(format!("{CTRL_D_KEY}"), "delete".into())
             .add_input(format!("{R_KEY}"), "run".into())
@@ -186,6 +188,7 @@ impl Containers {
             .build();
 
         Self {
+            config,
             name: String::from(NAME),
             page_help: Arc::new(Mutex::new(page_help)),
             tx,
@@ -289,7 +292,7 @@ impl Component for Containers {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         let rows = self.containers.clone().into_iter().map(|c| {
             let style = match c.running {
-                true => Style::default().fg(Color::Green),
+                true => Style::default().fg(self.config.theme.positive_highlight()),
                 false => Style::default(),
             };
 

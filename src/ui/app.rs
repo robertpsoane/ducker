@@ -1,6 +1,8 @@
 use color_eyre::eyre::{Context, Result};
 use ratatui::{
     layout::{Constraint, Layout, Rect},
+    style::Style,
+    widgets::Block,
     Frame,
 };
 use tokio::sync::mpsc::Sender;
@@ -13,6 +15,7 @@ use crate::{
         input_field::InputField,
         resize_notice::ResizeScreen,
     },
+    config::Config,
     events::{key::Key, message::MessageResponse, Message, Transition},
     state::{self, Running},
     traits::{Component, ModalComponent},
@@ -27,6 +30,7 @@ enum ModalType {
 #[derive(Debug)]
 pub struct App {
     pub running: state::Running,
+    config: Box<Config>,
     mode: state::Mode,
     blocked: bool,
     resize_screen: ResizeScreen,
@@ -38,22 +42,25 @@ pub struct App {
 }
 
 impl App {
-    pub async fn new(tx: Sender<Message<Key, Transition>>) -> Result<Self> {
+    pub async fn new(tx: Sender<Message<Key, Transition>>, config: Config) -> Result<Self> {
+        let config = Box::new(config);
+
         let page = state::CurrentPage::default();
 
-        let body = PageManager::new(page.clone(), tx.clone())
+        let body = PageManager::new(page.clone(), tx.clone(), config.clone())
             .await
             .context("unable to create new body component")?;
 
         let app = Self {
             running: state::Running::default(),
+            config: config.clone(),
             mode: state::Mode::default(),
             blocked: true,
-            resize_screen: ResizeScreen::default(),
-            title: Header::default(),
+            resize_screen: ResizeScreen::new(config.clone()),
+            title: Header::new(config.clone()),
             page_manager: body,
-            footer: Footer::default(),
-            input_field: InputField::new(tx),
+            footer: Footer::new(config.clone()),
+            input_field: InputField::new(tx, config.prompt),
             modal: None,
         };
         Ok(app)
@@ -166,6 +173,12 @@ impl App {
     pub fn draw(&mut self, f: &mut Frame<'_>) {
         // Short circuits drawing the app if the frame is too small;
         let area: Rect = f.size();
+
+        f.render_widget(
+            Block::new().style(Style::new().bg(self.config.theme.background())),
+            area,
+        );
+
         if area.height < self.resize_screen.min_height || area.width < self.resize_screen.min_width
         {
             self.blocked = true;

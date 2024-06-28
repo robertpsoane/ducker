@@ -5,7 +5,7 @@ use ratatui::{
     widgets::{block::Title, Block},
 };
 
-use crate::traits::Component;
+use crate::{config::Config, traits::Component};
 
 const MIN_ROWS: u16 = 20;
 const MIN_COLS: u16 = 100;
@@ -14,13 +14,15 @@ const MIN_COLS: u16 = 100;
 pub struct ResizeScreen {
     pub min_height: u16,
     pub min_width: u16,
+    config: Box<Config>,
 }
 
-impl Default for ResizeScreen {
-    fn default() -> Self {
+impl ResizeScreen {
+    pub fn new(config: Box<Config>) -> Self {
         Self {
             min_width: MIN_COLS,
             min_height: MIN_ROWS,
+            config,
         }
     }
 }
@@ -47,9 +49,9 @@ impl Component for ResizeScreen {
         let mut height_span = Span::from(format!("{}", size.height));
 
         let height_style = if height >= self.min_height {
-            Style::default().fg(ratatui::style::Color::Green)
+            Style::default().fg(self.config.theme.success())
         } else {
-            Style::default().fg(ratatui::style::Color::Red)
+            Style::default().fg(self.config.theme.error())
         };
         height_span = height_span.style(height_style);
 
@@ -57,9 +59,9 @@ impl Component for ResizeScreen {
         let mut width_span = Span::from(format!("{}", size.width));
 
         let width_style = if width >= self.min_width {
-            Style::default().fg(ratatui::style::Color::Green)
+            Style::default().fg(self.config.theme.success())
         } else {
-            Style::default().fg(ratatui::style::Color::Red)
+            Style::default().fg(self.config.theme.error())
         };
         width_span = width_span.style(width_style);
 
@@ -85,7 +87,7 @@ impl Component for ResizeScreen {
 
         let block = Block::bordered()
             .title(Title::from("< Terminal Too Small >").alignment(layout::Alignment::Center))
-            .border_style(Style::default().fg(ratatui::style::Color::Magenta));
+            .border_style(Style::default().fg(self.config.theme.negative_highlight()));
 
         let [_, inner_area, _] = Layout::vertical(vec![
             Constraint::Min(0),

@@ -21,10 +21,12 @@ chrono = "0.4.38"
 clap = { version = "4.5.6", features = ["derive"] }
 color-eyre = "0.6.3"
 crossterm = { version = "0.27", features = ["event-stream"] }
+dirs-next = "2.0.0"
 futures = "0.3.30"
 itertools = "0.13.0"
 ratatui = { version = "0.27.0", features = ["serde"] }
 serde = "1.0.203"
+serde_yml = "0.0.10"
 tokio = { version = "1.38.0", features = [
     "rt-multi-thread",
     "macros",

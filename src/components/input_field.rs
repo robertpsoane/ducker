@@ -30,7 +30,7 @@ const CONTAINERS: &str = "containers";
 #[derive(Debug)]
 pub struct InputField {
     input: String,
-    prompt: char,
+    prompt: String,
     tx: Sender<Message<Key, Transition>>,
     candidate: Option<String>,
     ac: Autocomplete<'static>,
@@ -38,10 +38,10 @@ pub struct InputField {
 }
 
 impl InputField {
-    pub fn new(tx: Sender<Message<Key, Transition>>) -> Self {
+    pub fn new(tx: Sender<Message<Key, Transition>>, prompt: String) -> Self {
         Self {
             input: String::new(),
-            prompt: '🦆',
+            prompt,
             tx,
             candidate: None,
             ac: Autocomplete::from(vec![QUIT, Q, IMAGE, IMAGES, CONTAINER, CONTAINERS]),
@@ -140,13 +140,8 @@ impl Component for InputField {
 
         if let Some(candidate) = &self.candidate {
             if let Some(delta) = candidate.strip_prefix(&self.input as &str) {
-                input_text.push(
-                    Span::raw(delta).style(
-                        Style::default()
-                            .fg(Color::DarkGray)
-                            .add_modifier(Modifier::DIM),
-                    ),
-                )
+                input_text
+                    .push(Span::raw(delta).style(Style::default().add_modifier(Modifier::DIM)))
             }
         }
 
