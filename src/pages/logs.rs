@@ -26,6 +26,8 @@ const UP_KEY: Key = Key::Up;
 const K_KEY: Key = Key::Char('k');
 const DOWN_KEY: Key = Key::Down;
 const SPACE_BAR: Key = Key::Char(' ');
+const G_KEY: Key = Key::Char('g');
+const SHIFT_G_KEY: Key = Key::Char('G');
 
 #[derive(Debug)]
 pub struct Logs {
@@ -64,7 +66,10 @@ impl Logs {
     }
 
     fn build_page_help(config: Box<Config>) -> PageHelpBuilder {
-        PageHelpBuilder::new(NAME.into(), config).add_input(format!("{ESC_KEY}"), "back".into())
+        PageHelpBuilder::new(NAME.into(), config)
+            .add_input(format!("{ESC_KEY}"), "back".into())
+            .add_input(format!("{G_KEY}"), "top".into())
+            .add_input(format!("{SHIFT_G_KEY}"), "bottom".into())
     }
 
     fn activate_auto_scroll(&mut self) {
@@ -103,6 +108,14 @@ impl Page for Logs {
                         },
                     )))
                     .await?;
+                MessageResponse::Consumed
+            }
+            G_KEY => {
+                self.list_state.select_first();
+                MessageResponse::Consumed
+            }
+            SHIFT_G_KEY => {
+                self.list_state.select_last();
                 MessageResponse::Consumed
             }
             J_KEY | DOWN_KEY => {
