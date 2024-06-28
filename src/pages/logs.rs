@@ -67,31 +67,6 @@ impl Logs {
         PageHelpBuilder::new(NAME.into(), config).add_input(format!("{ESC_KEY}"), "back".into())
     }
 
-    fn increment_list(&mut self) {
-        let current_idx = self.list_state.selected();
-        match current_idx {
-            None => self.list_state.select(Some(0)),
-            Some(current_idx) => {
-                let lock = self.log_messages.lock().unwrap();
-                if !lock.is_empty() && current_idx < lock.len() - 1 {
-                    self.list_state.select(Some(current_idx + 1))
-                }
-            }
-        }
-    }
-
-    fn decrement_list(&mut self) {
-        let current_idx = self.list_state.selected();
-        match current_idx {
-            None => self.list_state.select(Some(0)),
-            Some(current_idx) => {
-                if current_idx > 0 {
-                    self.list_state.select(Some(current_idx - 1))
-                }
-            }
-        }
-    }
-
     fn activate_auto_scroll(&mut self) {
         if self.auto_scroll {
             return;
@@ -131,12 +106,12 @@ impl Page for Logs {
                 MessageResponse::Consumed
             }
             J_KEY | DOWN_KEY => {
-                self.increment_list();
+                self.list_state.select_next();
                 self.deactivate_auto_scroll();
                 MessageResponse::Consumed
             }
             K_KEY | UP_KEY => {
-                self.decrement_list();
+                self.list_state.select_previous();
                 self.deactivate_auto_scroll();
                 MessageResponse::Consumed
             }
@@ -147,9 +122,8 @@ impl Page for Logs {
             _ => MessageResponse::NotConsumed,
         };
 
-        let n_messages = self.log_messages.lock().unwrap().len();
-        if self.auto_scroll && n_messages > 0 {
-            self.list_state.select(Some(n_messages - 1));
+        if self.auto_scroll {
+            self.list_state.select_last();
         }
         Ok(res)
     }
