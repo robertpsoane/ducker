@@ -77,6 +77,14 @@ impl Page for Images {
                 self.increment_list();
                 MessageResponse::Consumed
             }
+            G_KEY => {
+                self.list_state.select(Some(0));
+                MessageResponse::Consumed
+            }
+            SHIFT_G_KEY => {
+                self.list_state.select(Some(self.images.len() - 1));
+                MessageResponse::Consumed
+            }
             CTRL_D_KEY => match self.delete_image(false, None, None) {
                 Ok(_) => MessageResponse::Consumed,
                 Err(_) => MessageResponse::NotConsumed,
