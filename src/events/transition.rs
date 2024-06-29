@@ -1,4 +1,8 @@
+use color_eyre::eyre::{Context, Result};
+use tokio::sync::mpsc::Sender;
+
 use crate::context::AppContext;
+use crate::events::{Key, Message};
 
 /// A transition is a type of event that flows "in reverse" when compared
 /// with input events.  A transition can be emitted from a component
@@ -13,4 +17,14 @@ pub enum Transition {
     ToContainerPage(AppContext),
     ToLogPage(AppContext),
     ToAttach(AppContext),
+}
+
+pub async fn send_transition(
+    tx: Sender<Message<Key, Transition>>,
+    transition: Transition,
+) -> Result<()> {
+    tx.send(Message::Transition(transition))
+        .await
+        .context("unable to send transition")?;
+    Ok(())
 }
