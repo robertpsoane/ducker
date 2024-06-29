@@ -5,67 +5,18 @@ use events::{EventLoop, Key, Message};
 use ui::App;
 
 mod autocomplete;
+mod callbacks;
+mod components;
 mod config;
 mod context;
+mod docker;
+mod events;
+mod pages;
 mod state;
-mod util;
-mod ui {
-    pub mod app;
-    pub mod page_manager;
-
-    pub use app::App;
-}
-mod callbacks {
-    pub mod delete_container;
-    pub mod delete_image;
-
-    pub use delete_container::DeleteContainer;
-}
-mod traits {
-    mod callback;
-    mod component;
-    mod page;
-
-    pub use callback::Callback;
-    pub use component::Component;
-    pub use component::ModalComponent;
-    pub use page::Page;
-}
-mod events {
-    pub mod event_loop;
-    pub mod key;
-    pub mod message;
-    pub mod transition;
-
-    pub use event_loop::EventLoop;
-    pub use key::Key;
-    pub use message::Message;
-    pub use transition::Transition;
-}
-mod widgets {
-    pub mod modal;
-}
-mod docker {
-    pub mod container;
-    pub mod image;
-    pub mod logs;
-}
-mod pages {
-    pub mod attach;
-    pub mod containers;
-    pub mod images;
-    pub mod logs;
-}
-mod components {
-    pub mod alert_modal;
-    pub mod boolean_modal;
-    pub mod footer;
-    pub mod header;
-    pub mod help;
-    pub mod input_field;
-    pub mod resize_notice;
-}
-pub mod terminal;
+mod terminal;
+mod traits;
+mod ui;
+mod widgets;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

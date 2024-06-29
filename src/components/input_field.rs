@@ -15,9 +15,9 @@ use tokio::sync::mpsc::Sender;
 use crate::{
     autocomplete::Autocomplete,
     context::AppContext,
+    events::transition::send_transition,
     events::{message::MessageResponse, Key, Message, Transition},
     traits::Component,
-    util::send_transition,
 };
 
 const QUIT: &str = "quit";
