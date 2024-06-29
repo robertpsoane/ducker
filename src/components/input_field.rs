@@ -200,7 +200,13 @@ impl History {
             None => 0,
         };
 
-        let max_idx = self.values.len() - 1;
+        let n_values = self.values.len();
+
+        if n_values == 0 {
+            return None;
+        }
+
+        let max_idx = n_values - 1;
 
         if max_idx < next_idx {
             next_idx = max_idx
