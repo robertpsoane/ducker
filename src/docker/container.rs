@@ -51,6 +51,15 @@ impl DockerContainer {
 
         let running = matches!(c.state.unwrap_or_default().as_str(), "running");
 
+        let names = c
+            .names
+            .clone()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|n| n.strip_prefix('/').unwrap_or_default().into())
+            .collect::<Vec<String>>()
+            .join(", ");
+
         Self {
             id: c.id.clone().unwrap_or_default(),
             image: c.image.clone().unwrap_or_default(),
@@ -58,13 +67,13 @@ impl DockerContainer {
             created: datetime,
             status: c.status.clone().unwrap_or_default(),
             ports,
-            names: c.names.clone().unwrap_or_default().join(", "),
+            names,
             running,
         }
     }
 
     pub async fn list(docker: &bollard::Docker) -> Result<Vec<Self>> {
-        let containrs = docker
+        let containers = docker
             .list_containers(Some(ListContainersOptions::<String> {
                 all: true,
                 ..Default::default()
@@ -75,7 +84,7 @@ impl DockerContainer {
             .map(Self::from)
             .collect();
 
-        Ok(containrs)
+        Ok(containers)
     }
 
     pub async fn delete(&self, docker: &bollard::Docker, force: bool) -> Result<()> {
@@ -100,7 +109,7 @@ impl DockerContainer {
         docker
             .stop_container(&self.id, None)
             .await
-            .context("failed to start container")?;
+            .context("failed to stop container")?;
         Ok(())
     }
 

@@ -8,7 +8,10 @@ use ratatui::{
     widgets::{Row, Table, TableState},
     Frame,
 };
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashSet,
+    sync::{Arc, Mutex},
+};
 use tokio::sync::mpsc::Sender;
 
 use crate::{
@@ -55,6 +58,7 @@ pub struct Containers {
     containers: Vec<DockerContainer>,
     list_state: TableState,
     modal: Option<BooleanModal<ModalTypes>>,
+    stopping_containers: Arc<Mutex<HashSet<String>>>,
 }
 
 #[async_trait::async_trait]
@@ -197,6 +201,7 @@ impl Containers {
             containers: vec![],
             list_state: TableState::default(),
             modal: None,
+            stopping_containers: Arc::new(Mutex::new(HashSet::new())),
         }
     }
 
@@ -249,7 +254,27 @@ impl Containers {
 
     async fn stop_container(&mut self) -> Result<Option<()>> {
         if let Ok(container) = self.get_container() {
-            container.stop(&self.docker).await?;
+            self.stopping_containers
+                .lock()
+                .unwrap()
+                .insert(container.id.clone());
+
+            let c = container.clone();
+            let docker = self.docker.clone();
+            let tx = self.tx.clone();
+            let stopping_containers = self.stopping_containers.clone();
+            tokio::spawn(async move {
+                let message = if c.stop(&docker).await.is_ok() {
+                    Message::Tick
+                } else {
+                    let msg = format!("Failed to delete container {}", c.id);
+                    Message::Error(msg)
+                };
+                stopping_containers.lock().unwrap().remove(&c.id);
+                let _ = tx.send(message).await;
+            });
+
+            // Second spawned taskt is used to update the state
 
             self.refresh().await?;
             return Ok(Some(()));
@@ -262,19 +287,17 @@ impl Containers {
             let name = container.names.clone();
             let image = container.image.clone();
 
-            let message = match container.running {
-                true => {
-                    format!("Are you sure you wish to delete container {name} (image = {image})?  This container is currently running; this will result in a force deletion.")
-                }
-                false => {
-                    format!("Are you sure you wish to delete container {name} (image = {image})?")
-                }
+            let message = if container.running {
+                format!("Are you sure you wish to delete container {name} (image = {image})?  This container is currently running; this will result in a force deletion.")
+            } else {
+                format!("Are you sure you wish to delete container {name} (image = {image})?")
             };
 
             let cb = Arc::new(FutureMutex::new(DeleteContainer::new(
                 self.docker.clone(),
                 container.clone(),
                 container.running,
+                self.tx.clone(),
             )));
 
             let mut modal =
@@ -291,9 +314,12 @@ impl Containers {
 impl Component for Containers {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         let rows = self.containers.clone().into_iter().map(|c| {
-            let style = match c.running {
-                true => Style::default().fg(self.config.theme.positive_highlight()),
-                false => Style::default(),
+            let style = if self.stopping_containers.lock().unwrap().contains(&c.id) {
+                Style::default().fg(self.config.theme.negative_highlight())
+            } else if c.running {
+                Style::default().fg(self.config.theme.positive_highlight())
+            } else {
+                Style::default()
             };
 
             Row::new(vec![

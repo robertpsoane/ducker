@@ -123,12 +123,7 @@ impl App {
     }
 
     async fn update_view_mode(&mut self, message: Key) -> Result<MessageResponse> {
-        if let MessageResponse::Consumed = self
-            .page_manager
-            .update(message)
-            .await
-            .context("unable to update body")?
-        {
+        if let MessageResponse::Consumed = self.page_manager.update(message).await? {
             return Ok(MessageResponse::Consumed);
         }
 
