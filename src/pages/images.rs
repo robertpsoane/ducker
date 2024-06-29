@@ -34,6 +34,7 @@ const DOWN_KEY: Key = Key::Down;
 const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
 const CTRL_D_KEY: Key = Key::Ctrl('d');
+const D_KEY: Key = Key::Char('d');
 const G_KEY: Key = Key::Char('g');
 const SHIFT_G_KEY: Key = Key::Char('G');
 
@@ -52,6 +53,7 @@ pub struct Images {
     images: Vec<DockerImage>,
     list_state: TableState,
     modal: Option<BooleanModal<ModalTypes>>,
+    show_dangling: bool,
 }
 
 #[async_trait::async_trait]
@@ -75,6 +77,10 @@ impl Page for Images {
             }
             DOWN_KEY | J_KEY => {
                 self.increment_list();
+                MessageResponse::Consumed
+            }
+            D_KEY => {
+                self.show_dangling = !self.show_dangling;
                 MessageResponse::Consumed
             }
             G_KEY => {
@@ -124,12 +130,10 @@ impl Page for Images {
 impl Images {
     pub fn new(docker: Docker, config: Box<Config>) -> Self {
         let page_help = PageHelpBuilder::new(NAME.into(), config.clone())
-            // .add_input(format!("{}", A_KEY), "attach".into())
             .add_input(format!("{CTRL_D_KEY}"), "delete".into())
-            // .add_input(format!("{R_KEY}"), "run".into())
-            // .add_input(format!("{S_KEY}"), "stop".into())
             .add_input(format!("{G_KEY}"), "top".into())
             .add_input(format!("{SHIFT_G_KEY}"), "bottom".into())
+            .add_input(format!("{D_KEY}"), "dangling".into())
             .build();
 
         Self {
@@ -140,6 +144,7 @@ impl Images {
             images: vec![],
             list_state: TableState::default(),
             modal: None,
+            show_dangling: false,
         }
     }
 
@@ -147,7 +152,7 @@ impl Images {
         let mut filters: HashMap<String, Vec<String>> = HashMap::new();
         filters.insert("dangling".into(), vec!["false".into()]);
 
-        self.images = DockerImage::list(&self.docker)
+        self.images = DockerImage::list(&self.docker, self.show_dangling)
             .await
             .context("unable to retrieve list of images")?;
         Ok(())

@@ -28,13 +28,23 @@ impl DockerImage {
         .format("%Y-%m-%d %H:%M:%S");
         let b = Byte::from_u64(bollard_image.size as u64).get_appropriate_unit(UnitType::Binary);
 
-        for repo_tag in bollard_image.repo_tags {
-            let split_tag = repo_tag.split(':').collect::<Vec<&str>>();
+        if !bollard_image.repo_tags.is_empty() {
+            for repo_tag in bollard_image.repo_tags {
+                let split_tag = repo_tag.split(':').collect::<Vec<&str>>();
 
+                response.push(Self {
+                    id: bollard_image.id.clone(),
+                    name: split_tag[0].to_string(),
+                    tag: split_tag[1].to_string(),
+                    created: datetime.to_string(),
+                    size: format!("{b:.2}"),
+                })
+            }
+        } else {
             response.push(Self {
                 id: bollard_image.id.clone(),
-                name: split_tag[0].to_string(),
-                tag: split_tag[1].to_string(),
+                name: "<none>".into(),
+                tag: "<none>".into(),
                 created: datetime.to_string(),
                 size: format!("{b:.2}"),
             })
@@ -42,13 +52,15 @@ impl DockerImage {
         response
     }
 
-    pub async fn list(docker: &bollard::Docker) -> Result<Vec<Self>> {
+    pub async fn list(docker: &bollard::Docker, dangling: bool) -> Result<Vec<Self>> {
         let mut filters: HashMap<String, Vec<String>> = HashMap::new();
-        filters.insert("dangling".into(), vec!["false".into()]);
+        if !dangling {
+            filters.insert("dangling".into(), vec!["false".into()]);
+        }
 
         let mut images = docker
             .list_images(Some(ListImagesOptions::<String> {
-                all: false,
+                all: true,
                 digests: false,
                 filters,
             }))
@@ -76,6 +88,12 @@ impl DockerImage {
     }
 
     pub fn get_full_name(&self) -> String {
-        format!("{}:{}", self.name, self.tag)
+        let image = format!("{}:{}", self.name, self.tag);
+
+        if image == "<none>:<none>" {
+            self.id.clone()
+        } else {
+            image
+        }
     }
 }
