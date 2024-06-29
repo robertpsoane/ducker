@@ -20,6 +20,7 @@ pub enum CurrentPage {
     Images,
     Logs,
     Attach,
+    DescribeContainer,
 }
 
 // impl Default for CurrentPage {

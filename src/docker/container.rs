@@ -2,14 +2,19 @@ use bollard::container::{ListContainersOptions, RemoveContainerOptions};
 use chrono::prelude::DateTime;
 use chrono::Local;
 use color_eyre::eyre::{Context, Result};
-use std::time::{Duration, UNIX_EPOCH};
+use serde::Serialize;
+use std::{
+    collections::HashMap,
+    time::{Duration, UNIX_EPOCH},
+};
 use tokio::process::Command;
 
 use bollard::secret::ContainerSummary;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct DockerContainer {
     pub id: String,
+    pub image_id: String,
     pub image: String,
     pub command: String,
     pub created: String,
@@ -17,9 +22,14 @@ pub struct DockerContainer {
     pub ports: String,
     pub names: String,
     pub running: bool,
+    read_write_size: String,
+    root_fs_size: String,
+    labels: Option<HashMap<String, String>>,
+    network_mode: Option<String>,
 }
 
 impl DockerContainer {
+    /// Builds a DockerContainer struct from a bollard::...::ContainerSummary instance.
     pub fn from(c: ContainerSummary) -> Self {
         let ports = match c.ports.clone() {
             Some(p) => p
@@ -49,7 +59,7 @@ impl DockerContainer {
         .format("%Y-%m-%d %H:%M:%S")
         .to_string();
 
-        let running = matches!(c.state.unwrap_or_default().as_str(), "running");
+        let running = matches!(c.state.clone().unwrap_or_default().as_str(), "running");
 
         let names = c
             .names
@@ -63,15 +73,24 @@ impl DockerContainer {
         Self {
             id: c.id.clone().unwrap_or_default(),
             image: c.image.clone().unwrap_or_default(),
+            image_id: c.image.clone().unwrap_or_default(),
             command: c.command.clone().unwrap_or_default(),
             created: datetime,
             status: c.status.clone().unwrap_or_default(),
             ports,
             names,
             running,
+            read_write_size: String::new(),
+            root_fs_size: String::new(),
+            labels: None,
+            network_mode: None,
         }
     }
 
+    /// Lists all containers present on a given docker daemon
+    ///
+    /// **Note:** While this returns all containers present, it will
+    /// return only the minimal set of values (those which aren't marked optional).
     pub async fn list(docker: &bollard::Docker) -> Result<Vec<Self>> {
         let containers = docker
             .list_containers(Some(ListContainersOptions::<String> {
@@ -87,6 +106,7 @@ impl DockerContainer {
         Ok(containers)
     }
 
+    /// Delete the container from the relevant docker daemon
     pub async fn delete(&self, docker: &bollard::Docker, force: bool) -> Result<()> {
         let opt = RemoveContainerOptions {
             force,
@@ -96,6 +116,7 @@ impl DockerContainer {
         Ok(())
     }
 
+    /// Start the container on the docker daemon
     pub async fn start(&self, docker: &bollard::Docker) -> Result<()> {
         docker
             .start_container::<String>(&self.id, None)
@@ -105,6 +126,7 @@ impl DockerContainer {
         Ok(())
     }
 
+    /// Stop the container from running
     pub async fn stop(&self, docker: &bollard::Docker) -> Result<()> {
         docker
             .stop_container(&self.id, None)
@@ -113,6 +135,7 @@ impl DockerContainer {
         Ok(())
     }
 
+    /// Exec into the container with the given command
     pub async fn attach(&self, cmd: &str) -> Result<()> {
         Command::new("clear").spawn()?.wait().await?;
 
