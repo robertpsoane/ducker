@@ -2,7 +2,9 @@
 
 A terminal app for managing docker containers, inpired by [K9s](https://k9scli.io/)
 
-This is perhaps obviously very much a work in progress...
+❗❗❗ **Note:** Ducker is currently in a "pre-release" state. ❗❗❗
+
+By all means install and try it out, but it is currently undergoing active development, and there are a number of known issues and features in the pipeline (see the pinned issue).
 
 
 ![](https://raw.githubusercontent.com/robertpsoane/ducker/master/demo.gif?raw=true)
@@ -24,6 +26,72 @@ You can install `ducker` from the [AUR](https://aur.archlinux.org/packages/ducke
 paru -S ducker
 ```
 
+## Useage
+
+Ducker is comprised of a set of **pages**, each of which display specific information about and/or allow interaction with the docker containers and images on the host system.
+
+Top level **pages** can be navigated to with **commands**, input via the **prompt**.  **Pages** can be interacted with using **actions**; these are input via hotkey inputs.
+
+A legend for common global hotkey inputs is displayed at the bottom of the screen; one for contextual (eg different on each page) hotkey inputs are displayed in the top right.
+
+### Commands
+
+The following commands are supported:
+
+| Command      | Aliases     | Description                          |
+| ------------ | ----------- | ------------------------------------ |
+| `images`     | `image`     | Open the `Images` top level page     |
+| `containers` | `container` | Open the `Containers` top level page |
+| `quit`       | `q`         | Close the application                |
+
+
+### Actions
+
+#### Global
+
+The following global actions are available on all pages:
+
+| Hotkey  | Action                                    |
+| ------- | ----------------------------------------- |
+| `k`/`↑` | Navigate up in a list/table               |
+| `j`/`↓` | Navigate down in a list/table             |
+| `Q`/`q` | Close the application                     |
+| `:`     | Open the command prompt                   |
+| `G`     | Navigate to the bottom of a list or table |
+| `g`     | Navigate to the top of a list or table    |
+
+#### Containers
+
+The following actions are available on the Containers page:
+
+| Hotkey   | Action                                                                |
+| -------- | --------------------------------------------------------------------- |
+| `Ctrl+d` | Delete the currently selected container                               |
+| `a`      | Exec into the currently selected container (if container is running)* |
+| `l`      | View the logs for the currently selected container                    |
+| `r`      | Run the currently selected container                                  |
+| `s`      | Stop the currently selected container                                 |
+
+***NB**: exec currently only supports containers with bash installed.  The intention is that this will be updated to provide a user option.
+
+#### Images
+
+The following actions are available on the Images page:
+
+| Hotkey   | Action                                                         |
+| -------- | -------------------------------------------------------------- |
+| `Ctrl+d` | Delete the currently selected image                            |
+| `d`      | Toggle whether or not to show dangling images (off by default) |
+
+
+#### Logs
+
+The following actions are available on the Logs page:
+
+| Hotkey | Action                        |
+| ------ | ----------------------------- |
+| `Esc`  | Return to the containers page |
+
 ## Configuration
 
 Ducker is configured via a yaml file found in the relevant config directory for host platform.  On linux this is `~/.config/ducker/config.yaml`.
@@ -31,8 +99,8 @@ Ducker is configured via a yaml file found in the relevant config directory for 
 The following table summarises the available config values:
 
 | Key          | Default     | Description                                                                                                                 |
-|--------------|-------------|-----------------------------------------------------------------------------------------------------------------------------|
-| prompt       | 🦆          | The default prompt to display in the command pane                                                                           |
+| ------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------- |
+| prompt       | 🦆           | The default prompt to display in the command pane                                                                           |
 | default_exec | `/bin/bash` | The default prompt to display in the command pane. NB - currently uses this for all exec's; it is planned to offer a choice |
 | theme        | [See below] | The colour theme configuration                                                                                              |
 
@@ -45,7 +113,7 @@ To create a fully populated default config, run ducker with the `-e/--export-def
 By default, ducker uses the terminal emulator's preset colours.  However, it is possible to set a custom colour theme in config.  This is set in the `theme` section of the config file.  The following table describes the theme options.  The default theme provides the colours provided in the GIF in this README.
 
 | Key                | Default   | Description                                                                                          |
-|--------------------|-----------|------------------------------------------------------------------------------------------------------|
+| ------------------ | --------- | ---------------------------------------------------------------------------------------------------- |
 | use_theme          | `false`   | When `true` uses the colour scheme defined in config, when `false` uses the default terminal colours |
 | title              | `#96E072` | The colour used for the Ducker font in the header                                                    |
 | help               | `#EE5D43` | The colour used in the help prompts in the header                                                    |
