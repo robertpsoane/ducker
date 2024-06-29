@@ -3,6 +3,7 @@ pub enum Message<I, T> {
     Tick,
     Input(I),
     Transition(T),
+    Error(String),
 }
 
 #[derive(PartialEq, Debug, Clone)]

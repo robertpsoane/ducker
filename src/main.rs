@@ -124,6 +124,10 @@ async fn main() -> color_eyre::Result<()> {
             Message::Tick => {
                 app.update(Key::Null).await;
             }
+
+            Message::Error(_) => {
+                // This needs implementing
+            }
         }
     }
 
