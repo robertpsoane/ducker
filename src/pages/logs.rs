@@ -13,7 +13,7 @@ use crate::config::Config;
 use crate::context::AppContext;
 use crate::{
     components::help::{PageHelp, PageHelpBuilder},
-    docker::{container::DockerContainer, logs::DockerLogs},
+    docker::{container_summary::DockerContainerSummary, logs::DockerLogs},
     events::{message::MessageResponse, Key, Message, Transition},
     traits::{Close, Component, Page},
 };
@@ -34,7 +34,7 @@ pub struct Logs {
     config: Box<Config>,
     docker: bollard::Docker,
     tx: Sender<Message<Key, Transition>>,
-    container: Option<DockerContainer>,
+    container: Option<DockerContainerSummary>,
     logs: Option<DockerLogs>,
     page_help: Arc<Mutex<PageHelp>>,
     log_messages: Arc<Mutex<Vec<String>>>,

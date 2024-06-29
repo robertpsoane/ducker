@@ -1,5 +1,5 @@
 use crate::{
-    docker::container::DockerContainer,
+    docker::container_summary::DockerContainerSummary,
     events::{Key, Message, Transition},
     traits::Callback,
 };
@@ -10,7 +10,7 @@ use tokio::sync::mpsc::Sender;
 #[derive(Debug)]
 pub struct DeleteContainer {
     docker: bollard::Docker,
-    container: DockerContainer,
+    container: DockerContainerSummary,
     force: bool,
     tx: Sender<Message<Key, Transition>>,
 }
@@ -18,7 +18,7 @@ pub struct DeleteContainer {
 impl DeleteContainer {
     pub fn new(
         docker: bollard::Docker,
-        container: DockerContainer,
+        container: DockerContainerSummary,
         force: bool,
         tx: Sender<Message<Key, Transition>>,
     ) -> Self {

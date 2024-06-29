@@ -1,19 +1,19 @@
 use bollard::container::LogsOptions;
 use futures::{Stream, StreamExt};
 
-use super::container::DockerContainer;
+use super::container_summary::DockerContainerSummary;
 
 #[derive(Debug, Clone)]
 pub struct DockerLogs {
-    container: DockerContainer,
+    container: DockerContainerSummary,
 }
 
 impl DockerLogs {
-    pub fn new(container: DockerContainer) -> Self {
+    pub fn new(container: DockerContainerSummary) -> Self {
         DockerLogs { container }
     }
 
-    pub fn from(container: DockerContainer) -> Self {
+    pub fn from(container: DockerContainerSummary) -> Self {
         Self::new(container)
     }
 
