@@ -15,7 +15,7 @@ use crate::{
     components::help::{PageHelp, PageHelpBuilder},
     docker::{container::DockerContainer, logs::DockerLogs},
     events::{message::MessageResponse, Key, Message, Transition},
-    traits::{Component, Page},
+    traits::{Close, Component, Page},
 };
 
 const NAME: &str = "Logs";
@@ -141,7 +141,13 @@ impl Page for Logs {
         Ok(res)
     }
 
-    async fn initialise(&mut self) -> Result<()> {
+    async fn initialise(&mut self, cx: AppContext) -> Result<()> {
+        if let Some(container) = cx.docker_container {
+            self.logs = Some(DockerLogs::from(container.clone()));
+            self.container = Some(container);
+        } else {
+            bail!("no docker container")
+        }
         self.auto_scroll = true;
         if let Some(logs) = &self.logs {
             let mut logs_stream = logs.get_log_stream(&self.docker, 50);
@@ -162,18 +168,14 @@ impl Page for Logs {
         Ok(())
     }
 
-    async fn set_visible(&mut self, cx: AppContext) -> Result<()> {
-        if let Some(container) = cx.docker_container {
-            self.logs = Some(DockerLogs::from(container.clone()));
-            self.container = Some(container);
-        } else {
-            bail!("no docker container")
-        }
-        self.initialise().await?;
-        Ok(())
+    fn get_help(&self) -> Arc<Mutex<PageHelp>> {
+        self.page_help.clone()
     }
+}
 
-    async fn set_invisible(&mut self) -> Result<()> {
+#[async_trait::async_trait]
+impl Close for Logs {
+    async fn close(&mut self) -> Result<()> {
         if let Some(handle) = &self.log_streamer_handle {
             handle.abort()
         }
@@ -181,10 +183,6 @@ impl Page for Logs {
         self.logs = None;
         self.log_messages = Arc::new(Mutex::new(vec![]));
         Ok(())
-    }
-
-    fn get_help(&self) -> Arc<Mutex<PageHelp>> {
-        self.page_help.clone()
     }
 }
 
