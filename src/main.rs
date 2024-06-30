@@ -1,6 +1,7 @@
 use clap::Parser;
 use color_eyre::eyre::Context;
 use config::Config;
+use docker::util::new_local_docker_connection;
 use events::{EventLoop, Key, Message};
 use ui::App;
 
@@ -18,6 +19,8 @@ mod traits;
 mod ui;
 mod widgets;
 
+const CONFIGURATION_DOC_PATH: &str = "https://github.com/robertpsoane/ducker#configuration";
+
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
@@ -25,19 +28,29 @@ struct Args {
     /// (usually ~/.config/ducker/config.yaml)
     #[clap(long, short, action)]
     export_default_config: bool,
+
+    /// Path at which to find the socket to communicate with
+    /// docker
+    #[clap(long, short)]
+    docker_path: Option<String>,
 }
 
 #[tokio::main]
 async fn main() -> color_eyre::Result<()> {
     let args = Args::parse();
-    let config = Config::new(&args.export_default_config)?;
+    let config = Config::new(&args.export_default_config, args.docker_path)?;
+
+    let docker = new_local_docker_connection(&config.docker_path)
+        .await
+        .context(format!("failed to create docker connection, potentially due to misconfiguration (see {CONFIGURATION_DOC_PATH})"))?;
 
     terminal::init_panic_hook();
+
     let mut terminal = terminal::init().context("failed to initialise terminal")?;
 
     let mut events = EventLoop::new();
     let events_tx = events.get_tx();
-    let mut app = App::new(events_tx, config)
+    let mut app = App::new(events_tx, docker, config)
         .await
         .context("failed to create app")?;
 
