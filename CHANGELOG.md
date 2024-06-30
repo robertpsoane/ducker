@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.4](https://github.com/robertpsoane/ducker/compare/v0.0.3...v0.0.4) - 2024-06-30
+
+### Other
+- *(deps)* bump clap from 4.5.6 to 4.5.8
+- *(pages)* simplify page lifecycle removing the redundant concept of visibility
+
 ## [0.0.3](https://github.com/robertpsoane/ducker/compare/v0.0.2...v0.0.3) - 2024-06-30
 
 ### Added
