@@ -16,17 +16,13 @@
 # Filesystems
 - Access image/container filesystem & get file
 
-# Other/Tech Debt
-- Fix error message when docker isn't installed/docker.sock is unavailable
-    - Potentially offer alternative sock path as well?
-- Proper help page in repo & included in app somewhere
-- Use mod.rs; current setup is hella confusing
-
-
+# Modals
 - Modals to use trait objects
+- General purpose modals for errors
+
+# Other/Tech Debt
 - Fix callbacks to use closures
 - Add filter widget/component (similar to vim searching)
-- General purpose modals for errors
 - Add tracing of some sort
 - Simplify page loading/closing lifecycle
     - Can visibility be removed, and just rely on constructor?
