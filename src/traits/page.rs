@@ -14,10 +14,15 @@ use crate::{
 };
 
 #[async_trait]
-pub trait Page: Component + Debug + Send + Sync {
+pub trait Page: Component + Close + Debug + Send + Sync {
     async fn update(&mut self, message: Key) -> Result<MessageResponse>;
-    async fn initialise(&mut self) -> Result<()>;
-    async fn set_visible(&mut self, cx: AppContext) -> Result<()>;
-    async fn set_invisible(&mut self) -> Result<()>;
+    async fn initialise(&mut self, cx: AppContext) -> Result<()>;
     fn get_help(&self) -> Arc<Mutex<PageHelp>>;
+}
+
+#[async_trait]
+pub trait Close: Debug + Send + Sync {
+    async fn close(&mut self) -> Result<()> {
+        Ok(())
+    }
 }

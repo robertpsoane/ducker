@@ -51,7 +51,7 @@ impl PageManager {
     }
 
     pub async fn init(&mut self) -> Result<()> {
-        self.page.set_visible(AppContext::default()).await?;
+        self.page.initialise(AppContext::default()).await?;
         Ok(())
     }
 
@@ -94,7 +94,7 @@ impl PageManager {
             return Ok(());
         }
         self.page
-            .set_invisible()
+            .close()
             .await
             .context("unable to close old page")?;
 
@@ -124,7 +124,7 @@ impl PageManager {
         };
 
         self.page
-            .set_visible(cx)
+            .initialise(cx)
             .await
             .context("unable to open new page")?;
 

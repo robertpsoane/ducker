@@ -8,6 +8,7 @@ use tokio::sync::mpsc::Sender;
 
 use crate::config::Config;
 use crate::context::AppContext;
+use crate::traits::Close;
 use crate::{
     components::help::{PageHelp, PageHelpBuilder},
     docker::container::DockerContainer,
@@ -50,7 +51,12 @@ impl Page for Attach {
         Ok(res)
     }
 
-    async fn initialise(&mut self) -> Result<()> {
+    async fn initialise(&mut self, cx: AppContext) -> Result<()> {
+        if let Some(container) = cx.docker_container {
+            self.container = Some(container)
+        } else {
+            bail!("no docker container")
+        }
         if let Some(container) = self.container.clone() {
             disable_raw_mode()?;
             container.attach(&self.config.default_exec).await?;
@@ -69,24 +75,13 @@ impl Page for Attach {
         Ok(())
     }
 
-    async fn set_visible(&mut self, cx: AppContext) -> Result<()> {
-        if let Some(container) = cx.docker_container {
-            self.container = Some(container)
-        } else {
-            bail!("no docker container")
-        }
-        self.initialise().await?;
-        Ok(())
-    }
-
-    async fn set_invisible(&mut self) -> Result<()> {
-        Ok(())
-    }
-
     fn get_help(&self) -> Arc<Mutex<PageHelp>> {
         self.page_help.clone()
     }
 }
+
+#[async_trait::async_trait]
+impl Close for Attach {}
 
 impl Component for Attach {
     fn draw(&mut self, _f: &mut Frame<'_>, _area: Rect) {}

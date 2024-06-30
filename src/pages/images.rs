@@ -23,7 +23,7 @@ use crate::{
     context::AppContext,
     docker::image::DockerImage,
     events::{message::MessageResponse, Key},
-    traits::{Component, ModalComponent, Page},
+    traits::{Close, Component, ModalComponent, Page},
 };
 
 const NAME: &str = "Images";
@@ -47,7 +47,6 @@ enum ModalTypes {
 #[derive(Debug)]
 pub struct Images {
     pub name: String,
-    pub visible: bool,
     page_help: Arc<Mutex<PageHelp>>,
     docker: Docker,
     images: Vec<DockerImage>,
@@ -59,10 +58,6 @@ pub struct Images {
 #[async_trait::async_trait]
 impl Page for Images {
     async fn update(&mut self, message: Key) -> Result<MessageResponse> {
-        if !self.visible {
-            return Ok(MessageResponse::NotConsumed);
-        }
-
         self.refresh().await?;
 
         let res = self.update_modal(message).await?;
@@ -101,24 +96,11 @@ impl Page for Images {
         Ok(result)
     }
 
-    async fn initialise(&mut self) -> Result<()> {
+    async fn initialise(&mut self, _: AppContext) -> Result<()> {
         self.list_state = TableState::default();
         self.list_state.select(Some(0));
 
-        self.refresh().await?;
-        Ok(())
-    }
-
-    async fn set_visible(&mut self, _: AppContext) -> Result<()> {
-        self.visible = true;
-        self.initialise()
-            .await
-            .context("unable to set containers as visible")?;
-        Ok(())
-    }
-
-    async fn set_invisible(&mut self) -> Result<()> {
-        self.visible = false;
+        self.refresh().await.context("unable to refresh images")?;
         Ok(())
     }
 
@@ -126,6 +108,9 @@ impl Page for Images {
         self.page_help.clone()
     }
 }
+
+#[async_trait::async_trait]
+impl Close for Images {}
 
 impl Images {
     pub fn new(docker: Docker, config: Box<Config>) -> Self {
@@ -139,7 +124,6 @@ impl Images {
         Self {
             name: String::from(NAME),
             page_help: Arc::new(Mutex::new(page_help)),
-            visible: false,
             docker,
             images: vec![],
             list_state: TableState::default(),

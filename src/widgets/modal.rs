@@ -82,6 +82,6 @@ impl<'a> Widget for ModalWidget<'a> {
 
         self.prompt.wrap(Wrap { trim: true }).render(top, buf);
 
-        Line::from(self.opts).centered().render(bottom, buf)
+        Line::from(self.opts).centered().render(bottom, buf);
     }
 }

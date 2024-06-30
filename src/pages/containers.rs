@@ -24,7 +24,7 @@ use crate::{
     context::AppContext,
     docker::container::DockerContainer,
     events::{message::MessageResponse, Key, Message, Transition},
-    traits::{Component, ModalComponent, Page},
+    traits::{Close, Component, ModalComponent, Page},
 };
 
 const NAME: &str = "Containers";
@@ -51,7 +51,6 @@ enum ModalTypes {
 pub struct Containers {
     config: Box<Config>,
     pub name: String,
-    pub visible: bool,
     tx: Sender<Message<Key, Transition>>,
     page_help: Arc<Mutex<PageHelp>>,
     docker: Docker,
@@ -64,10 +63,6 @@ pub struct Containers {
 #[async_trait::async_trait]
 impl Page for Containers {
     async fn update(&mut self, message: Key) -> Result<MessageResponse> {
-        if !self.visible {
-            return Ok(MessageResponse::NotConsumed);
-        }
-
         // If a modal is open, we process it; if it is open or complete, and the
         // result is Consumed, we exit early with the Consumed result
         if let Some(m) = self.modal.as_mut() {
@@ -139,19 +134,13 @@ impl Page for Containers {
         Ok(result)
     }
 
-    async fn initialise(&mut self) -> Result<()> {
+    async fn initialise(&mut self, cx: AppContext) -> Result<()> {
         self.list_state = TableState::default();
         self.list_state.select(Some(0));
 
-        self.refresh().await?;
-        Ok(())
-    }
-
-    async fn set_visible(&mut self, cx: AppContext) -> Result<()> {
-        self.visible = true;
-        self.initialise()
+        self.refresh()
             .await
-            .context("unable to set containers as visible")?;
+            .context("unable to set refresh containers")?;
 
         // If a context has been passed in, choose that item in list
         // this ist to allo logs, attach etc to appear to revert to previous
@@ -169,15 +158,13 @@ impl Page for Containers {
         Ok(())
     }
 
-    async fn set_invisible(&mut self) -> Result<()> {
-        self.visible = false;
-        Ok(())
-    }
-
     fn get_help(&self) -> Arc<Mutex<PageHelp>> {
         self.page_help.clone()
     }
 }
+
+#[async_trait::async_trait]
+impl Close for Containers {}
 
 impl Containers {
     pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Box<Config>) -> Self {
@@ -196,7 +183,6 @@ impl Containers {
             name: String::from(NAME),
             page_help: Arc::new(Mutex::new(page_help)),
             tx,
-            visible: false,
             docker,
             containers: vec![],
             list_state: TableState::default(),
