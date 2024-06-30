@@ -29,11 +29,9 @@ impl PageManager {
     pub async fn new(
         page: state::CurrentPage,
         tx: Sender<Message<Key, Transition>>,
+        docker: Docker,
         config: Box<Config>,
     ) -> Result<Self> {
-        let docker = bollard::Docker::connect_with_socket_defaults()
-            .context("unable to connect to local docker daemon")?;
-
         let containers = Box::new(Containers::new(docker.clone(), tx.clone(), config.clone()));
 
         let mut page_manager = Self {

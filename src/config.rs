@@ -16,25 +16,33 @@ pub struct Config {
     #[serde(default = "default_exec")]
     pub default_exec: String,
 
+    #[serde(default = "default_docker_path")]
+    pub docker_path: String,
+
     #[serde(default)]
     pub theme: Theme,
 }
 
 impl Config {
-    pub fn new(write: &bool) -> Result<Self> {
+    pub fn new(write: &bool, docker_path: Option<String>) -> Result<Self> {
         let config_path = get_app_config_path()?.join("config.yaml");
         if *write {
             write_default_config(&config_path).context("failed to write default config")?;
         }
 
-        if let Ok(f) = File::open(config_path) {
-            let config: Config =
-                serde_yml::from_reader(BufReader::new(f)).context("unable to parse config")?;
+        let mut config: Config;
 
-            Ok(config)
+        if let Ok(f) = File::open(config_path) {
+            config = serde_yml::from_reader(BufReader::new(f)).context("unable to parse config")?;
         } else {
-            Ok(Config::default())
+            config = Config::default()
         }
+
+        if let Some(p) = docker_path {
+            config.docker_path = p;
+        }
+
+        Ok(config)
     }
 }
 
@@ -46,6 +54,14 @@ fn default_exec() -> String {
     "/bin/bash".into()
 }
 
+fn default_docker_path() -> String {
+    #[cfg(unix)]
+    return "unix:///var/run/docker.sock".into();
+
+    #[cfg(windows)]
+    return "npipe:////./pipe/docker_engine".into();
+}
+
 fn default_use_theme() -> bool {
     false
 }
@@ -55,7 +71,7 @@ impl Default for Config {
         Self {
             prompt: default_prompt(),
             default_exec: default_exec(),
-
+            docker_path: default_docker_path(),
             theme: Theme::default(),
         }
     }

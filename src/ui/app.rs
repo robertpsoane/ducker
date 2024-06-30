@@ -1,3 +1,4 @@
+use bollard::Docker;
 use color_eyre::eyre::{Context, Result};
 use ratatui::{
     layout::{Constraint, Layout, Rect},
@@ -42,12 +43,16 @@ pub struct App {
 }
 
 impl App {
-    pub async fn new(tx: Sender<Message<Key, Transition>>, config: Config) -> Result<Self> {
+    pub async fn new(
+        tx: Sender<Message<Key, Transition>>,
+        docker: Docker,
+        config: Config,
+    ) -> Result<Self> {
         let config = Box::new(config);
 
         let page = state::CurrentPage::default();
 
-        let body = PageManager::new(page.clone(), tx.clone(), config.clone())
+        let body = PageManager::new(page.clone(), tx.clone(), docker, config.clone())
             .await
             .context("unable to create new body component")?;
 
