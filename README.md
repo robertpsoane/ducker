@@ -1,16 +1,30 @@
-# Ducker
+<p align="center">
+	<h1 align="center">Ducker</h1>
+</p>
 
-A terminal app for managing docker containers, inpired by [K9s](https://k9scli.io/)
+<p align="center">
+🐋 A terminal app for managing docker containers, inspired by <a href="https://k9scli.io">K9s</a>
+<br/>
+<a href="#installation">Installation</a> · <a href="#useage">Useage</a> · <a href="#configuration">Configuration</a>
+</p>
 
-❗❗❗ **Note:** Ducker is currently in a "pre-release" state. ❗❗❗
 
-By all means install and try it out, but it is currently undergoing active development, and there are a number of known issues and features in the pipeline (see the pinned issue).
+<a href="https://github.com/robertpsoane/ducker"><img src="https://raw.githubusercontent.com/robertpsoane/ducker/master/demo.gif?raw=true" width="100%" /></a>
 
-
-![](https://raw.githubusercontent.com/robertpsoane/ducker/master/demo.gif?raw=true)
-
+<p align="center">
+🦀 Written in Rust 🦀
+</p>
 
 ## Installation
+
+<p align="center">
+❗ Note: Ducker is currently in a "pre-release" state. ❗
+<br/>
+Please do install and try it out - it is currently undergoing active development. There are a number of known issues and features in the pipeline (<a href="https://github.com/robertpsoane/ducker/issues/2">see the pinned issue</a>).  Any feedback is welcome.
+</p>
+
+
+### Cargo
 
 There isn't currently a downloadable build; to install you will need cargo installed:
 
@@ -24,6 +38,14 @@ You can install `ducker` from the [AUR](https://aur.archlinux.org/packages/ducke
 
 ```sh
 paru -S ducker
+```
+
+### Unstable
+
+To install the latest unstable version of Ducker, run the following command:
+
+```
+cargo install --git https://github.com/robertpsoane/ducker
 ```
 
 ## Useage
