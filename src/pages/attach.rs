@@ -11,7 +11,7 @@ use crate::context::AppContext;
 use crate::traits::Close;
 use crate::{
     components::help::{PageHelp, PageHelpBuilder},
-    docker::container::DockerContainer,
+    docker::container_summary::DockerContainerSummary,
     events::{message::MessageResponse, Key, Message, Transition},
     traits::{Component, Page},
 };
@@ -23,7 +23,7 @@ const ESC_KEY: Key = Key::Esc;
 #[derive(Debug)]
 pub struct Attach {
     config: Box<Config>,
-    container: Option<DockerContainer>,
+    container: Option<DockerContainerSummary>,
     tx: Sender<Message<Key, Transition>>,
     page_help: Arc<Mutex<PageHelp>>,
 }

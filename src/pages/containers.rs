@@ -22,7 +22,7 @@ use crate::{
     },
     config::Config,
     context::AppContext,
-    docker::container::DockerContainer,
+    docker::container_summary::DockerContainerSummary,
     events::{message::MessageResponse, Key, Message, Transition},
     traits::{Close, Component, ModalComponent, Page},
 };
@@ -36,6 +36,7 @@ const A_KEY: Key = Key::Char('a');
 const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
 const CTRL_D_KEY: Key = Key::Ctrl('d');
+const D_KEY: Key = Key::Char('d');
 const R_KEY: Key = Key::Char('r');
 const S_KEY: Key = Key::Char('s');
 const G_KEY: Key = Key::Char('g');
@@ -54,7 +55,7 @@ pub struct Containers {
     tx: Sender<Message<Key, Transition>>,
     page_help: Arc<Mutex<PageHelp>>,
     docker: Docker,
-    containers: Vec<DockerContainer>,
+    containers: Vec<DockerContainerSummary>,
     list_state: TableState,
     modal: Option<BooleanModal<ModalTypes>>,
     stopping_containers: Arc<Mutex<HashSet<String>>>,
@@ -128,6 +129,18 @@ impl Page for Containers {
                     .await?;
                 MessageResponse::Consumed
             }
+            D_KEY => {
+                let container = self.get_container()?;
+                self.tx
+                    .send(Message::Transition(Transition::ToDescribeContainerPage(
+                        AppContext {
+                            docker_container: Some(container.clone()),
+                            ..Default::default()
+                        },
+                    )))
+                    .await?;
+                MessageResponse::Consumed
+            }
             _ => MessageResponse::NotConsumed,
         };
         self.refresh().await?;
@@ -192,7 +205,7 @@ impl Containers {
     }
 
     async fn refresh(&mut self) -> Result<(), color_eyre::eyre::Error> {
-        self.containers = DockerContainer::list(&self.docker).await?;
+        self.containers = DockerContainerSummary::list(&self.docker).await?;
         Ok(())
     }
 
@@ -220,7 +233,7 @@ impl Containers {
         }
     }
 
-    fn get_container(&self) -> Result<&DockerContainer> {
+    fn get_container(&self) -> Result<&DockerContainerSummary> {
         if let Some(container_idx) = self.list_state.selected() {
             if let Some(container) = self.containers.get(container_idx) {
                 return Ok(container);

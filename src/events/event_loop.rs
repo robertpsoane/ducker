@@ -30,6 +30,12 @@ pub struct EventLoop {
     inbound_rx: Arc<Mutex<Receiver<Message<Key, Transition>>>>,
 }
 
+impl Default for EventLoop {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl EventLoop {
     pub fn new() -> Self {
         let (outbound_tx, outbound_rx) = mpsc::channel::<Message<Key, Transition>>(32);

@@ -11,7 +11,10 @@ use crate::{
     config::Config,
     context::AppContext,
     events::{message::MessageResponse, Key, Message, Transition},
-    pages::{attach::Attach, containers::Containers, images::Images, logs::Logs},
+    pages::{
+        attach::Attach, containers::Containers, describe_container::DescribeContainer,
+        images::Images, logs::Logs,
+    },
     state,
     traits::{Component, Page},
 };
@@ -76,6 +79,11 @@ impl PageManager {
                     .await?;
                 MessageResponse::Consumed
             }
+            Transition::ToDescribeContainerPage(cx) => {
+                self.set_current_page(state::CurrentPage::DescribeContainer, cx)
+                    .await?;
+                MessageResponse::Consumed
+            }
             _ => MessageResponse::NotConsumed,
         };
         Ok(result)
@@ -116,6 +124,13 @@ impl PageManager {
             }
             state::CurrentPage::Logs => {
                 self.page = Box::new(Logs::new(
+                    self.docker.clone(),
+                    self.tx.clone(),
+                    self.config.clone(),
+                ))
+            }
+            state::CurrentPage::DescribeContainer => {
+                self.page = Box::new(DescribeContainer::new(
                     self.docker.clone(),
                     self.tx.clone(),
                     self.config.clone(),
