@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 
 use bollard::Docker;
@@ -11,7 +12,7 @@ use tokio::sync::mpsc::Sender;
 
 use crate::config::Config;
 use crate::context::AppContext;
-use crate::docker::container::DockerContainer;
+use crate::docker::traits::Describe;
 use crate::traits::Close;
 use crate::{
     components::help::{PageHelp, PageHelpBuilder},
@@ -31,8 +32,8 @@ const K_KEY: Key = Key::Char('k');
 pub struct DescribeContainer {
     _docker: Docker,
     config: Box<Config>,
-    container: Option<DockerContainer>,
-    container_summary: Option<Vec<String>>,
+    thing: Option<Box<dyn Describe>>,
+    thing_summary: Option<Vec<String>>,
     tx: Sender<Message<Key, Transition>>,
     page_help: Arc<Mutex<PageHelp>>,
     scroll: u16,
@@ -45,8 +46,8 @@ impl DescribeContainer {
         Self {
             _docker: docker,
             config,
-            container: None,
-            container_summary: None,
+            thing: None,
+            thing_summary: None,
             tx,
             page_help: Arc::new(Mutex::new(page_help)),
             scroll: 0,
@@ -70,10 +71,6 @@ impl DescribeContainer {
         };
         self.scroll
     }
-
-    fn set_summary(&mut self, summary: String) {
-        self.container_summary = Some(summary.lines().map(String::from).collect());
-    }
 }
 
 #[async_trait::async_trait]
@@ -92,7 +89,7 @@ impl Page for DescribeContainer {
                 self.tx
                     .send(Message::Transition(Transition::ToContainerPage(
                         AppContext {
-                            docker_container: self.container.clone(),
+                            describable: self.thing.clone(),
                             ..Default::default()
                         },
                     )))
@@ -106,21 +103,15 @@ impl Page for DescribeContainer {
     }
 
     async fn initialise(&mut self, cx: AppContext) -> Result<()> {
-        let container = match cx.docker_container.clone() {
+        let thing = match cx.describable.clone() {
             Some(c) => c,
             None => {
                 bail!("no docker container")
             }
         };
-        self.container = Some(container);
+        self.thing_summary = Some(thing.describe()?);
+        self.thing = Some(thing);
 
-        let summary = match serde_yml::to_string(&self.container) {
-            Ok(s) => s,
-            Err(_) => {
-                bail!("failed to parse container summary")
-            }
-        };
-        self.set_summary(summary);
         Ok(())
     }
 
@@ -134,10 +125,10 @@ impl Close for DescribeContainer {}
 
 impl Component for DescribeContainer {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
-        if self.container_summary.is_none() {
+        if self.thing_summary.is_none() {
             return;
         }
-        let container_summary = self.container_summary.as_ref().unwrap();
+        let container_summary = self.thing_summary.as_ref().unwrap();
         let lines: Vec<Line> = container_summary
             .iter()
             .map(|l| {

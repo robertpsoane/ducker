@@ -22,6 +22,7 @@ clap = { version = "4.5.8", features = ["derive"] }
 color-eyre = "0.6.3"
 crossterm = { version = "0.27", features = ["event-stream"] }
 dirs-next = "2.0.0"
+dyn-clone = "1.0.17"
 futures = "0.3.30"
 itertools = "0.13.0"
 ratatui = { version = "0.27.0", features = [

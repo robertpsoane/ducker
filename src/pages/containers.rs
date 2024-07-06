@@ -134,6 +134,7 @@ impl Page for Containers {
                 self.tx
                     .send(Message::Transition(Transition::ToDescribeContainerPage(
                         AppContext {
+                            describable: Some(Box::new(container.clone())),
                             docker_container: Some(container.clone()),
                             ..Default::default()
                         },
@@ -159,15 +160,22 @@ impl Page for Containers {
         // this ist to allo logs, attach etc to appear to revert to previous
         // state
         // I'm sure there is a more sensible way of doing this...
+        let container_id: String;
         if let Some(container) = cx.docker_container {
-            let container_id = container.id;
-            for (idx, c) in self.containers.iter().enumerate() {
-                if c.id == container_id {
-                    self.list_state.select(Some(idx));
-                    break;
-                }
+            container_id = container.id;
+        } else if let Some(describable) = cx.describable {
+            container_id = describable.get_id();
+        } else {
+            return Ok(());
+        }
+
+        for (idx, c) in self.containers.iter().enumerate() {
+            if c.id == container_id {
+                self.list_state.select(Some(idx));
+                break;
             }
         }
+
         Ok(())
     }
 
