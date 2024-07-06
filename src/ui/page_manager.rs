@@ -120,7 +120,11 @@ impl PageManager {
                 ))
             }
             state::CurrentPage::Images => {
-                self.page = Box::new(Images::new(self.docker.clone(), self.config.clone()))
+                self.page = Box::new(Images::new(
+                    self.docker.clone(),
+                    self.tx.clone(),
+                    self.config.clone(),
+                ))
             }
             state::CurrentPage::Logs => {
                 self.page = Box::new(Logs::new(

@@ -52,7 +52,7 @@ impl Page for Attach {
     }
 
     async fn initialise(&mut self, cx: AppContext) -> Result<()> {
-        if let Some(container) = cx.docker_container {
+        if let Some(container) = cx.clone().docker_container {
             self.container = Some(container)
         } else {
             bail!("no docker container")
@@ -60,14 +60,17 @@ impl Page for Attach {
         if let Some(container) = self.container.clone() {
             disable_raw_mode()?;
             container.attach(&self.config.default_exec).await?;
-            self.tx
-                .send(Message::Transition(Transition::ToContainerPage(
-                    AppContext {
-                        docker_container: Some(container),
-                        ..Default::default()
-                    },
-                )))
-                .await?;
+
+            let transition = if let Some(t) = cx.next() {
+                t
+            } else {
+                Transition::ToContainerPage(AppContext {
+                    docker_container: Some(container),
+                    ..Default::default()
+                })
+            };
+
+            self.tx.send(Message::Transition(transition)).await?;
             self.tx
                 .send(Message::Transition(Transition::ToNewTerminal))
                 .await?;

@@ -110,34 +110,25 @@ impl Page for Containers {
                 MessageResponse::Consumed
             }
             A_KEY => {
-                let container = self.get_container()?;
                 self.tx
-                    .send(Message::Transition(Transition::ToAttach(AppContext {
-                        docker_container: Some(container.clone()),
-                        ..Default::default()
-                    })))
+                    .send(Message::Transition(Transition::ToAttach(
+                        self.get_context()?,
+                    )))
                     .await?;
                 MessageResponse::Consumed
             }
             L_KEY => {
-                let container = self.get_container()?;
                 self.tx
-                    .send(Message::Transition(Transition::ToLogPage(AppContext {
-                        docker_container: Some(container.clone()),
-                        ..Default::default()
-                    })))
+                    .send(Message::Transition(Transition::ToLogPage(
+                        self.get_context()?,
+                    )))
                     .await?;
                 MessageResponse::Consumed
             }
             D_KEY => {
-                let container = self.get_container()?;
                 self.tx
                     .send(Message::Transition(Transition::ToDescribeContainerPage(
-                        AppContext {
-                            describable: Some(Box::new(container.clone())),
-                            docker_container: Some(container.clone()),
-                            ..Default::default()
-                        },
+                        self.get_context()?,
                     )))
                     .await?;
                 MessageResponse::Consumed
@@ -163,8 +154,8 @@ impl Page for Containers {
         let container_id: String;
         if let Some(container) = cx.docker_container {
             container_id = container.id;
-        } else if let Some(describable) = cx.describable {
-            container_id = describable.get_id();
+        } else if let Some(thing) = cx.describable {
+            container_id = thing.get_id();
         } else {
             return Ok(());
         }
@@ -315,6 +306,23 @@ impl Containers {
             bail!("Ahhh")
         }
         Ok(())
+    }
+
+    fn get_context(&self) -> Result<AppContext> {
+        let container = self.get_container()?;
+
+        let then = Some(Box::new(Transition::ToContainerPage(AppContext {
+            docker_container: Some(container.clone()),
+            ..Default::default()
+        })));
+
+        let cx = AppContext {
+            describable: Some(Box::new(container.clone())),
+            then,
+            ..Default::default()
+        };
+
+        Ok(cx)
     }
 }
 
