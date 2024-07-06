@@ -160,7 +160,7 @@ impl Describe for DockerContainer {
         self.id.clone()
     }
     fn get_name(&self) -> String {
-        format!("Container {}", self.names)
+        format!("container: {}", self.names)
     }
     fn describe(&self) -> Result<Vec<String>> {
         let summary = match serde_yml::to_string(&self) {

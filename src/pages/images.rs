@@ -12,6 +12,7 @@ use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
 };
+use tokio::sync::mpsc::Sender;
 
 use crate::{
     callbacks::delete_image::DeleteImage,
@@ -22,7 +23,7 @@ use crate::{
     config::Config,
     context::AppContext,
     docker::image::DockerImage,
-    events::{message::MessageResponse, Key},
+    events::{message::MessageResponse, Key, Message, Transition},
     traits::{Close, Component, ModalComponent, Page},
 };
 
@@ -34,6 +35,7 @@ const DOWN_KEY: Key = Key::Down;
 const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
 const CTRL_D_KEY: Key = Key::Ctrl('d');
+const SHIFT_D_KEY: Key = Key::Char('D');
 const D_KEY: Key = Key::Char('d');
 const G_KEY: Key = Key::Char('g');
 const SHIFT_G_KEY: Key = Key::Char('G');
@@ -47,6 +49,7 @@ enum ModalTypes {
 #[derive(Debug)]
 pub struct Images {
     pub name: String,
+    tx: Sender<Message<Key, Transition>>,
     page_help: Arc<Mutex<PageHelp>>,
     docker: Docker,
     images: Vec<DockerImage>,
@@ -74,7 +77,7 @@ impl Page for Images {
                 self.increment_list();
                 MessageResponse::Consumed
             }
-            D_KEY => {
+            SHIFT_D_KEY => {
                 self.show_dangling = !self.show_dangling;
                 MessageResponse::Consumed
             }
@@ -90,17 +93,45 @@ impl Page for Images {
                 Ok(_) => MessageResponse::Consumed,
                 Err(_) => MessageResponse::NotConsumed,
             },
-
+            D_KEY => {
+                self.tx
+                    .send(Message::Transition(Transition::ToDescribeContainerPage(
+                        self.get_context()?,
+                    )))
+                    .await?;
+                MessageResponse::Consumed
+            }
             _ => MessageResponse::NotConsumed,
         };
         Ok(result)
     }
 
-    async fn initialise(&mut self, _: AppContext) -> Result<()> {
+    async fn initialise(&mut self, cx: AppContext) -> Result<()> {
         self.list_state = TableState::default();
         self.list_state.select(Some(0));
 
         self.refresh().await.context("unable to refresh images")?;
+
+        // If a context has been passed in, choose that item in list
+        // this ist to allo logs, attach etc to appear to revert to previous
+        // state
+        // I'm sure there is a more sensible way of doing this...
+        let image_id: String;
+        if let Some(image) = cx.docker_image {
+            image_id = image.id;
+        } else if let Some(thing) = cx.describable {
+            image_id = thing.get_id();
+        } else {
+            return Ok(());
+        }
+
+        for (idx, c) in self.images.iter().enumerate() {
+            if c.id == image_id {
+                self.list_state.select(Some(idx));
+                break;
+            }
+        }
+
         Ok(())
     }
 
@@ -113,16 +144,18 @@ impl Page for Images {
 impl Close for Images {}
 
 impl Images {
-    pub fn new(docker: Docker, config: Box<Config>) -> Self {
+    pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Box<Config>) -> Self {
         let page_help = PageHelpBuilder::new(NAME.into(), config.clone())
             .add_input(format!("{CTRL_D_KEY}"), "delete".into())
             .add_input(format!("{G_KEY}"), "top".into())
             .add_input(format!("{SHIFT_G_KEY}"), "bottom".into())
-            .add_input(format!("{D_KEY}"), "dangling".into())
+            .add_input(format!("{SHIFT_D_KEY}"), "dangling".into())
+            .add_input(format!("{D_KEY}"), "describe".into())
             .build();
 
         Self {
             name: String::from(NAME),
+            tx,
             page_help: Arc::new(Mutex::new(page_help)),
             docker,
             images: vec![],
@@ -246,6 +279,23 @@ impl Images {
             bail!("Ahhh")
         }
         Ok(())
+    }
+
+    fn get_context(&self) -> Result<AppContext> {
+        let image = self.get_image()?;
+
+        let then = Some(Box::new(Transition::ToImagePage(AppContext {
+            docker_image: Some(image.clone()),
+            ..Default::default()
+        })));
+
+        let cx = AppContext {
+            describable: Some(Box::new(image.clone())),
+            then,
+            ..Default::default()
+        };
+
+        Ok(cx)
     }
 }
 

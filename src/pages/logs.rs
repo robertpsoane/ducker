@@ -41,6 +41,7 @@ pub struct Logs {
     log_streamer_handle: Option<JoinHandle<()>>,
     list_state: ListState,
     auto_scroll: bool,
+    next: Option<Transition>,
 }
 
 impl Logs {
@@ -62,6 +63,7 @@ impl Logs {
             log_streamer_handle: None,
             list_state: ListState::default(),
             auto_scroll: true,
+            next: None,
         }
     }
 
@@ -100,14 +102,16 @@ impl Page for Logs {
     async fn update(&mut self, message: Key) -> Result<MessageResponse> {
         let res = match message {
             Key::Esc => {
-                self.tx
-                    .send(Message::Transition(Transition::ToContainerPage(
-                        AppContext {
-                            docker_container: self.container.clone(),
-                            ..Default::default()
-                        },
-                    )))
-                    .await?;
+                let transition = if let Some(t) = self.next.clone() {
+                    t
+                } else {
+                    Transition::ToContainerPage(AppContext {
+                        docker_container: self.container.clone(),
+                        ..Default::default()
+                    })
+                };
+
+                self.tx.send(Message::Transition(transition)).await?;
                 MessageResponse::Consumed
             }
             G_KEY => {
@@ -142,7 +146,7 @@ impl Page for Logs {
     }
 
     async fn initialise(&mut self, cx: AppContext) -> Result<()> {
-        if let Some(container) = cx.docker_container {
+        if let Some(container) = cx.clone().docker_container {
             self.logs = Some(DockerLogs::from(container.clone()));
             self.container = Some(container);
         } else {
@@ -163,6 +167,10 @@ impl Page for Logs {
             }));
         } else {
             bail!("unable to stream logs without logs to stream");
+        }
+
+        if let Some(t) = cx.next() {
+            self.next = Some(t)
         }
 
         Ok(())

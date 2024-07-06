@@ -35,13 +35,14 @@ pub struct DescribeContainer {
     thing: Option<Box<dyn Describe>>,
     thing_summary: Option<Vec<String>>,
     tx: Sender<Message<Key, Transition>>,
+    cx: Option<AppContext>,
     page_help: Arc<Mutex<PageHelp>>,
     scroll: u16,
 }
 
 impl DescribeContainer {
     pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Box<Config>) -> Self {
-        let page_help = PageHelpBuilder::new(NAME.into(), config.clone()).build();
+        let page_help = Self::build_page_help(config.clone(), None);
 
         Self {
             _docker: docker,
@@ -49,9 +50,19 @@ impl DescribeContainer {
             thing: None,
             thing_summary: None,
             tx,
+            cx: None,
             page_help: Arc::new(Mutex::new(page_help)),
             scroll: 0,
         }
+    }
+
+    fn build_page_help(config: Box<Config>, name: Option<String>) -> PageHelp {
+        let page_name = if let Some(name) = name {
+            name
+        } else {
+            NAME.into()
+        };
+        PageHelpBuilder::new(page_name, config).build()
     }
 
     fn down(&mut self) {
@@ -65,7 +76,11 @@ impl DescribeContainer {
     }
 
     fn resolve_scroll(&mut self, height: &u16, n_lines: &u16) -> u16 {
-        let max_scroll = n_lines - (height / 2);
+        let max_scroll = if *n_lines < (height / 2) {
+            0
+        } else {
+            n_lines - (height / 2)
+        };
         if self.scroll > max_scroll {
             self.scroll = max_scroll;
         };
@@ -86,14 +101,21 @@ impl Page for DescribeContainer {
                 MessageResponse::Consumed
             }
             Key::Esc => {
-                self.tx
-                    .send(Message::Transition(Transition::ToContainerPage(
-                        AppContext {
+                let transition = match self.cx.clone() {
+                    Some(cx) => match cx.then {
+                        Some(tr) => *tr.clone(),
+                        None => Transition::ToContainerPage(AppContext {
                             describable: self.thing.clone(),
                             ..Default::default()
-                        },
-                    )))
-                    .await?;
+                        }),
+                    },
+                    None => Transition::ToContainerPage(AppContext {
+                        describable: self.thing.clone(),
+                        ..Default::default()
+                    }),
+                };
+
+                self.tx.send(Message::Transition(transition)).await?;
                 MessageResponse::Consumed
             }
             _ => MessageResponse::NotConsumed,
@@ -110,7 +132,13 @@ impl Page for DescribeContainer {
             }
         };
         self.thing_summary = Some(thing.describe()?);
+        let page_name = format!("Describe ({})", thing.get_name());
+        self.page_help = Arc::new(Mutex::new(Self::build_page_help(
+            self.config.clone(),
+            Some(page_name),
+        )));
         self.thing = Some(thing);
+        self.cx = Some(cx);
 
         Ok(())
     }

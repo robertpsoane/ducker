@@ -2,13 +2,15 @@ use bollard::image::RemoveImageOptions;
 use byte_unit::{Byte, UnitType};
 use chrono::prelude::DateTime;
 use chrono::Local;
-use color_eyre::eyre::{Context, Result};
+use color_eyre::eyre::{bail, Context, Result};
 use itertools::Itertools;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::time::{Duration, UNIX_EPOCH};
 
 use bollard::{image::ListImagesOptions, secret::ImageSummary};
+
+use super::traits::Describe;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize)]
 pub struct DockerImage {
@@ -17,6 +19,8 @@ pub struct DockerImage {
     pub tag: String,
     pub created: String,
     pub size: String,
+    pub tags: Vec<String>,
+    pub digests: Vec<String>,
 }
 
 impl DockerImage {
@@ -29,6 +33,9 @@ impl DockerImage {
         .format("%Y-%m-%d %H:%M:%S");
         let b = Byte::from_u64(bollard_image.size as u64).get_appropriate_unit(UnitType::Binary);
 
+        let tags = bollard_image.repo_tags.clone();
+        let digests = bollard_image.repo_digests.clone();
+
         if !bollard_image.repo_tags.is_empty() {
             for repo_tag in bollard_image.repo_tags {
                 let split_tag = repo_tag.split(':').collect::<Vec<&str>>();
@@ -39,6 +46,8 @@ impl DockerImage {
                     tag: split_tag[1].to_string(),
                     created: datetime.to_string(),
                     size: format!("{b:.2}"),
+                    tags: tags.clone(),
+                    digests: digests.clone(),
                 })
             }
         } else {
@@ -48,6 +57,8 @@ impl DockerImage {
                 tag: "<none>".into(),
                 created: datetime.to_string(),
                 size: format!("{b:.2}"),
+                tags,
+                digests,
             })
         }
         response
@@ -96,5 +107,23 @@ impl DockerImage {
         } else {
             image
         }
+    }
+}
+
+impl Describe for DockerImage {
+    fn get_id(&self) -> String {
+        self.id.clone()
+    }
+    fn get_name(&self) -> String {
+        format!("image: {}", self.name)
+    }
+    fn describe(&self) -> Result<Vec<String>> {
+        let summary = match serde_yml::to_string(&self) {
+            Ok(s) => s,
+            Err(_) => {
+                bail!("failed to parse image summary")
+            }
+        };
+        Ok(summary.lines().map(String::from).collect())
     }
 }
