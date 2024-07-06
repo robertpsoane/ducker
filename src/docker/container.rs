@@ -1,7 +1,7 @@
 use bollard::container::{ListContainersOptions, RemoveContainerOptions};
 use chrono::prelude::DateTime;
 use chrono::Local;
-use color_eyre::eyre::{Context, Result};
+use color_eyre::eyre::{bail, Context, Result};
 use serde::Serialize;
 use std::{
     collections::HashMap,
@@ -10,6 +10,8 @@ use std::{
 use tokio::process::Command;
 
 use bollard::secret::ContainerSummary;
+
+use super::traits::Describe;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct DockerContainer {
@@ -150,5 +152,23 @@ impl DockerContainer {
 
         Command::new("clear").spawn()?.wait().await?;
         Ok(())
+    }
+}
+
+impl Describe for DockerContainer {
+    fn get_id(&self) -> String {
+        self.id.clone()
+    }
+    fn get_name(&self) -> String {
+        format!("Container {}", self.names)
+    }
+    fn describe(&self) -> Result<Vec<String>> {
+        let summary = match serde_yml::to_string(&self) {
+            Ok(s) => s,
+            Err(_) => {
+                bail!("failed to parse container summary")
+            }
+        };
+        Ok(summary.lines().map(String::from).collect())
     }
 }

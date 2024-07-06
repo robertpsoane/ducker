@@ -12,8 +12,8 @@ use crate::{
     context::AppContext,
     events::{message::MessageResponse, Key, Message, Transition},
     pages::{
-        attach::Attach, containers::Containers, describe_container::DescribeContainer,
-        images::Images, logs::Logs,
+        attach::Attach, containers::Containers, describe::DescribeContainer, images::Images,
+        logs::Logs,
     },
     state,
     traits::{Component, Page},
