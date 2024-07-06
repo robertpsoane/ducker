@@ -1,23 +1,14 @@
 use clap::Parser;
 use color_eyre::eyre::Context;
-use config::Config;
-use docker::util::new_local_docker_connection;
-use events::{EventLoop, Key, Message};
-use ui::App;
 
-mod autocomplete;
-mod callbacks;
-mod components;
-mod config;
-mod context;
-mod docker;
-mod events;
-mod pages;
-mod state;
-mod terminal;
-mod traits;
-mod ui;
-mod widgets;
+use ducker::{
+    config::Config,
+    docker::util::new_local_docker_connection,
+    events,
+    events::{EventLoop, Key, Message},
+    state, terminal,
+    ui::App,
+};
 
 const CONFIGURATION_DOC_PATH: &str = "https://github.com/robertpsoane/ducker#configuration";
 

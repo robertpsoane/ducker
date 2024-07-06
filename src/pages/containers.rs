@@ -36,6 +36,7 @@ const A_KEY: Key = Key::Char('a');
 const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
 const CTRL_D_KEY: Key = Key::Ctrl('d');
+const D_KEY: Key = Key::Char('d');
 const R_KEY: Key = Key::Char('r');
 const S_KEY: Key = Key::Char('s');
 const G_KEY: Key = Key::Char('g');
@@ -125,6 +126,18 @@ impl Page for Containers {
                         docker_container: Some(container.clone()),
                         ..Default::default()
                     })))
+                    .await?;
+                MessageResponse::Consumed
+            }
+            D_KEY => {
+                let container = self.get_container()?;
+                self.tx
+                    .send(Message::Transition(Transition::ToDescribeContainerPage(
+                        AppContext {
+                            docker_container: Some(container.clone()),
+                            ..Default::default()
+                        },
+                    )))
                     .await?;
                 MessageResponse::Consumed
             }
