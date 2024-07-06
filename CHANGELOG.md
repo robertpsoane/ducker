@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.4](https://github.com/robertpsoane/ducker/compare/v0.0.3...v0.0.4) - 2024-07-06
+
+### Added
+- add ability for more detailed summary of images
+- add ability for more detailed container description and stats ([#17](https://github.com/robertpsoane/ducker/pull/17))
+
+### Other
+- describe uses a trait object
+- *(deps)* bump clap from 4.5.6 to 4.5.8
+- *(pages)* simplify page lifecycle removing the redundant concept of visibility
+
 ## [0.0.3](https://github.com/robertpsoane/ducker/compare/v0.0.2...v0.0.3) - 2024-06-30
 
 ### Added
