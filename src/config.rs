@@ -66,7 +66,7 @@ fn default_docker_path() -> String {
 }
 
 fn default_check_update() -> bool {
-    return true;
+    true
 }
 
 fn default_use_theme() -> bool {

@@ -137,7 +137,7 @@ The following table summarises the available config values:
 | check_for_update | `true`                        | When true, checks whether there is a newer version on load.  If a newer version is found, indicates via note in bottom right.* |
 | theme            | [See below]                   | The colour theme configuration                                                                                                 |
 
-> :warning: **This is not available in v0.0.5 and below as released on cargo**: to use this feature, install the unstable build or await next release
+> :warning: **`check_for_update` is not available in v0.0.5 and below as released on cargo**: to use this feature, install the unstable build or await next release
 
 If a value is unset or if the config file is unfound, Ducker will use the default values.  If a value is malformed, Ducker will fail to run.
 
