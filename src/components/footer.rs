@@ -1,6 +1,6 @@
 use itertools::Itertools;
 use ratatui::{
-    layout::Rect,
+    layout::{Constraint, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     Frame,
@@ -8,19 +8,32 @@ use ratatui::{
 
 use crate::{config::Config, traits::Component};
 
+use super::version::VersionComponent;
+
 #[derive(Debug)]
 pub struct Footer {
     config: Box<Config>,
+    version: VersionComponent,
 }
 
 impl Footer {
-    pub fn new(config: Box<Config>) -> Self {
-        Self { config }
+    pub async fn new(config: Box<Config>) -> Self {
+        Self {
+            config: config.clone(),
+            version: VersionComponent::new(config).await,
+        }
     }
 }
 
 impl Component for Footer {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
+        let layout = Layout::horizontal([
+            Constraint::Length(20),
+            Constraint::Min(0),
+            Constraint::Length(20),
+        ]);
+        let [_left, mid, right] = layout.areas(area);
+
         let keys = [
             ("K/↑", "Up"),
             ("J/↓", "Down"),
@@ -48,6 +61,8 @@ impl Component for Footer {
 
         let footer = Line::from(spans).centered().style(Style::new());
 
-        f.render_widget(footer, area)
+        f.render_widget(footer, mid);
+
+        self.version.draw(f, right)
     }
 }

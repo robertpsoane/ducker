@@ -64,7 +64,7 @@ impl App {
             resize_screen: ResizeScreen::new(config.clone()),
             title: Header::new(config.clone()),
             page_manager: body,
-            footer: Footer::new(config.clone()),
+            footer: Footer::new(config.clone()).await,
             input_field: CommandInput::new(tx, config.prompt),
             modal: None,
         };

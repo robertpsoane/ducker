@@ -19,6 +19,9 @@ pub struct Config {
     #[serde(default = "default_docker_path")]
     pub docker_path: String,
 
+    #[serde(default = "default_check_update")]
+    pub check_for_update: bool,
+
     #[serde(default)]
     pub theme: Theme,
 }
@@ -62,6 +65,10 @@ fn default_docker_path() -> String {
     return "npipe:////./pipe/docker_engine".into();
 }
 
+fn default_check_update() -> bool {
+    return true;
+}
+
 fn default_use_theme() -> bool {
     false
 }
@@ -72,6 +79,7 @@ impl Default for Config {
             prompt: default_prompt(),
             default_exec: default_exec(),
             docker_path: default_docker_path(),
+            check_for_update: default_check_update(),
             theme: Theme::default(),
         }
     }
