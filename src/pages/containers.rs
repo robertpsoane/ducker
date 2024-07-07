@@ -319,6 +319,7 @@ impl Containers {
         let cx = AppContext {
             describable: Some(Box::new(container.clone())),
             then,
+            docker_container: Some(container.clone()),
             ..Default::default()
         };
 

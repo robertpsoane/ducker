@@ -9,7 +9,7 @@ use crate::{
     context::AppContext,
     events::{message::MessageResponse, transition::send_transition, Key, Message, Transition},
     traits::Component,
-    widgets::text_input::{Autocomplete, TextInput, TextInputState},
+    widgets::text_input::Autocomplete,
 };
 
 use super::text_input_wrapper::TextInputWrapper;
