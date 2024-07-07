@@ -11,9 +11,9 @@ use tokio::sync::mpsc::Sender;
 use crate::{
     components::{
         alert_modal::{AlertModal, ModalState},
+        command_input::CommandInput,
         footer::Footer,
         header::Header,
-        input_field::InputField,
         resize_notice::ResizeScreen,
     },
     config::Config,
@@ -38,7 +38,7 @@ pub struct App {
     title: Header,
     page_manager: PageManager,
     footer: Footer,
-    input_field: InputField,
+    input_field: CommandInput,
     modal: Option<AlertModal<ModalType>>,
 }
 
@@ -65,7 +65,7 @@ impl App {
             title: Header::new(config.clone()),
             page_manager: body,
             footer: Footer::new(config.clone()),
-            input_field: InputField::new(tx, config.prompt),
+            input_field: CommandInput::new(tx, config.prompt),
             modal: None,
         };
         Ok(app)

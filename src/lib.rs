@@ -1,4 +1,3 @@
-pub mod autocomplete;
 pub mod callbacks;
 pub mod components;
 pub mod config;
