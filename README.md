@@ -40,6 +40,15 @@ You can install `ducker` from the [AUR](https://aur.archlinux.org/packages/ducke
 paru -S ducker
 ```
 
+### Brew
+
+For macOS, you can install `ducker` using by `homebrew`.
+
+```sh
+brew tap draftbrew/tap
+brew install ducker
+```
+
 ### Unstable
 
 To install the latest unstable version of Ducker, run the following command:
