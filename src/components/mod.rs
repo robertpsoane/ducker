@@ -6,3 +6,4 @@ pub mod header;
 pub mod help;
 pub mod resize_notice;
 pub mod text_input_wrapper;
+pub mod version;
