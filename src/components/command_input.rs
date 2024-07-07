@@ -1,24 +1,18 @@
 use color_eyre::eyre::{Context, Result};
 use itertools::min;
-use ratatui::{
-    layout::{Margin, Rect},
-    prelude::*,
-    style::Style,
-    text::{Line, Span},
-    widgets::{Block, Padding, Paragraph},
-    Frame,
-};
+use ratatui::{layout::Rect, Frame};
 use std::{collections::VecDeque, fmt::Debug};
 
 use tokio::sync::mpsc::Sender;
 
 use crate::{
-    autocomplete::Autocomplete,
     context::AppContext,
-    events::transition::send_transition,
-    events::{message::MessageResponse, Key, Message, Transition},
+    events::{message::MessageResponse, transition::send_transition, Key, Message, Transition},
     traits::Component,
+    widgets::text_input::{Autocomplete, TextInput, TextInputState},
 };
+
+use super::text_input_wrapper::TextInputWrapper;
 
 const QUIT: &str = "quit";
 const Q: &str = "q";
@@ -28,76 +22,70 @@ const CONTAINER: &str = "container";
 const CONTAINERS: &str = "containers";
 
 #[derive(Debug)]
-pub struct InputField {
-    input: String,
-    prompt: String,
+pub struct CommandInput {
     tx: Sender<Message<Key, Transition>>,
-    candidate: Option<String>,
-    ac: Autocomplete<'static>,
     history: History,
+    text_input: TextInputWrapper,
 }
 
-impl InputField {
+impl CommandInput {
     pub fn new(tx: Sender<Message<Key, Transition>>, prompt: String) -> Self {
+        let ac: Autocomplete =
+            Autocomplete::from(vec![QUIT, Q, IMAGE, IMAGES, CONTAINER, CONTAINERS]);
         Self {
-            input: String::new(),
-            prompt,
             tx,
-            candidate: None,
-            ac: Autocomplete::from(vec![QUIT, Q, IMAGE, IMAGES, CONTAINER, CONTAINERS]),
             history: History::new(),
+            text_input: TextInputWrapper::new(prompt, Some(ac)),
         }
     }
 
     pub fn initialise(&mut self) {
-        self.input = String::new();
-        self.candidate = None;
+        self.text_input.reset();
         self.history.reset_idx();
     }
 
     pub async fn update(&mut self, message: Key) -> Result<MessageResponse> {
+        // NB - for now the CommandInput is over-riding bits of the TextInputWrapper
+        // This should probably be fixed by a generic TextInput widget over a
+        // trait which defines the interaction between the widget and its state struct
+        // for now unlikely we'll need history for anything else, so autocomplete
+        // as an optional first class citizen is fine & we'll see what happens
+        //
+        // Similarly, it could be that autocomplete varies, or we want different types
+        // of autocomplete, which would trigger a refactor?
         match message {
-            Key::Char(c) => {
+            Key::Char(_) => {
                 self.history.reset_idx();
-                self.input.push(c);
-                let input = &self.input;
-                self.candidate = self.ac.get_completion(input);
-            }
-            Key::Tab => {
-                if let Some(candidate) = &self.candidate {
-                    self.input.clone_from(candidate)
-                }
+                self.text_input.update(message)?;
             }
             Key::Up => {
-                self.history.conditional_set_working_buffer(&self.input);
+                let input_value = self.text_input.get_value();
+                self.history.conditional_set_working_buffer(&input_value);
                 if let Some(v) = &self.history.next() {
-                    self.input.clone_from(v);
+                    self.text_input.set_input(v.clone());
                 }
             }
             Key::Down => {
                 if let Some(v) = &self.history.previous() {
-                    self.input.clone_from(v);
+                    self.text_input.set_input(v.clone());
                 }
             }
-            Key::Backspace => {
-                self.input.pop();
-            }
             Key::Enter => {
-                self.history.add_value(&self.input);
+                self.history.add_value(&self.text_input.get_value());
                 self.history.reset_idx();
                 self.submit()
                     .await
                     .context("unable to submit user command")?;
             }
 
-            _ => return Ok(MessageResponse::NotConsumed),
+            _ => return self.text_input.update(message),
         }
 
         Ok(MessageResponse::Consumed)
     }
 
     async fn submit(&mut self) -> Result<()> {
-        let transition = match &*self.input {
+        let transition = match &*self.text_input.get_value() {
             Q | QUIT => Some(Transition::Quit),
             IMAGE | IMAGES => Some(Transition::ToImagePage(AppContext::default())),
             CONTAINER | CONTAINERS => Some(Transition::ToContainerPage(AppContext::default())),
@@ -122,31 +110,9 @@ impl InputField {
     }
 }
 
-impl Component for InputField {
+impl Component for CommandInput {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
-        let block = Block::bordered()
-            .border_type(ratatui::widgets::BorderType::Plain)
-            .padding(Padding::left(300));
-
-        f.render_widget(block, area);
-
-        let inner_body_margin = Margin::new(2, 1);
-        let body_inner = area.inner(inner_body_margin);
-
-        let mut input_text = vec![
-            Span::styled::<String, Style>(format!("{} ", self.prompt), Style::new().green()),
-            Span::raw(self.input.clone()),
-        ];
-
-        if let Some(candidate) = &self.candidate {
-            if let Some(delta) = candidate.strip_prefix(&self.input as &str) {
-                input_text
-                    .push(Span::raw(delta).style(Style::default().add_modifier(Modifier::DIM)))
-            }
-        }
-
-        let p = Paragraph::new(Line::from(input_text));
-        f.render_widget(p, body_inner)
+        self.text_input.draw(f, area);
     }
 }
 
