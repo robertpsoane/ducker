@@ -142,10 +142,7 @@ impl PageManager {
             }
         };
 
-        self.page
-            .initialise(cx)
-            .await
-            .context("unable to open new page")?;
+        self.page.initialise(cx).await?;
 
         Ok(())
     }

@@ -41,6 +41,26 @@ impl Attach {
             page_help: Arc::new(Mutex::new(page_help)),
         }
     }
+
+    async fn attach(&self, container: DockerContainer, exec: &str, cx: AppContext) -> Result<()> {
+        disable_raw_mode()?;
+        container.attach(exec).await?;
+
+        let transition = if let Some(t) = cx.next() {
+            t
+        } else {
+            Transition::ToContainerPage(AppContext {
+                docker_container: Some(container),
+                ..Default::default()
+            })
+        };
+
+        self.tx.send(Message::Transition(transition)).await?;
+        self.tx
+            .send(Message::Transition(Transition::ToNewTerminal))
+            .await?;
+        Ok(())
+    }
 }
 
 #[async_trait::async_trait]
@@ -58,21 +78,7 @@ impl Page for Attach {
             bail!("no docker container")
         }
         if let Some(container) = self.container.clone() {
-            disable_raw_mode()?;
-            container.attach(&self.config.default_exec).await?;
-
-            let transition = if let Some(t) = cx.next() {
-                t
-            } else {
-                Transition::ToContainerPage(AppContext {
-                    docker_container: Some(container),
-                    ..Default::default()
-                })
-            };
-
-            self.tx.send(Message::Transition(transition)).await?;
-            self.tx
-                .send(Message::Transition(Transition::ToNewTerminal))
+            self.attach(container, &self.config.default_exec, cx)
                 .await?;
         }
         Ok(())
