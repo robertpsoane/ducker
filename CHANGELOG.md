@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.5](https://github.com/robertpsoane/ducker/compare/v0.0.4...v0.0.5) - 2024-07-07
+
+When consolidating the command field to use a common text input widget as part of the plan to add more user options, I came across a regression in `exec`; in essence the exec action fails, which isn't ideal.
+
+This was introduced as part of the changes to the transition payloads.  Unfortunately I'm not yet at a point where there is a test suite for the project (see the [pinned issue](https://github.com/robertpsoane/ducker/issues/2)  for some wider context as to how this project got to where it is) - I think this highlights that that needs prioritising.
+
+### Fixed
+- fix!(attach): exec regression fixed
+
+### Other
+- use new text input widget
+- add brew commands ([#32](https://github.com/robertpsoane/ducker/pull/32))
+- add CONTRIBUTING.md
+- fix cargo.toml to include license from correct source
+
 ## [0.0.4](https://github.com/robertpsoane/ducker/compare/v0.0.3...v0.0.4) - 2024-07-06
 
 ### Added
