@@ -17,11 +17,10 @@
 
 ## Installation
 
-<p align="center">
-❗ Note: Ducker is currently in a "pre-release" state. ❗
-<br/>
-Please do install and try it out - it is currently undergoing active development. There are a number of known issues and features in the pipeline (<a href="https://github.com/robertpsoane/ducker/issues/2">see the pinned issue</a>).  Any feedback is welcome.
-</p>
+> :warning: **Ducker is currently in a "pre-release" state**: Please do install and try it out - it is currently undergoing active development. 
+> 
+> There are a number of known issues and features in the pipeline (See [the pinned issue](https://github.com/robertpsoane/ducker/issues/2) and [ISSUES.md](./ISSUES.md) for more info). Any feedback and suggestions are welcome.
+
 
 
 ### Cargo
@@ -129,13 +128,13 @@ Ducker is configured via a yaml file found in the relevant config directory for 
 
 The following table summarises the available config values:
 
-| Key              | Default                       | Description                                                                                                                    |
-| ---------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| prompt           | 🦆                             | The default prompt to display in the command pane                                                                              |
-| default_exec     | `/bin/bash`                   | The default prompt to display in the command pane. NB - currently uses this for all exec's; it is planned to offer a choice    |
-| docker_path      | `unix:///var/run/docker.sock` | The location of the socket on which the docker daemon is exposed (defaults to `npipe:////./pipe/docker_engine` on windows)     |
-| check_for_update | `true`                        | When true, checks whether there is a newer version on load.  If a newer version is found, indicates via note in bottom right.* |
-| theme            | [See below]                   | The colour theme configuration                                                                                                 |
+| Key              | Default                       | Description                                                                                                                   |
+| ---------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| prompt           | 🦆                             | The default prompt to display in the command pane                                                                             |
+| default_exec     | `/bin/bash`                   | The default prompt to display in the command pane. NB - currently uses this for all exec's; it is planned to offer a choice   |
+| docker_path      | `unix:///var/run/docker.sock` | The location of the socket on which the docker daemon is exposed (defaults to `npipe:////./pipe/docker_engine` on windows)    |
+| check_for_update | `true`                        | When true, checks whether there is a newer version on load.  If a newer version is found, indicates via note in bottom right. |
+| theme            | [See below]                   | The colour theme configuration                                                                                                |
 
 > :warning: **`check_for_update` is not available in v0.0.5 and below as released on cargo**: to use this feature, install the unstable build or await next release
 
