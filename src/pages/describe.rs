@@ -132,7 +132,7 @@ impl Page for DescribeContainer {
             }
         };
         self.thing_summary = Some(thing.describe()?);
-        let page_name = format!("Describe ({})", thing.get_name());
+        let page_name = format!("{NAME} ({})", thing.get_name());
         self.page_help = Arc::new(Mutex::new(Self::build_page_help(
             self.config.clone(),
             Some(page_name),

@@ -141,16 +141,24 @@ impl DockerContainer {
     pub async fn attach(&self, cmd: &str) -> Result<()> {
         Command::new("clear").spawn()?.wait().await?;
 
-        Command::new("docker")
-            .arg("exec")
-            .arg("-it")
-            .arg(&self.names)
-            .arg(cmd)
-            .spawn()?
-            .wait()
-            .await?;
+        let parts: Vec<String> = cmd.split_whitespace().map(String::from).collect();
+
+        let mut command = Command::new("docker");
+
+        let mut arged_commands = command.arg("exec").arg("-it").arg(&self.names);
+
+        for part in parts {
+            arged_commands = arged_commands.arg(part);
+        }
+
+        let exit_status = arged_commands.spawn()?.wait().await?;
 
         Command::new("clear").spawn()?.wait().await?;
+
+        if !exit_status.success() {
+            bail!("error in connecting to or interacting with container")
+        }
+
         Ok(())
     }
 }

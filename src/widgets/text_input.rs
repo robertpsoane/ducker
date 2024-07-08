@@ -84,7 +84,7 @@ impl TextInputState {
         self.update_autocomplete();
     }
 
-    pub fn get_value(&mut self) -> String {
+    pub fn get_value(&self) -> String {
         self.value.clone()
     }
 

@@ -36,7 +36,7 @@ impl TextInputWrapper {
         Ok(MessageResponse::Consumed)
     }
 
-    pub fn get_value(&mut self) -> String {
+    pub fn get_value(&self) -> String {
         self.state.get_value().clone()
     }
 
