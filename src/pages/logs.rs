@@ -11,9 +11,10 @@ use tokio::sync::mpsc::Sender;
 
 use crate::config::Config;
 use crate::context::AppContext;
+use crate::docker::logs::StreamOptions;
 use crate::{
     components::help::{PageHelp, PageHelpBuilder},
-    docker::{container::DockerContainer, logs::DockerLogs},
+    docker::logs::DockerLogs,
     events::{message::MessageResponse, Key, Message, Transition},
     traits::{Close, Component, Page},
 };
@@ -22,6 +23,7 @@ const NAME: &str = "Logs";
 
 const ESC_KEY: Key = Key::Esc;
 const J_KEY: Key = Key::Char('j');
+const A_KEY: Key = Key::Char('a');
 const UP_KEY: Key = Key::Up;
 const K_KEY: Key = Key::Char('k');
 const DOWN_KEY: Key = Key::Down;
@@ -34,7 +36,6 @@ pub struct Logs {
     config: Box<Config>,
     docker: bollard::Docker,
     tx: Sender<Message<Key, Transition>>,
-    container: Option<DockerContainer>,
     logs: Option<DockerLogs>,
     page_help: Arc<Mutex<PageHelp>>,
     log_messages: Arc<Mutex<Vec<String>>>,
@@ -42,6 +43,7 @@ pub struct Logs {
     list_state: ListState,
     auto_scroll: bool,
     next: Option<Transition>,
+    stream_options: StreamOptions,
 }
 
 impl Logs {
@@ -50,12 +52,11 @@ impl Logs {
         tx: Sender<Message<Key, Transition>>,
         config: Box<Config>,
     ) -> Self {
-        let page_help = Self::build_page_help(config.clone()).build();
+        let page_help = Self::build_page_help(NAME, config.clone()).build();
 
         Self {
             config,
             docker,
-            container: None,
             logs: None,
             tx,
             page_help: Arc::new(Mutex::new(page_help)),
@@ -64,14 +65,16 @@ impl Logs {
             list_state: ListState::default(),
             auto_scroll: true,
             next: None,
+            stream_options: StreamOptions::default(),
         }
     }
 
-    fn build_page_help(config: Box<Config>) -> PageHelpBuilder {
-        PageHelpBuilder::new(NAME.into(), config)
+    fn build_page_help(name: &str, config: Box<Config>) -> PageHelpBuilder {
+        PageHelpBuilder::new(format!("{} ({})", NAME, name), config)
             .add_input(format!("{ESC_KEY}"), "back".into())
             .add_input(format!("{G_KEY}"), "top".into())
             .add_input(format!("{SHIFT_G_KEY}"), "bottom".into())
+            .add_input(format!("{A_KEY}"), "<all>".into())
     }
 
     fn activate_auto_scroll(&mut self) {
@@ -79,8 +82,17 @@ impl Logs {
             return;
         }
         self.auto_scroll = true;
+
         self.page_help = Arc::new(Mutex::new(
-            Self::build_page_help(self.config.clone()).build(),
+            Self::build_page_help(
+                if let Some(l) = &self.logs {
+                    &l.container.names
+                } else {
+                    ""
+                },
+                self.config.clone(),
+            )
+            .build(),
         ));
     }
 
@@ -90,10 +102,48 @@ impl Logs {
         }
         self.auto_scroll = false;
         self.page_help = Arc::new(Mutex::new(
-            Self::build_page_help(self.config.clone())
-                .add_input(format!("{SPACE_BAR}"), "auto-scroll".into())
-                .build(),
+            Self::build_page_help(
+                if let Some(l) = &self.logs {
+                    &l.container.names
+                } else {
+                    ""
+                },
+                self.config.clone(),
+            )
+            .add_input(format!("{SPACE_BAR}"), "auto-scroll".into())
+            .build(),
         ));
+    }
+
+    fn abort(&mut self) {
+        if let Some(handle) = &self.log_streamer_handle {
+            handle.abort()
+        }
+        self.log_streamer_handle = None;
+        self.log_messages = Arc::new(Mutex::new(vec![String::new()]));
+        self.logs = None;
+    }
+
+    async fn start_log_stream(&mut self) -> Result<()> {
+        self.auto_scroll = true;
+        if let Some(logs) = &self.logs {
+            let mut logs_stream = logs.get_log_stream(&self.docker, self.stream_options.clone());
+            let tx = self.tx.clone();
+            let log_messages = self.log_messages.clone();
+
+            self.log_streamer_handle = Some(tokio::spawn(async move {
+                while let Some(v) = logs_stream.next().await {
+                    {
+                        log_messages.lock().unwrap().push(v);
+                    }
+                    let _ = tx.send(Message::Tick).await;
+                }
+            }));
+        } else {
+            bail!("unable to stream logs without logs to stream");
+        }
+
+        Ok(())
     }
 }
 
@@ -104,11 +154,13 @@ impl Page for Logs {
             Key::Esc => {
                 let transition = if let Some(t) = self.next.clone() {
                     t
-                } else {
+                } else if let Some(logs) = &self.logs {
                     Transition::ToContainerPage(AppContext {
-                        docker_container: self.container.clone(),
+                        docker_container: Some(logs.container.clone()),
                         ..Default::default()
                     })
+                } else {
+                    Transition::ToContainerPage(AppContext::default())
                 };
 
                 self.tx.send(Message::Transition(transition)).await?;
@@ -136,6 +188,16 @@ impl Page for Logs {
                 self.activate_auto_scroll();
                 MessageResponse::Consumed
             }
+            A_KEY => {
+                self.stream_options.all = true;
+                let logs = self.logs.clone();
+                self.abort();
+                if let Some(l) = logs {
+                    self.logs = Some(DockerLogs::from(l.container.clone()));
+                }
+                self.start_log_stream().await?;
+                MessageResponse::Consumed
+            }
             _ => MessageResponse::NotConsumed,
         };
 
@@ -148,30 +210,15 @@ impl Page for Logs {
     async fn initialise(&mut self, cx: AppContext) -> Result<()> {
         if let Some(container) = cx.clone().docker_container {
             self.logs = Some(DockerLogs::from(container.clone()));
-            self.container = Some(container);
         } else {
             bail!("no docker container")
-        }
-        self.auto_scroll = true;
-        if let Some(logs) = &self.logs {
-            let mut logs_stream = logs.get_log_stream(&self.docker, 50);
-            let tx = self.tx.clone();
-            let log_messages = self.log_messages.clone();
-            self.log_streamer_handle = Some(tokio::spawn(async move {
-                while let Some(v) = logs_stream.next().await {
-                    {
-                        log_messages.lock().unwrap().push(v);
-                    }
-                    let _ = tx.send(Message::Tick).await;
-                }
-            }));
-        } else {
-            bail!("unable to stream logs without logs to stream");
         }
 
         if let Some(t) = cx.next() {
             self.next = Some(t)
         }
+
+        self.start_log_stream().await?;
 
         Ok(())
     }
@@ -184,10 +231,7 @@ impl Page for Logs {
 #[async_trait::async_trait]
 impl Close for Logs {
     async fn close(&mut self) -> Result<()> {
-        if let Some(handle) = &self.log_streamer_handle {
-            handle.abort()
-        }
-        self.log_streamer_handle = None;
+        self.abort();
         self.logs = None;
         self.log_messages = Arc::new(Mutex::new(vec![]));
         Ok(())
