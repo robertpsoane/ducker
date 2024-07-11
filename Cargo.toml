@@ -45,6 +45,8 @@ tui-big-text = "0.4.5"
 strip = true
 lto = true
 codegen-units = 1
+panic = "abort"
+opt-level = "z"
 
 [badges]
 maintenance = { status = "actively-developed" }

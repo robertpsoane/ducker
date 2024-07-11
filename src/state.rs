@@ -18,6 +18,7 @@ pub enum CurrentPage {
     #[default]
     Containers,
     Images,
+    Volumes,
     Logs,
     Attach,
     DescribeContainer,
