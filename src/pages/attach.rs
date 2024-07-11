@@ -3,8 +3,8 @@ use std::sync::{Arc, Mutex};
 use crossterm::terminal::disable_raw_mode;
 
 use color_eyre::eyre::{bail, Result};
-use ratatui::layout::{Constraint, Layout};
 use ratatui::{layout::Rect, Frame};
+use ratatui_macros::{horizontal, vertical};
 use tokio::sync::mpsc::Sender;
 
 use crate::components::alert_modal::{AlertModal, ModalState};
@@ -162,19 +162,9 @@ impl Component for Attach {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         let height = area.height;
 
-        let [_, text_area, _] = Layout::vertical([
-            Constraint::Length((height - 3) / 2),
-            Constraint::Length(3),
-            Constraint::Min(0),
-        ])
-        .areas(area);
+        let [_, text_area, _] = vertical![==((height-3)/2), ==3, >=0].areas(area);
 
-        let [_, text_area, _] = Layout::horizontal([
-            Constraint::Percentage(5),
-            Constraint::Percentage(90),
-            Constraint::Percentage(5),
-        ])
-        .areas(text_area);
+        let [_, text_area, _] = horizontal![==5%, ==90%, ==5%].areas(text_area);
 
         self.attach_input.draw(f, text_area);
 

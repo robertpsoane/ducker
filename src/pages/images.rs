@@ -8,6 +8,7 @@ use ratatui::{
     widgets::{Row, Table, TableState},
     Frame,
 };
+use ratatui_macros::constraints;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -304,13 +305,7 @@ impl Component for Images {
         let rows = get_image_rows(&self.images);
         let columns = Row::new(vec!["ID", "Name", "Tag", "Created", "Size"]);
 
-        let widths = [
-            Constraint::Percentage(20),
-            Constraint::Percentage(20),
-            Constraint::Percentage(20),
-            Constraint::Percentage(20),
-            Constraint::Percentage(20),
-        ];
+        let widths = constraints![==20%, ==20%, ==20%, ==20%, ==20%];
 
         let table = Table::new(rows.clone(), widths)
             .header(columns.clone().style(Style::new().bold()))

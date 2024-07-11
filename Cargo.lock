@@ -621,6 +621,7 @@ dependencies = [
  "futures",
  "itertools 0.13.0",
  "ratatui",
+ "ratatui-macros",
  "reqwest",
  "serde",
  "serde_yml",
@@ -1720,6 +1721,15 @@ dependencies = [
  "unicode-segmentation",
  "unicode-truncate",
  "unicode-width",
+]
+
+[[package]]
+name = "ratatui-macros"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f8c61408e431e111a6fecee4270953cdbef8a0b363fd215a5dadd9b93ce0797d"
+dependencies = [
+ "ratatui",
 ]
 
 [[package]]

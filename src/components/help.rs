@@ -5,6 +5,7 @@ use ratatui::{
     text::{Line, Span},
     widgets::Paragraph,
 };
+use ratatui_macros::constraint;
 
 use crate::{config::Config, traits::Component};
 
@@ -86,7 +87,7 @@ impl Component for PageHelp {
         let chunked_displays: Vec<&[String]> = displays.chunks(group_height as usize).collect();
 
         // Dynamically build horizontal of fixed width
-        let mut constraints = vec![Constraint::Min(0)];
+        let mut constraints = vec![constraint!(>=0)];
         for _ in 0..n_blocks {
             constraints.push(Constraint::Length(width as u16));
         }

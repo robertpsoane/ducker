@@ -8,6 +8,7 @@ use ratatui::{
     widgets::{Row, Table, TableState},
     Frame,
 };
+use ratatui_macros::constraints;
 use std::{
     collections::HashSet,
     sync::{Arc, Mutex},
@@ -347,15 +348,7 @@ impl Component for Containers {
             "ID", "Image", "Command", "Created", "Status", "Ports", "Names",
         ]);
 
-        let widths = [
-            Constraint::Percentage(12),
-            Constraint::Percentage(20),
-            Constraint::Percentage(20),
-            Constraint::Percentage(10),
-            Constraint::Percentage(13),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-        ];
+        let widths = constraints![==12%, ==20%, ==20%, ==10%, ==13%, ==10%, ==10%];
 
         let table = Table::new(rows.clone(), widths)
             .header(columns.clone().style(Style::new().bold()))

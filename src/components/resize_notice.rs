@@ -1,9 +1,10 @@
 use ratatui::{
-    layout::{self, Constraint, Layout},
+    layout::{self},
     style::Style,
     text::{Line, Span, Text},
     widgets::{block::Title, Block},
 };
+use ratatui_macros::{horizontal, vertical};
 
 use crate::{config::Config, traits::Component};
 
@@ -29,19 +30,9 @@ impl ResizeScreen {
 
 impl Component for ResizeScreen {
     fn draw(&mut self, f: &mut ratatui::Frame<'_>, area: ratatui::prelude::Rect) {
-        let [_, area, _] = Layout::horizontal(vec![
-            Constraint::Min(0),
-            Constraint::Max(40),
-            Constraint::Min(0),
-        ])
-        .areas(area);
+        let [_, area, _] = horizontal![>=0, <=40, >=0].areas(area);
 
-        let [_, area, _] = Layout::vertical(vec![
-            Constraint::Min(0),
-            Constraint::Max(9),
-            Constraint::Min(0),
-        ])
-        .areas(area);
+        let [_, area, _] = vertical![>=0, <=9, >=0].areas(area);
 
         let size = f.size();
 
@@ -89,12 +80,7 @@ impl Component for ResizeScreen {
             .title(Title::from("< Terminal Too Small >").alignment(layout::Alignment::Center))
             .border_style(Style::default().fg(self.config.theme.negative_highlight()));
 
-        let [_, inner_area, _] = Layout::vertical(vec![
-            Constraint::Min(0),
-            Constraint::Max(5),
-            Constraint::Min(0),
-        ])
-        .areas(area);
+        let [_, inner_area, _] = vertical![>=0, <=5, >=0].areas(area);
 
         f.render_widget(block, area);
 
