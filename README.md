@@ -32,6 +32,7 @@ There isn't currently a downloadable build; to install you will need cargo insta
 ```bash
 cargo install --locked ducker
 ```
+> :warning: **Make sure you use --locked**: if ducker is installed without `--locked` it is susceptible to changes in upstream dependencies, which could break the build.
 
 ### AUR
 
