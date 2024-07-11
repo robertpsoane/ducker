@@ -1,5 +1,7 @@
+
 <p align="center">
-	<h1 align="center">Ducker</h1>
+<a href="https://github.com/robertpsoane/ducker"><img src="https://raw.githubusercontent.com/robertpsoane/ducker/master/assets/ducker.png?raw=true" width="250" height="250" /></a>
+<h1 align="center">Ducker</h1>
 </p>
 
 <p align="center">
@@ -9,7 +11,7 @@
 </p>
 
 
-<a href="https://github.com/robertpsoane/ducker"><img src="https://raw.githubusercontent.com/robertpsoane/ducker/master/demo.gif?raw=true" width="100%" /></a>
+<a href="https://github.com/robertpsoane/ducker"><img src="https://raw.githubusercontent.com/robertpsoane/ducker/master/assets/demo.gif?raw=true" width="100%" /></a>
 
 <p align="center">
 🦀 Written in Rust 🦀
