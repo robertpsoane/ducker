@@ -6,6 +6,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.6](https://github.com/robertpsoane/ducker/compare/v0.0.5...v0.0.6) - 2024-07-11
+
+Over the past few days I have added a few small features, as well as bumping some dependency versions where there have been known vulnerabilities.
+One of the new features is a visual prompt that there is a new version.  This makes one network request at the beginning of each ducker session, but can be switched off in the config.  The bottom right of the screen shows the current version, and when there is a new version, it will show both.  I hope this is minimally intrusive, and am open to feedback.
+
+The other main feature is the option to choose which command to exec into the shell as.  I'm not entirely happy with how it's presented to the user and once I've got modals sorted I will probably change this up a bit.  Similarly I'm wondering if its worth having two exec actions, one to use the default and one to offer the pop-up?
+
+I have been giving versioning a bit of thought; when I started this I thought I'd start with v0.0.1 to signify the lack of completeness.  I intend to add initial support for volumes and networks, as well as get some unit test coverage (so I have some degree of trust in the stability of the system!) before bumping to v0.1.0.
+
+### Added
+- option to display all logs
+- initial optional exec command
+- add version info to bottom right of screen
+
+### Other
+- start using macros for layouts
+- update to issues roadmap
+- *(deps)* bump zerovec from 0.10.2 to 0.10.4
+- *(deps)* bump serde from 1.0.203 to 1.0.204
+- *(deps)* bump async-trait from 0.1.80 to 0.1.81
+
 ## [0.0.5](https://github.com/robertpsoane/ducker/compare/v0.0.4...v0.0.5) - 2024-07-07
 
 When consolidating the command field to use a common text input widget as part of the plan to add more user options, I came across a regression in `exec`; in essence the exec action fails, which isn't ideal.
