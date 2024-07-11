@@ -1,11 +1,12 @@
 use bollard::Docker;
 use color_eyre::eyre::{Context, Result};
 use ratatui::{
-    layout::{Constraint, Layout, Rect},
+    layout::{Layout, Rect},
     style::Style,
     widgets::Block,
     Frame,
 };
+use ratatui_macros::{horizontal, vertical};
 use tokio::sync::mpsc::Sender;
 
 use crate::{
@@ -196,27 +197,17 @@ impl App {
         match self.mode {
             state::Mode::TextInput => {
                 let text_input: Rect;
-                layout = Layout::vertical([
-                    Constraint::Length(5),
-                    Constraint::Length(3),
-                    Constraint::Min(0),
-                    Constraint::Length(1),
-                ]);
+                layout = vertical![==5, ==3, >=0, ==1];
                 [top, text_input, page, footer] = layout.areas(f.size());
                 self.input_field.draw(f, text_input);
             }
             _ => {
-                layout = Layout::vertical([
-                    Constraint::Length(5),
-                    Constraint::Min(0),
-                    Constraint::Length(1),
-                ]);
+                layout = vertical![==5, >=0, ==1];
                 [top, page, footer] = layout.areas(f.size());
             }
         }
 
-        let [title, right_space] =
-            Layout::horizontal(vec![Constraint::Length(50), Constraint::Min(0)]).areas(top);
+        let [title, right_space] = horizontal![==50, >=0].areas(top);
 
         self.title.draw(f, title);
         self.page_manager.draw(f, page);

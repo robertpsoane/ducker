@@ -1,9 +1,9 @@
 use ratatui::{
-    layout::{Constraint, Layout},
     style::Style,
     text::{Line, Span, Text},
     widgets::{block::Title, Block, Clear, Paragraph, Widget, Wrap},
 };
+use ratatui_macros::{horizontal, vertical};
 
 const UPPER_PAD_SIZE: u16 = 1;
 const MID_PAD_SIZE: u16 = 1;
@@ -47,19 +47,9 @@ impl<'a> Widget for ModalWidget<'a> {
         let width = self.width;
         let height = self.height;
 
-        let [_, area, _] = Layout::horizontal(vec![
-            Constraint::Min(0),
-            Constraint::Length(width),
-            Constraint::Min(0),
-        ])
-        .areas(area);
+        let [_, area, _] = horizontal![>=0, ==width, >=0].areas(area);
 
-        let [_, area, _] = Layout::vertical(vec![
-            Constraint::Min(0),
-            Constraint::Length(height),
-            Constraint::Min(0),
-        ])
-        .areas(area);
+        let [_, area, _] = vertical![>=0, ==height, >=0 ].areas(area);
 
         let block = Block::bordered()
             .title(self.title)
@@ -68,12 +58,7 @@ impl<'a> Widget for ModalWidget<'a> {
 
         let inner_block = block.inner(area);
 
-        let vertical_layout = Layout::vertical(vec![
-            Constraint::Length(UPPER_PAD_SIZE),
-            Constraint::Min(0),
-            Constraint::Length(MID_PAD_SIZE),
-            Constraint::Min(0),
-        ]);
+        let vertical_layout = vertical![==UPPER_PAD_SIZE, >=0, ==MID_PAD_SIZE, >=0];
 
         let [_, top, _, bottom] = vertical_layout.areas(inner_block);
 

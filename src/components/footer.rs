@@ -1,10 +1,11 @@
 use itertools::Itertools;
 use ratatui::{
-    layout::{Constraint, Layout, Rect},
+    layout::Rect,
     style::{Modifier, Style},
     text::{Line, Span},
     Frame,
 };
+use ratatui_macros::horizontal;
 
 use crate::{config::Config, traits::Component};
 
@@ -27,11 +28,7 @@ impl Footer {
 
 impl Component for Footer {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
-        let layout = Layout::horizontal([
-            Constraint::Length(20),
-            Constraint::Min(0),
-            Constraint::Length(20),
-        ]);
+        let layout = horizontal![==20, >=0, ==20];
         let [_left, mid, right] = layout.areas(area);
 
         let keys = [

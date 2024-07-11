@@ -29,6 +29,7 @@ ratatui = { version = "0.27.0", features = [
     "serde",
     "unstable-rendered-line-info",
 ] }
+ratatui-macros = "0.4.2"
 reqwest = { version = "0.12.5", features = ["json"] }
 serde = "1.0.204"
 serde_yml = "0.0.10"
