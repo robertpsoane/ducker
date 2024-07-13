@@ -74,6 +74,7 @@ The following commands are supported:
 | ------------ | ----------- | ------------------------------------ |
 | `images`     | `image`     | Open the `Images` top level page     |
 | `containers` | `container` | Open the `Containers` top level page |
+| `volumes`    | `volume`    | Open the `Volumes` top level page    |
 | `quit`       | `q`         | Close the application                |
 
 
@@ -113,8 +114,17 @@ The following actions are available on the Images page:
 | Hotkey   | Action                                                         |
 | -------- | -------------------------------------------------------------- |
 | `Ctrl+d` | Delete the currently selected image                            |
-| `d`      | Toggle whether or not to show dangling images (off by default) |
+| `d`      | Describe the currently selected image                          |
+| `D`      | Toggle whether or not to show dangling images (off by default) |
 
+#### Volumes
+
+The following actions are available on the Volumes page:
+
+| Hotkey   | Action                                 |
+| -------- | -------------------------------------- |
+| `Ctrl+d` | Delete the currently selected volume   |
+| `d`      | Describe the currently selected volume |
 
 #### Logs
 
