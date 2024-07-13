@@ -1,6 +1,7 @@
 use crate::{
     docker::{
-        container::DockerContainer, image::DockerImage, traits::Describe, volume::DockerVolume,
+        container::DockerContainer, image::DockerImage, network::DockerNetwork, traits::Describe,
+        volume::DockerVolume,
     },
     events::Transition,
 };
@@ -17,6 +18,7 @@ pub struct AppContext {
     pub docker_container: Option<DockerContainer>,
     pub docker_image: Option<DockerImage>,
     pub docker_volume: Option<DockerVolume>,
+    pub docker_network: Option<DockerNetwork>,
     pub describable: Option<Box<dyn Describe>>,
 }
 

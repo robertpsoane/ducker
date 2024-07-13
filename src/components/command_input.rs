@@ -22,6 +22,8 @@ const CONTAINER: &str = "container";
 const CONTAINERS: &str = "containers";
 const VOLUME: &str = "volume";
 const VOLUMES: &str = "volumes";
+const NETWORK: &str = "network";
+const NETWORKS: &str = "networks";
 
 #[derive(Debug)]
 pub struct CommandInput {
@@ -33,7 +35,7 @@ pub struct CommandInput {
 impl CommandInput {
     pub fn new(tx: Sender<Message<Key, Transition>>, prompt: String) -> Self {
         let ac: Autocomplete = Autocomplete::from(vec![
-            QUIT, Q, IMAGE, IMAGES, CONTAINER, CONTAINERS, VOLUME, VOLUMES,
+            QUIT, Q, IMAGE, IMAGES, CONTAINER, CONTAINERS, VOLUME, VOLUMES, NETWORK, NETWORKS,
         ]);
         Self {
             tx,
@@ -93,6 +95,7 @@ impl CommandInput {
             IMAGE | IMAGES => Some(Transition::ToImagePage(AppContext::default())),
             CONTAINER | CONTAINERS => Some(Transition::ToContainerPage(AppContext::default())),
             VOLUME | VOLUMES => Some(Transition::ToVolumePage(AppContext::default())),
+            NETWORK | NETWORKS => Some(Transition::ToNetworkPage(AppContext::default())),
             _ => None,
         };
 
