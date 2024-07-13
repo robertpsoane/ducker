@@ -13,7 +13,7 @@ use crate::{
     events::{message::MessageResponse, Key, Message, Transition},
     pages::{
         attach::Attach, containers::Containers, describe::DescribeContainer, images::Images,
-        logs::Logs,
+        logs::Logs, volume::Volume,
     },
     state,
     traits::{Component, Page},
@@ -84,6 +84,11 @@ impl PageManager {
                     .await?;
                 MessageResponse::Consumed
             }
+            Transition::ToVolumePage(cx) => {
+                self.set_current_page(state::CurrentPage::Volumes, cx)
+                    .await?;
+                MessageResponse::Consumed
+            }
             _ => MessageResponse::NotConsumed,
         };
         Ok(result)
@@ -135,6 +140,13 @@ impl PageManager {
             }
             state::CurrentPage::DescribeContainer => {
                 self.page = Box::new(DescribeContainer::new(
+                    self.docker.clone(),
+                    self.tx.clone(),
+                    self.config.clone(),
+                ))
+            }
+            state::CurrentPage::Volumes => {
+                self.page = Box::new(Volume::new(
                     self.docker.clone(),
                     self.tx.clone(),
                     self.config.clone(),

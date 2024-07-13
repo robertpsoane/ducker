@@ -1,5 +1,7 @@
 use crate::{
-    docker::{container::DockerContainer, image::DockerImage, traits::Describe},
+    docker::{
+        container::DockerContainer, image::DockerImage, traits::Describe, volume::DockerVolume,
+    },
     events::Transition,
 };
 
@@ -14,6 +16,7 @@ pub struct AppContext {
     pub list_idx: Option<usize>,
     pub docker_container: Option<DockerContainer>,
     pub docker_image: Option<DockerImage>,
+    pub docker_volume: Option<DockerVolume>,
     pub describable: Option<Box<dyn Describe>>,
 }
 

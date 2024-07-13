@@ -20,6 +20,8 @@ const IMAGE: &str = "image";
 const IMAGES: &str = "images";
 const CONTAINER: &str = "container";
 const CONTAINERS: &str = "containers";
+const VOLUME: &str = "volume";
+const VOLUMES: &str = "volumes";
 
 #[derive(Debug)]
 pub struct CommandInput {
@@ -30,8 +32,9 @@ pub struct CommandInput {
 
 impl CommandInput {
     pub fn new(tx: Sender<Message<Key, Transition>>, prompt: String) -> Self {
-        let ac: Autocomplete =
-            Autocomplete::from(vec![QUIT, Q, IMAGE, IMAGES, CONTAINER, CONTAINERS]);
+        let ac: Autocomplete = Autocomplete::from(vec![
+            QUIT, Q, IMAGE, IMAGES, CONTAINER, CONTAINERS, VOLUME, VOLUMES,
+        ]);
         Self {
             tx,
             history: History::new(),
@@ -89,6 +92,7 @@ impl CommandInput {
             Q | QUIT => Some(Transition::Quit),
             IMAGE | IMAGES => Some(Transition::ToImagePage(AppContext::default())),
             CONTAINER | CONTAINERS => Some(Transition::ToContainerPage(AppContext::default())),
+            VOLUME | VOLUMES => Some(Transition::ToVolumePage(AppContext::default())),
             _ => None,
         };
 
