@@ -21,6 +21,7 @@ pub enum CurrentPage {
     Volumes,
     Logs,
     Attach,
+    Network,
     DescribeContainer,
 }
 

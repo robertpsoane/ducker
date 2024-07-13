@@ -75,6 +75,7 @@ The following commands are supported:
 | `images`     | `image`     | Open the `Images` top level page     |
 | `containers` | `container` | Open the `Containers` top level page |
 | `volumes`    | `volume`    | Open the `Volumes` top level page    |
+| `networks`   | `network`   | Open the `Networks` top level page   |
 | `quit`       | `q`         | Close the application                |
 
 
@@ -125,6 +126,17 @@ The following actions are available on the Volumes page:
 | -------- | -------------------------------------- |
 | `Ctrl+d` | Delete the currently selected volume   |
 | `d`      | Describe the currently selected volume |
+
+#### Networks
+
+The following actions are available on the Volumes page:
+
+| Hotkey   | Action                                 |
+| -------- | -------------------------------------- |
+| `Ctrl+d` | Delete the currently selected volume   |
+| `d`      | Describe the currently selected volume |
+
+> :warning: **Network deletion isn't entirely complete**: A failed deletion currently results in a yes/no modal telling you that it couldn't be deleted.  There is no difference between the yes and no results.  This is due to the current modal story and a quick and dirty hack to get them set up.  Once a generic modal exists this will be patched up!
 
 #### Logs
 

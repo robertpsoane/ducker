@@ -3,4 +3,5 @@ pub mod containers;
 pub mod describe;
 pub mod images;
 pub mod logs;
-pub mod volume;
+pub mod networks;
+pub mod volumes;

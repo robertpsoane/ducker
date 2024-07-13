@@ -19,6 +19,7 @@ pub enum Transition {
     ToDescribeContainerPage(AppContext),
     ToAttach(AppContext),
     ToVolumePage(AppContext),
+    ToNetworkPage(AppContext),
 }
 
 pub async fn send_transition(
