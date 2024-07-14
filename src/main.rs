@@ -1,12 +1,14 @@
+use std::path::PathBuf;
+
 use clap::Parser;
 use color_eyre::eyre::Context;
 
 use ducker::{
     config::Config,
     docker::util::new_local_docker_connection,
-    events,
-    events::{EventLoop, Key, Message},
+    events::{self, EventLoop, Key, Message},
     state, terminal,
+    tracing::initialize_logging,
     ui::App,
 };
 
@@ -24,11 +26,22 @@ struct Args {
     /// docker
     #[clap(long, short)]
     docker_path: Option<String>,
+
+    /// Path at which to write log messages; intended mainly for debugging.
+    /// If unset will log to default log location; usually
+    /// ~/.local/share/ducker/ducker.log
+    ///
+    /// Set log level by setting the `DUCKER_LOGLEVEL` environment variable
+    /// defaults to `info`.
+    #[clap(long, short)]
+    log_path: Option<PathBuf>,
 }
 
 #[tokio::main]
 async fn main() -> color_eyre::Result<()> {
     let args = Args::parse();
+    initialize_logging(&args.log_path).context("failed to initialise logging")?;
+    color_eyre::install()?;
     let config = Config::new(&args.export_default_config, args.docker_path)?;
 
     let docker = new_local_docker_connection(&config.docker_path)

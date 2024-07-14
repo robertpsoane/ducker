@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{config::Config, traits::Component};
-use color_eyre::eyre::Result;
+use color_eyre::eyre::{bail, Result};
 use ratatui::{
     layout::{Margin, Rect},
     style::Style,
@@ -85,17 +85,17 @@ async fn find_latest_version() -> Result<String> {
 
     let release = match body.get(0) {
         Some(v) => v,
-        None => panic!("could not parse response"),
+        None => bail!("could not parse response"),
     };
 
     let release_name = match release.get("name") {
         Some(v) => v,
-        None => panic!("could not parse response"),
+        None => bail!("could not parse response"),
     };
 
     let release_name_value = match release_name.as_str() {
         Some(v) => String::from(v),
-        None => panic!("could not parse response"),
+        None => bail!("could not parse response"),
     };
 
     Ok(release_name_value)

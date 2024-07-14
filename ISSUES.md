@@ -6,11 +6,8 @@ The "issues" listed here are the aspirational set of features I have in mind, so
 
 Feel free to raise issues in github.
 
-- Option to control container log time ranges
 - Add tracing of some sort
 - Automated test strategy; perhaps obviously there aren't any tests in the repo.  This is due to the way in which the project started, but probably needs to change sooner rather than later!
-- Add volumes as a first class citizen
-- Add networks as a first class citizen
 - Modals should use a general purpose trait object of some sort - preferably only one modal field per page, in a similar way to pages in the page manager
 - Support for "forms" of scrolling stateful widgets (TODO - look out for ratatui libraries that already support this)
 - Run Images - Given an image, run a new container; provide a form/modal to allow user to configure the container

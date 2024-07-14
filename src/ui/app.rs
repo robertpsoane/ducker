@@ -84,7 +84,10 @@ impl App {
             if let ModalState::Open(_) = m.state {
                 let res = match m.update(message).await {
                     Ok(r) => r,
-                    Err(e) => panic!("failed to process failure modal; {e}"),
+                    Err(e) => {
+                        tracing::error! {"failed to process failure modal; double failure so crashing {}", e}
+                        panic!("failed to process failure modal; {e}")
+                    }
                 };
                 if let ModalState::Closed = m.state {
                     self.modal = None;
@@ -99,7 +102,7 @@ impl App {
         };
 
         res.unwrap_or_else(|e| {
-            self.handle_error("Error".into(), format!("{e}"));
+            self.handle_error("Error".into(), &e);
             MessageResponse::NotConsumed
         })
     }
@@ -124,7 +127,7 @@ impl App {
                 .transition(transition)
                 .await
                 .unwrap_or_else(|e| {
-                    self.handle_error("Error".into(), format!("{e}"));
+                    self.handle_error("Error".into(), &e);
                     MessageResponse::NotConsumed
                 }),
         }
@@ -167,9 +170,10 @@ impl App {
         }
     }
 
-    fn handle_error(&mut self, title: String, msg: String) {
+    fn handle_error(&mut self, title: String, msg: &color_eyre::Report) {
+        tracing::error!("An error occurred \n{}", msg);
         let mut modal = AlertModal::new(title, ModalType::AlertModal);
-        modal.initialise(msg);
+        modal.initialise(format!("{msg}"));
         self.modal = Some(modal)
     }
 
