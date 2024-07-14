@@ -6,7 +6,6 @@ use ratatui::{
     text::{Line, Span},
     Frame,
 };
-use reqwest::header::USER_AGENT;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const TAGS_URL: &str = "https://api.github.com/repos/robertpsoane/ducker/tags";
@@ -77,15 +76,10 @@ async fn get_update_to(version: &str) -> Option<String> {
 }
 
 async fn find_latest_version() -> Result<String> {
-    let client = reqwest::Client::new();
-
-    let body: serde_yml::Value = client
-        .get(TAGS_URL)
-        .header(USER_AGENT, format!("Ducker / {VERSION}"))
-        .send()
-        .await?
-        .json()
-        .await?;
+    let body: serde_yml::Value = ureq::get(TAGS_URL)
+        .set("User-Agent", &format!("Ducker / {VERSION}"))
+        .call()?
+        .into_json()?;
 
     let release = match body.get(0) {
         Some(v) => v,
