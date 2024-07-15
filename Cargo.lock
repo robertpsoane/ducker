@@ -63,12 +63,12 @@ dependencies = [
 
 [[package]]
 name = "ansi-to-tui"
-version = "4.0.1"
+version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8438af3d7e7dccdb98eff55e5351587d9bec2294daff505fc9a061bd14d22db0"
+checksum = "ba3bf628a79452df9614d933012dc500f8cb6ddad8c897ff8122ea1c0b187ff7"
 dependencies = [
  "nom",
- "ratatui",
+ "ratatui 0.26.3",
  "simdutf8",
  "smallvec",
  "thiserror",
@@ -617,7 +617,7 @@ dependencies = [
  "dyn-clone",
  "futures",
  "itertools 0.13.0",
- "ratatui",
+ "ratatui 0.27.0",
  "ratatui-macros",
  "serde",
  "serde_yml",
@@ -1560,6 +1560,25 @@ dependencies = [
 
 [[package]]
 name = "ratatui"
+version = "0.26.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f44c9e68fd46eda15c646fbb85e1040b657a58cdc8c98db1d97a55930d991eef"
+dependencies = [
+ "bitflags",
+ "cassowary",
+ "compact_str",
+ "itertools 0.12.1",
+ "lru",
+ "paste",
+ "stability",
+ "strum",
+ "unicode-segmentation",
+ "unicode-truncate",
+ "unicode-width",
+]
+
+[[package]]
+name = "ratatui"
 version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d16546c5b5962abf8ce6e2881e722b4e0ae3b6f1a08a26ae3573c55853ca68d3"
@@ -1586,7 +1605,7 @@ version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8c61408e431e111a6fecee4270953cdbef8a0b363fd215a5dadd9b93ce0797d"
 dependencies = [
- "ratatui",
+ "ratatui 0.27.0",
 ]
 
 [[package]]
@@ -2344,7 +2363,7 @@ dependencies = [
  "derive_builder",
  "font8x8",
  "itertools 0.13.0",
- "ratatui",
+ "ratatui 0.27.0",
 ]
 
 [[package]]

@@ -13,7 +13,7 @@ categories = ["command-line-utilities", "development-tools"]
 include = ["/src", "LICENSE.txt", "CHANGELOG.md", "README.md"]
 
 [dependencies]
-ansi-to-tui = "4.0.1"
+ansi-to-tui = "4.1.0"
 async-trait = "0.1.81"
 bollard = { version = "0.16.1", features = ["ssl"] }
 byte-unit = { version = "5.1.4", features = ["byte"] }
