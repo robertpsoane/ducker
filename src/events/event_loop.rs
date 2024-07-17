@@ -11,6 +11,7 @@ use tokio::{
     task::JoinHandle,
     time::interval,
 };
+use tracing::trace;
 
 use super::key::Key;
 use super::Message;
@@ -77,9 +78,11 @@ impl EventLoop {
                 let delay = interval.tick();
                 tokio::select! {
                     _ = tx.closed() => {
+                        trace!{"tick task sender closed"};
                         break;
                     }
                     _ = delay =>  {
+                        trace!{"sending tick message"};
                         tx.send(Message::Tick).await.unwrap();
                     }
 
@@ -98,12 +101,14 @@ impl EventLoop {
                 let crossterm_event = reader.next().fuse();
                 tokio::select! {
                     _ = tx.closed() => {
+                        trace!{"io sender closed"};
                         break;
                     }
                     _ = delay => {}
                     Some(Ok(event)) = crossterm_event => {
                         if let CrossTermEvent::Key(key) = event {
                             let key = Key::from(key);
+                            trace!{"received event input `{}`", key};
                             tx.send(Message::Input(key)).await.unwrap();
                         }
                     }
@@ -119,10 +124,12 @@ impl EventLoop {
             loop {
                 tokio::select! {
                     _ = tx.closed() => {
+                        trace!("inbound task sender closed");
                         break;
                     }
                     mut locked_rx = rx.lock() => {
                         if let Some(event) = locked_rx.recv().await {
+                            trace!("received inbound task `{}`", stringify!(event));
                             tx.send(event).await.unwrap()
                         }
                     }

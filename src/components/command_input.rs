@@ -107,10 +107,6 @@ impl CommandInput {
                 .await
                 .context("unable to send transition")?;
         }
-        // At some point I want it to pop up a modal
-        // else {
-        //     panic!("")
-        // }
 
         self.initialise();
         Ok(())

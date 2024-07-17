@@ -216,7 +216,7 @@ impl Default for Theme {
     }
 }
 
-fn get_app_config_path() -> Result<std::path::PathBuf> {
+pub fn get_app_config_path() -> Result<std::path::PathBuf> {
     let path = if cfg!(target_os = "macos") {
         dirs_next::home_dir().map(|h| h.join(".config"))
     } else {

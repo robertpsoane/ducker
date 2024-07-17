@@ -7,6 +7,7 @@ pub mod events;
 pub mod pages;
 pub mod state;
 pub mod terminal;
+pub mod tracing;
 pub mod traits;
 pub mod ui;
 pub mod widgets;

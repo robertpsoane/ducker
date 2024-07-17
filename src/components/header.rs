@@ -30,7 +30,10 @@ impl Component for Header {
             .build()
         {
             Ok(b) => b,
-            _ => panic!("Ahhhh!"),
+            _ => {
+                tracing::error!("failed to build title text");
+                panic!("Failed to build title text; panicking...")
+            }
         };
 
         let area = area.inner(Margin {
