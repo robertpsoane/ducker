@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use bollard::Docker;
 use color_eyre::eyre::{Context, Result};
 use ratatui::{
@@ -32,7 +34,7 @@ enum ModalType {
 #[derive(Debug)]
 pub struct App {
     pub running: state::Running,
-    config: Box<Config>,
+    config: Arc<Config>,
     mode: state::Mode,
     blocked: bool,
     resize_screen: ResizeScreen,
@@ -49,7 +51,7 @@ impl App {
         docker: Docker,
         config: Config,
     ) -> Result<Self> {
-        let config = Box::new(config);
+        let config = Arc::new(config);
 
         let page = state::CurrentPage::default();
 
@@ -66,7 +68,7 @@ impl App {
             title: Header::new(config.clone()),
             page_manager: body,
             footer: Footer::new(config.clone()).await,
-            input_field: CommandInput::new(tx, config.prompt),
+            input_field: CommandInput::new(tx, config.prompt.clone()),
             modal: None,
         };
         Ok(app)

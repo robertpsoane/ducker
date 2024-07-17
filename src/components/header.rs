@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ratatui::{
     layout::{self, Margin, Rect},
     style::Style,
@@ -9,11 +11,11 @@ use crate::{config::Config, traits::Component};
 
 #[derive(Debug)]
 pub struct Header {
-    config: Box<Config>,
+    config: Arc<Config>,
 }
 
 impl Header {
-    pub fn new(config: Box<Config>) -> Self {
+    pub fn new(config: Arc<Config>) -> Self {
         Self { config }
     }
 }

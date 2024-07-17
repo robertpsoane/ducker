@@ -143,7 +143,7 @@ impl Close for Network {}
 
 impl Network {
     #[must_use]
-    pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Box<Config>) -> Self {
+    pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Arc<Config>) -> Self {
         let page_help = PageHelpBuilder::new(NAME.into(), config.clone())
             .add_input(format!("{CTRL_D_KEY}"), "delete".into())
             .add_input(format!("{G_KEY}"), "top".into())

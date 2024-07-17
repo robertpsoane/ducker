@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{config::Config, traits::Component};
 use color_eyre::eyre::Result;
 use ratatui::{
@@ -12,13 +14,13 @@ const TAGS_URL: &str = "https://api.github.com/repos/robertpsoane/ducker/tags";
 
 #[derive(Debug)]
 pub struct VersionComponent {
-    config: Box<Config>,
+    config: Arc<Config>,
     version: String,
     update_to: Option<String>,
 }
 
 impl VersionComponent {
-    pub async fn new(config: Box<Config>) -> Self {
+    pub async fn new(config: Arc<Config>) -> Self {
         let version = format!("v{VERSION}");
 
         let update_to = if config.check_for_update {

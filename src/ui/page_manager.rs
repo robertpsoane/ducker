@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use bollard::Docker;
 use color_eyre::eyre::{Context, Result};
 use ratatui::{
@@ -21,7 +23,7 @@ use crate::{
 
 #[derive(Debug)]
 pub struct PageManager {
-    config: Box<Config>,
+    config: Arc<Config>,
     current_page: state::CurrentPage,
     page: Box<dyn Page>,
     tx: Sender<Message<Key, Transition>>,
@@ -33,7 +35,7 @@ impl PageManager {
         page: state::CurrentPage,
         tx: Sender<Message<Key, Transition>>,
         docker: Docker,
-        config: Box<Config>,
+        config: Arc<Config>,
     ) -> Result<Self> {
         let containers = Box::new(Containers::new(docker.clone(), tx.clone(), config.clone()));
 
