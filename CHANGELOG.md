@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.7](https://github.com/robertpsoane/ducker/compare/v0.0.6...v0.0.7) - 2024-07-17
+
+### Added
+- *(tracing)* add initial tracing to ~/.local/share/ducker/ducker.log ([#49](https://github.com/robertpsoane/ducker/pull/49))
+- initial network page ([#47](https://github.com/robertpsoane/ducker/pull/47))
+- add support for listing volumes ([#44](https://github.com/robertpsoane/ducker/pull/44))
+
+### Other
+- *(config)* use arc instead of box for config ([#52](https://github.com/robertpsoane/ducker/pull/52))
+- *(deps)* bump clap from 4.5.8 to 4.5.9 ([#51](https://github.com/robertpsoane/ducker/pull/51))
+- *(versions)* use ureq instead of reqwest for version checks ([#48](https://github.com/robertpsoane/ducker/pull/48))
+- symlink demo.gif to fix old cargo docs
+- *(readme)* add a note about using `--locked` to cargo installs
+- add an ai generated image of a duck riding a whale ([#45](https://github.com/robertpsoane/ducker/pull/45))
+
 ## [0.0.6](https://github.com/robertpsoane/ducker/compare/v0.0.5...v0.0.6) - 2024-07-11
 
 Over the past few days I have added a few small features, as well as bumping some dependency versions where there have been known vulnerabilities.
