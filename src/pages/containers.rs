@@ -51,7 +51,7 @@ enum ModalTypes {
 
 #[derive(Debug)]
 pub struct Containers {
-    config: Box<Config>,
+    config: Arc<Config>,
     pub name: String,
     tx: Sender<Message<Key, Transition>>,
     page_help: Arc<Mutex<PageHelp>>,
@@ -180,7 +180,7 @@ impl Page for Containers {
 impl Close for Containers {}
 
 impl Containers {
-    pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Box<Config>) -> Self {
+    pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Arc<Config>) -> Self {
         let page_help = PageHelpBuilder::new(NAME.into(), config.clone())
             .add_input(format!("{}", A_KEY), "exec".into())
             .add_input(format!("{CTRL_D_KEY}"), "delete".into())

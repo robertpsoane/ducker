@@ -33,7 +33,7 @@ enum ModalType {
 
 #[derive(Debug)]
 pub struct Attach {
-    config: Box<Config>,
+    config: Arc<Config>,
     container: Option<DockerContainer>,
     next: Option<Transition>,
     tx: Sender<Message<Key, Transition>>,
@@ -43,7 +43,7 @@ pub struct Attach {
 }
 
 impl Attach {
-    pub fn new(tx: Sender<Message<Key, Transition>>, config: Box<Config>) -> Self {
+    pub fn new(tx: Sender<Message<Key, Transition>>, config: Arc<Config>) -> Self {
         let page_help = Self::build_page_help(config.clone(), None);
         Self {
             config,
@@ -56,7 +56,7 @@ impl Attach {
         }
     }
 
-    pub fn build_page_help(config: Box<Config>, name: Option<String>) -> PageHelp {
+    pub fn build_page_help(config: Arc<Config>, name: Option<String>) -> PageHelp {
         PageHelpBuilder::new(
             match name {
                 Some(n) => n,

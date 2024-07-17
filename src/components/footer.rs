@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use itertools::Itertools;
 use ratatui::{
     layout::Rect,
@@ -13,12 +15,12 @@ use super::version::VersionComponent;
 
 #[derive(Debug)]
 pub struct Footer {
-    config: Box<Config>,
+    config: Arc<Config>,
     version: VersionComponent,
 }
 
 impl Footer {
-    pub async fn new(config: Box<Config>) -> Self {
+    pub async fn new(config: Arc<Config>) -> Self {
         Self {
             config: config.clone(),
             version: VersionComponent::new(config).await,

@@ -31,7 +31,7 @@ const K_KEY: Key = Key::Char('k');
 #[derive(Debug)]
 pub struct DescribeContainer {
     _docker: Docker,
-    config: Box<Config>,
+    config: Arc<Config>,
     thing: Option<Box<dyn Describe>>,
     thing_summary: Option<Vec<String>>,
     tx: Sender<Message<Key, Transition>>,
@@ -41,7 +41,7 @@ pub struct DescribeContainer {
 }
 
 impl DescribeContainer {
-    pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Box<Config>) -> Self {
+    pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Arc<Config>) -> Self {
         let page_help = Self::build_page_help(config.clone(), None);
 
         Self {
@@ -56,7 +56,7 @@ impl DescribeContainer {
         }
     }
 
-    fn build_page_help(config: Box<Config>, name: Option<String>) -> PageHelp {
+    fn build_page_help(config: Arc<Config>, name: Option<String>) -> PageHelp {
         let page_name = if let Some(name) = name {
             name
         } else {

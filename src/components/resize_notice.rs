@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ratatui::{
     layout::{self},
     style::Style,
@@ -15,11 +17,11 @@ const MIN_COLS: u16 = 100;
 pub struct ResizeScreen {
     pub min_height: u16,
     pub min_width: u16,
-    config: Box<Config>,
+    config: Arc<Config>,
 }
 
 impl ResizeScreen {
-    pub fn new(config: Box<Config>) -> Self {
+    pub fn new(config: Arc<Config>) -> Self {
         Self {
             min_width: MIN_COLS,
             min_height: MIN_ROWS,

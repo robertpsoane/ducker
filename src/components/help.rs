@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use itertools::Itertools;
 use ratatui::{
     layout::{Constraint, Layout},
@@ -12,7 +14,7 @@ use crate::{config::Config, traits::Component};
 #[derive(Debug, Clone)]
 pub struct PageHelp {
     name: String,
-    config: Box<Config>,
+    config: Arc<Config>,
     displays: Vec<String>,
     width: usize,
 }
@@ -20,12 +22,12 @@ pub struct PageHelp {
 #[derive(Debug, Clone)]
 pub struct PageHelpBuilder {
     name: String,
-    config: Box<Config>,
+    config: Arc<Config>,
     inputs: Vec<(String, String)>,
 }
 
 impl PageHelpBuilder {
-    pub fn new(name: String, config: Box<Config>) -> Self {
+    pub fn new(name: String, config: Arc<Config>) -> Self {
         Self {
             name,
             config,

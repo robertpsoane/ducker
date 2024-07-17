@@ -33,7 +33,7 @@ const SHIFT_G_KEY: Key = Key::Char('G');
 
 #[derive(Debug)]
 pub struct Logs {
-    config: Box<Config>,
+    config: Arc<Config>,
     docker: bollard::Docker,
     tx: Sender<Message<Key, Transition>>,
     logs: Option<DockerLogs>,
@@ -50,7 +50,7 @@ impl Logs {
     pub fn new(
         docker: bollard::Docker,
         tx: Sender<Message<Key, Transition>>,
-        config: Box<Config>,
+        config: Arc<Config>,
     ) -> Self {
         let page_help = Self::build_page_help(NAME, config.clone()).build();
 
@@ -69,7 +69,7 @@ impl Logs {
         }
     }
 
-    fn build_page_help(name: &str, config: Box<Config>) -> PageHelpBuilder {
+    fn build_page_help(name: &str, config: Arc<Config>) -> PageHelpBuilder {
         PageHelpBuilder::new(format!("{} ({})", NAME, name), config)
             .add_input(format!("{ESC_KEY}"), "back".into())
             .add_input(format!("{G_KEY}"), "top".into())
