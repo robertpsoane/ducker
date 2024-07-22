@@ -1620,9 +1620,9 @@ dependencies = [
 
 [[package]]
 name = "ratatui-macros"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8c61408e431e111a6fecee4270953cdbef8a0b363fd215a5dadd9b93ce0797d"
+checksum = "6eb998c66043d39b6e8c1ebb9db7227857eb180263a5f52dba2fafd19e6eb485"
 dependencies = [
  "ratatui",
 ]
