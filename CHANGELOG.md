@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.8](https://github.com/robertpsoane/ducker/compare/v0.0.7...v0.0.8) - 2024-07-29
+
+### Other
+- *(deps)* bump clap from 4.5.9 to 4.5.11 ([#57](https://github.com/robertpsoane/ducker/pull/57))
+- *(deps)* bump serde_yml from 0.0.10 to 0.0.11 ([#53](https://github.com/robertpsoane/ducker/pull/53))
+- *(deps)* bump ratatui-macros from 0.4.2 to 0.4.3 ([#54](https://github.com/robertpsoane/ducker/pull/54))
+- *(deps)* bump tokio from 1.38.0 to 1.38.1 ([#55](https://github.com/robertpsoane/ducker/pull/55))
+
 ## [0.0.7](https://github.com/robertpsoane/ducker/compare/v0.0.6...v0.0.7) - 2024-07-17
 
 ### Added
