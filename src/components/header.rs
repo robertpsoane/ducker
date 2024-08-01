@@ -22,19 +22,12 @@ impl Header {
 
 impl Component for Header {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
-        let big_text = match BigText::builder()
+        let big_text = BigText::builder()
             .pixel_size(PixelSize::HalfHeight)
             .style(Style::default().fg(self.config.theme.title()))
             .lines(vec!["Ducker".into()])
             .alignment(layout::Alignment::Center)
-            .build()
-        {
-            Ok(b) => b,
-            _ => {
-                tracing::error!("failed to build title text");
-                panic!("Failed to build title text; panicking...")
-            }
-        };
+            .build();
 
         let area = area.inner(Margin {
             vertical: 0,
