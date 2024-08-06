@@ -20,7 +20,7 @@ byte-unit = { version = "5.1.4", features = ["byte"] }
 chrono = "0.4.38"
 clap = { version = "4.5.13", features = ["derive"] }
 color-eyre = "0.6.3"
-crossterm = { version = "0.27", features = ["event-stream"] }
+crossterm = { version = "0.28", features = ["event-stream"] }
 dirs-next = "2.0.0"
 dyn-clone = "1.0.17"
 futures = "0.3.30"
