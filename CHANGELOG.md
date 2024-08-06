@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0](https://github.com/robertpsoane/ducker/compare/v0.0.7...v0.1.0) - 2024-08-06
+
+Over the past few weeks I've had little time to add to Ducker, however I've been trying to keep on top of dependencies.  I've decided to bump to v0.1.0 as Ducker's approaching a near-stable point, and to allow the semver to determine between feature update & changes and dependency patches.
+
+### Other
+- *(deps)* bump crossterm from 0.27.0 to 0.28.1 ([#62](https://github.com/robertpsoane/ducker/pull/62))
+- *(deps)* bump clap from 4.5.11 to 4.5.13 ([#63](https://github.com/robertpsoane/ducker/pull/63))
+- *(deps)* bump tui-big-text from 0.5.2 to 0.5.3 ([#64](https://github.com/robertpsoane/ducker/pull/64))
+- *(deps)* bump tui-big-text from 0.4.5 to 0.5.2 ([#60](https://github.com/robertpsoane/ducker/pull/60))
+- *(deps)* bump tokio from 1.38.1 to 1.39.2 ([#58](https://github.com/robertpsoane/ducker/pull/58))
+- *(deps)* bump clap from 4.5.9 to 4.5.11 ([#57](https://github.com/robertpsoane/ducker/pull/57))
+- *(deps)* bump serde_yml from 0.0.10 to 0.0.11 ([#53](https://github.com/robertpsoane/ducker/pull/53))
+- *(deps)* bump ratatui-macros from 0.4.2 to 0.4.3 ([#54](https://github.com/robertpsoane/ducker/pull/54))
+- *(deps)* bump tokio from 1.38.0 to 1.38.1 ([#55](https://github.com/robertpsoane/ducker/pull/55))
+
 ## [0.0.7](https://github.com/robertpsoane/ducker/compare/v0.0.6...v0.0.7) - 2024-07-17
 
 ### Added
