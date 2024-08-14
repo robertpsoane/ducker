@@ -179,7 +179,7 @@ impl App {
 
     pub fn draw(&mut self, f: &mut Frame<'_>) {
         // Short circuits drawing the app if the frame is too small;
-        let area: Rect = f.size();
+        let area: Rect = f.area();
 
         f.render_widget(
             Block::new().style(Style::new().bg(self.config.theme.background())),
@@ -204,12 +204,12 @@ impl App {
             state::Mode::TextInput => {
                 let text_input: Rect;
                 layout = vertical![==5, ==3, >=0, ==1];
-                [top, text_input, page, footer] = layout.areas(f.size());
+                [top, text_input, page, footer] = layout.areas(f.area());
                 self.input_field.draw(f, text_input);
             }
             _ => {
                 layout = vertical![==5, >=0, ==1];
-                [top, page, footer] = layout.areas(f.size());
+                [top, page, footer] = layout.areas(f.area());
             }
         }
 

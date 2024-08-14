@@ -36,7 +36,7 @@ impl Component for ResizeScreen {
 
         let [_, area, _] = vertical![>=0, <=9, >=0].areas(area);
 
-        let size = f.size();
+        let size = f.area();
 
         let height = size.height;
         let mut height_span = Span::from(format!("{}", size.height));
