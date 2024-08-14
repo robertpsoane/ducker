@@ -93,7 +93,7 @@ impl Component for PageHelp {
         for _ in 0..n_blocks {
             constraints.push(Constraint::Length(width as u16));
         }
-        let columns = Layout::horizontal(constraints).split(f.size());
+        let columns = Layout::horizontal(constraints).split(f.area());
 
         // This slight monstrosity iterates over each chunk, builds the column then writes it to the
         // relevant buffer
