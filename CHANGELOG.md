@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/robertpsoane/ducker/compare/v0.1.0...v0.1.1) - 2024-08-14
+
+### Other
+- *(deps)* bump clap from 4.5.13 to 4.5.15 ([#69](https://github.com/robertpsoane/ducker/pull/69))
+- *(deps)* bump serde from 1.0.204 to 1.0.207 ([#72](https://github.com/robertpsoane/ducker/pull/72))
+
 ## [0.1.0](https://github.com/robertpsoane/ducker/compare/v0.0.7...v0.1.0) - 2024-08-14
 
 Over the past few weeks I've had little time to add to Ducker, however I've been trying to keep on top of dependencies.  I've decided to bump to v0.1.0 as Ducker's approaching a near-stable point, and to allow the semver to determine between feature update & changes and dependency patches.
