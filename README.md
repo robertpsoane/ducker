@@ -34,12 +34,12 @@ cargo install --locked ducker
 ```
 > :warning: **Make sure you use --locked**: if ducker is installed without `--locked` it is susceptible to changes in upstream dependencies, which could break the build.
 
-### AUR
+### Arch Linux
 
-You can install `ducker` from the [AUR](https://aur.archlinux.org/packages/ducker) with using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers).
+You can install `ducker` from the [official repositories](https://archlinux.org/packages/extra/x86_64/ducker/) with using [pacman](https://wiki.archlinux.org/title/pacman).
 
 ```sh
-paru -S ducker
+pacman -S ducker
 ```
 
 ### Brew
