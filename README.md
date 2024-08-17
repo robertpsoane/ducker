@@ -58,7 +58,7 @@ To install the latest unstable version of Ducker, run the following command:
 cargo install --git https://github.com/robertpsoane/ducker
 ```
 
-## Useage
+## Usage
 
 Ducker is comprised of a set of **pages**, each of which display specific information about and/or allow interaction with the docker containers and images on the host system.
 
