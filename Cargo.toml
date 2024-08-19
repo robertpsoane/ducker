@@ -42,7 +42,7 @@ tracing = "0.1.40"
 tracing-error = "0.2.0"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tui-big-text = "0.6.0"
-ureq = { version = "2.10.0", features = ["json"] }
+ureq = { version = "2.10.1", features = ["json"] }
 
 
 [profile.release]
