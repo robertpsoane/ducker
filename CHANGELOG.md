@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3](https://github.com/robertpsoane/ducker/compare/v0.1.2...v0.1.3) - 2024-09-08
+
+### Other
+
+- *(deps)* bump tokio from 1.39.3 to 1.40.0 ([#91](https://github.com/robertpsoane/ducker/pull/91))
+- *(deps)* bump async-trait from 0.1.81 to 0.1.82 ([#90](https://github.com/robertpsoane/ducker/pull/90))
+
 ## [0.1.2](https://github.com/robertpsoane/ducker/compare/v0.1.1...v0.1.2) - 2024-08-31
 
 ### Other
