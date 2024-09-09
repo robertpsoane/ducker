@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4](https://github.com/robertpsoane/ducker/compare/v0.1.3...v0.1.4) - 2024-09-09
+
+### Other
+
+- *(deps)* bump clap from 4.5.16 to 4.5.17 ([#94](https://github.com/robertpsoane/ducker/pull/94))
+- *(deps)* bump serde from 1.0.209 to 1.0.210 ([#95](https://github.com/robertpsoane/ducker/pull/95))
+- *(deps)* bump ansi-to-tui from 4.0.1 to 6.0.0 ([#93](https://github.com/robertpsoane/ducker/pull/93))
+
 ## [0.1.3](https://github.com/robertpsoane/ducker/compare/v0.1.2...v0.1.3) - 2024-09-08
 
 ### Other
