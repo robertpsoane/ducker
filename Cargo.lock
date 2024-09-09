@@ -619,7 +619,7 @@ dependencies = [
 
 [[package]]
 name = "ducker"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "ansi-to-tui",
  "async-trait",
