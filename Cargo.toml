@@ -23,7 +23,7 @@ color-eyre = "0.6.3"
 crossterm = { version = "0.28", features = ["event-stream"] }
 dirs-next = "2.0.0"
 dyn-clone = "1.0.17"
-futures = "0.3.30"
+futures = "0.3.31"
 itertools = "0.13.0"
 lazy_static = "1.5.0"
 ratatui = { version = "0.28.1", features = [
