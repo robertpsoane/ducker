@@ -19,12 +19,6 @@
 
 ## Installation
 
-> :warning: **Ducker is currently in a "pre-release" state**: Please do install and try it out - it is currently undergoing active development. 
-> 
-> There are a number of known issues and features in the pipeline (See [the pinned issue](https://github.com/robertpsoane/ducker/issues/2) and [ISSUES.md](./ISSUES.md) for more info). Any feedback and suggestions are welcome.
-
-
-
 ### Cargo
 
 There isn't currently a downloadable build; to install you will need cargo installed:
