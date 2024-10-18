@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5](https://github.com/robertpsoane/ducker/compare/v0.1.4...v0.1.5) - 2024-10-18
+
+### Other
+
+- updates to README
+- *(deps)* bump async-trait from 0.1.82 to 0.1.83 ([#99](https://github.com/robertpsoane/ducker/pull/99))
+- *(deps)* bump clap from 4.5.17 to 4.5.20 ([#102](https://github.com/robertpsoane/ducker/pull/102))
+- *(deps)* bump futures from 0.3.30 to 0.3.31 ([#100](https://github.com/robertpsoane/ducker/pull/100))
+
 ## [0.1.4](https://github.com/robertpsoane/ducker/compare/v0.1.3...v0.1.4) - 2024-09-09
 
 ### Other
