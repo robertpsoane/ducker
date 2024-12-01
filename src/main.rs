@@ -47,10 +47,10 @@ async fn main() -> color_eyre::Result<()> {
     let docker = new_local_docker_connection(&config.docker_path)
         .await
         .context(format!("failed to create docker connection, potentially due to misconfiguration (see {CONFIGURATION_DOC_PATH})"))?;
-
     terminal::init_panic_hook();
 
-    let mut terminal = terminal::init().context("failed to initialise terminal")?;
+    let mut terminal = ratatui::init();
+    terminal.clear()?;
 
     let mut events = EventLoop::new();
     let events_tx = events.get_tx();
@@ -83,7 +83,8 @@ async fn main() -> color_eyre::Result<()> {
             }
             Message::Transition(t) => {
                 if t == events::Transition::ToNewTerminal {
-                    terminal = terminal::init().context("failed to initialise terminal")?;
+                    terminal = ratatui::init();
+                    terminal.clear()?;
                 } else {
                     let _ = &app.transition(t).await;
                 }
@@ -99,7 +100,7 @@ async fn main() -> color_eyre::Result<()> {
         }
     }
 
-    terminal::restore().context("failed to restore terminal")?;
+    ratatui::restore();
 
     Ok(())
 }

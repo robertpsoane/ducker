@@ -352,7 +352,7 @@ impl Component for Containers {
 
         let table = Table::new(rows.clone(), widths)
             .header(columns.clone().style(Style::new().bold()))
-            .highlight_style(Style::new().reversed());
+            .row_highlight_style(Style::new().reversed());
 
         f.render_stateful_widget(table, area, &mut self.list_state);
 

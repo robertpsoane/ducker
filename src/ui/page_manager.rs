@@ -3,8 +3,9 @@ use std::sync::Arc;
 use bollard::Docker;
 use color_eyre::eyre::{Context, Result};
 use ratatui::{
-    layout::{Alignment, Margin, Rect},
-    widgets::{block::Title, Block, Padding},
+    layout::{Margin, Rect},
+    text::Line,
+    widgets::{Block, Padding},
     Frame,
 };
 use tokio::sync::mpsc::Sender;
@@ -182,11 +183,11 @@ impl Component for PageManager {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         let title_message = self.page.get_help().lock().unwrap().get_name();
 
-        let title = Title::from(format!("< {} >", title_message)).alignment(Alignment::Center);
+        let title = Line::from(format!("< {} >", title_message)).centered();
 
         let block = Block::bordered()
             .border_type(ratatui::widgets::BorderType::Plain)
-            .title(title)
+            .title_top(title)
             .padding(Padding::left(300));
 
         f.render_widget(block, area);
