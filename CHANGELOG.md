@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6](https://github.com/robertpsoane/ducker/compare/v0.1.5...v0.1.6) - 2024-12-01
+
+### Other
+
+- *(deps)* bump tokio from 1.40.0 to 1.41.1 ([#112](https://github.com/robertpsoane/ducker/pull/112))
+- *(deps)* bump serde from 1.0.210 to 1.0.215 ([#114](https://github.com/robertpsoane/ducker/pull/114))
+- update brew installation to use the official tap ([#115](https://github.com/robertpsoane/ducker/pull/115))
+
 ## [0.1.5](https://github.com/robertpsoane/ducker/compare/v0.1.4...v0.1.5) - 2024-10-18
 
 ### Other
