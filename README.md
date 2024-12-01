@@ -41,7 +41,7 @@ pacman -S ducker
 For macOS, you can install `ducker` using by `homebrew`.
 
 ```sh
-brew install draftbrew/tap/ducker
+brew install ducker
 ```
 
 ### Unstable
