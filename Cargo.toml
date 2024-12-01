@@ -13,12 +13,12 @@ categories = ["command-line-utilities", "development-tools"]
 include = ["/src", "LICENSE.txt", "CHANGELOG.md", "README.md"]
 
 [dependencies]
-ansi-to-tui = "6.0.0"
+ansi-to-tui = "7.0.0"
 async-trait = "0.1.83"
-bollard = { version = "0.17.1", features = ["ssl"] }
-byte-unit = { version = "5.1.4", features = ["byte"] }
+bollard = { version = "0.18.1", features = ["ssl"] }
+byte-unit = { version = "5.1.6", features = ["byte"] }
 chrono = "0.4.38"
-clap = { version = "4.5.20", features = ["derive"] }
+clap = { version = "4.5.21", features = ["derive"] }
 color-eyre = "0.6.3"
 crossterm = { version = "0.28", features = ["event-stream"] }
 dirs-next = "2.0.0"
@@ -26,11 +26,11 @@ dyn-clone = "1.0.17"
 futures = "0.3.31"
 itertools = "0.13.0"
 lazy_static = "1.5.0"
-ratatui = { version = "0.28.1", features = [
+ratatui = { version = "0.29.0", features = [
     "serde",
     "unstable-rendered-line-info",
 ] }
-ratatui-macros = "0.5.0"
+ratatui-macros = "0.6.0"
 serde = "1.0.215"
 serde_yml = "0.0.12"
 tokio = { version = "1.41.1", features = [
@@ -38,11 +38,11 @@ tokio = { version = "1.41.1", features = [
     "macros",
     "process",
 ] }
-tracing = "0.1.40"
-tracing-error = "0.2.0"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-tui-big-text = "0.6.0"
-ureq = { version = "2.10.1", features = ["json"] }
+tracing = "0.1.41"
+tracing-error = "0.2.1"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+tui-big-text = "0.7.0"
+ureq = { version = "2.11.0", features = ["json"] }
 
 
 [profile.release]
