@@ -33,7 +33,7 @@ ratatui = { version = "0.28.1", features = [
 ratatui-macros = "0.5.0"
 serde = "1.0.215"
 serde_yml = "0.0.12"
-tokio = { version = "1.40.0", features = [
+tokio = { version = "1.41.1", features = [
     "rt-multi-thread",
     "macros",
     "process",
