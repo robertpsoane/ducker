@@ -5,10 +5,10 @@ use itertools::Itertools;
 
 use color_eyre::eyre::Result;
 use ratatui::{
-    layout::{Alignment, Rect},
+    layout::Rect,
     style::{Modifier, Style},
-    text::{Span, Text},
-    widgets::{block::Title, Paragraph, Wrap},
+    text::{Line, Span, Text},
+    widgets::{Paragraph, Wrap},
     Frame,
 };
 
@@ -89,7 +89,7 @@ where
             _ => return,
         };
 
-        let title = Title::from(format!("< {} >", self.title.clone())).alignment(Alignment::Center);
+        let title = Line::from(format!("< {} >", self.title.clone())).centered();
 
         let message = Paragraph::new(Text::from(message))
             .wrap(Wrap { trim: true })

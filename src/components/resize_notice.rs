@@ -1,10 +1,9 @@
 use std::sync::Arc;
 
 use ratatui::{
-    layout::{self},
     style::Style,
     text::{Line, Span, Text},
-    widgets::{block::Title, Block},
+    widgets::Block,
 };
 use ratatui_macros::{horizontal, vertical};
 
@@ -79,7 +78,7 @@ impl Component for ResizeScreen {
         let info = Text::from(messages).alignment(ratatui::layout::Alignment::Center);
 
         let block = Block::bordered()
-            .title(Title::from("< Terminal Too Small >").alignment(layout::Alignment::Center))
+            .title(Line::from("< Terminal Too Small >").centered())
             .border_style(Style::default().fg(self.config.theme.negative_highlight()));
 
         let [_, inner_area, _] = vertical![>=0, <=5, >=0].areas(area);

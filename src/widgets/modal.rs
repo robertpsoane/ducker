@@ -1,7 +1,7 @@
 use ratatui::{
     style::Style,
     text::{Line, Span, Text},
-    widgets::{block::Title, Block, Clear, Paragraph, Widget, Wrap},
+    widgets::{Block, Clear, Paragraph, Widget, Wrap},
 };
 use ratatui_macros::{horizontal, vertical};
 
@@ -9,7 +9,7 @@ const UPPER_PAD_SIZE: u16 = 1;
 const MID_PAD_SIZE: u16 = 1;
 
 pub struct ModalWidget<'a> {
-    title: Title<'a>,
+    title: Line<'a>,
     prompt: Paragraph<'a>,
     opts: Vec<Span<'a>>,
     width: u16,
@@ -17,7 +17,7 @@ pub struct ModalWidget<'a> {
 }
 
 impl<'a> ModalWidget<'a> {
-    pub fn new(title: Title<'a>, prompt: Paragraph<'a>, opts: Vec<Span<'a>>) -> Self {
+    pub fn new(title: Line<'a>, prompt: Paragraph<'a>, opts: Vec<Span<'a>>) -> Self {
         Self {
             title,
             prompt,
@@ -30,7 +30,7 @@ impl<'a> ModalWidget<'a> {
 impl<'a> Default for ModalWidget<'a> {
     fn default() -> Self {
         Self {
-            title: Title::from(""),
+            title: Line::from(""),
             prompt: Paragraph::new(Text::from("")),
             opts: vec![],
             width: 60,
@@ -52,7 +52,7 @@ impl<'a> Widget for ModalWidget<'a> {
         let [_, area, _] = vertical![>=0, ==height, >=0 ].areas(area);
 
         let block = Block::bordered()
-            .title(self.title)
+            .title(self.title.centered())
             .border_style(Style::default())
             .style(Style::default());
 
