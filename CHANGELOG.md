@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2](https://github.com/robertpsoane/ducker/compare/v0.2.1...v0.2.2) - 2024-12-09
+
+### Other
+
+- *(deps)* bump chrono from 0.4.38 to 0.4.39 (#122)
+- *(deps)* bump tokio from 1.41.1 to 1.42.0 (#121)
+- *(deps)* bump ureq from 2.11.0 to 2.12.1 (#123)
+- *(deps)* bump clap from 4.5.22 to 4.5.23 (#124)
+
 ## [0.2.1](https://github.com/robertpsoane/ducker/compare/v0.2.0...v0.2.1) - 2024-12-04
 
 ### Fixed
