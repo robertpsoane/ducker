@@ -21,7 +21,7 @@
 
 ### Cargo
 
-There isn't currently a downloadable build; to install you will need cargo installed:
+There isn't currently a downloadable pre-built binary; to install you will need cargo installed:
 
 ```bash
 cargo install --locked ducker
@@ -123,12 +123,12 @@ The following actions are available on the Volumes page:
 
 #### Networks
 
-The following actions are available on the Volumes page:
+The following actions are available on the Networks page:
 
-| Hotkey   | Action                                 |
-| -------- | -------------------------------------- |
-| `Ctrl+d` | Delete the currently selected volume   |
-| `d`      | Describe the currently selected volume |
+| Hotkey   | Action                                  |
+| -------- | --------------------------------------- |
+| `Ctrl+d` | Delete the currently selected network   |
+| `d`      | Describe the currently selected network |
 
 > :warning: **Network deletion isn't entirely complete**: A failed deletion currently results in a yes/no modal telling you that it couldn't be deleted.  There is no difference between the yes and no results.  This is due to the current modal story and a quick and dirty hack to get them set up.  Once a generic modal exists this will be patched up!
 
