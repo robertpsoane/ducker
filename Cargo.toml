@@ -18,7 +18,7 @@ async-trait = "0.1.85"
 bollard = { version = "0.18.1", features = ["ssl"] }
 byte-unit = { version = "5.1.6", features = ["byte"] }
 chrono = "0.4.39"
-clap = { version = "4.5.23", features = ["derive"] }
+clap = { version = "4.5.26", features = ["derive"] }
 color-eyre = "0.6.3"
 crossterm = { version = "0.28", features = ["event-stream"] }
 dirs-next = "2.0.0"
