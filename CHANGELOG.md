@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5](https://github.com/robertpsoane/ducker/compare/v0.2.4...v0.2.5) - 2025-01-25
+
+### Other
+
+- *(deps)* bump itertools from 0.13.0 to 0.14.0 (#132)
+- *(deps)* bump serde from 1.0.216 to 1.0.217 (#130)
+
 ## [0.2.4](https://github.com/robertpsoane/ducker/compare/v0.2.3...v0.2.4) - 2024-12-24
 
 ### Other
