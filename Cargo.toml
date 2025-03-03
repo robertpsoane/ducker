@@ -14,7 +14,7 @@ include = ["/src", "LICENSE.txt", "CHANGELOG.md", "README.md"]
 
 [dependencies]
 ansi-to-tui = "7.0.0"
-async-trait = "0.1.85"
+async-trait = "0.1.87"
 bollard = { version = "0.18.1", features = ["ssl"] }
 byte-unit = { version = "5.1.6", features = ["byte"] }
 chrono = "0.4.39"
