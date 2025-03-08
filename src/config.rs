@@ -19,6 +19,9 @@ pub struct Config {
     #[serde(default = "default_docker_path")]
     pub docker_path: String,
 
+    #[serde(default)]
+    pub docker_host: Option<String>,
+
     #[serde(default = "default_check_update")]
     pub check_for_update: bool,
 
@@ -27,7 +30,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(write: &bool, docker_path: Option<String>) -> Result<Self> {
+    pub fn new(write: &bool, docker_path: Option<String>, docker_host: Option<String>) -> Result<Self> {
         let config_path = get_app_config_path()?.join("config.yaml");
         if *write {
             write_default_config(&config_path).context("failed to write default config")?;
@@ -43,6 +46,10 @@ impl Config {
 
         if let Some(p) = docker_path {
             config.docker_path = p;
+        }
+
+        if let Some(h) = docker_host {
+            config.docker_host = Some(h);
         }
 
         Ok(config)
@@ -79,6 +86,7 @@ impl Default for Config {
             prompt: default_prompt(),
             default_exec: default_exec(),
             docker_path: default_docker_path(),
+            docker_host: None,
             check_for_update: default_check_update(),
             theme: Theme::default(),
         }

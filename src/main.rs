@@ -27,6 +27,11 @@ struct Args {
     #[clap(long, short)]
     docker_path: Option<String>,
 
+    /// Docker host URL (e.g. tcp://1.2.3.4:2375)
+    /// Overrides DOCKER_HOST environment variable
+    #[clap(long)]
+    docker_host: Option<String>,
+
     /// Path at which to write log messages; intended mainly for debugging.
     /// If unset will log to default log location; usually
     /// ~/.local/share/ducker/ducker.log
@@ -42,9 +47,9 @@ async fn main() -> color_eyre::Result<()> {
     let args = Args::parse();
     initialize_logging(&args.log_path).context("failed to initialise logging")?;
     color_eyre::install()?;
-    let config = Config::new(&args.export_default_config, args.docker_path)?;
+    let config = Config::new(&args.export_default_config, args.docker_path, args.docker_host)?;
 
-    let docker = new_local_docker_connection(&config.docker_path)
+    let docker = new_local_docker_connection(&config.docker_path, config.docker_host.as_deref())
         .await
         .context(format!("failed to create docker connection, potentially due to misconfiguration (see {CONFIGURATION_DOC_PATH})"))?;
     terminal::init_panic_hook();
