@@ -47,7 +47,11 @@ async fn main() -> color_eyre::Result<()> {
     let args = Args::parse();
     initialize_logging(&args.log_path).context("failed to initialise logging")?;
     color_eyre::install()?;
-    let config = Config::new(&args.export_default_config, args.docker_path, args.docker_host)?;
+    let config = Config::new(
+        &args.export_default_config,
+        args.docker_path,
+        args.docker_host,
+    )?;
 
     let docker = new_local_docker_connection(&config.docker_path, config.docker_host.as_deref())
         .await

@@ -59,8 +59,13 @@ impl DockerEndpoint {
     }
 }
 
-pub async fn new_local_docker_connection(socket_path: &str, docker_host: Option<&str>) -> Result<Docker> {
-    DockerEndpoint::from_env_or_default(socket_path, docker_host).connect().await
+pub async fn new_local_docker_connection(
+    socket_path: &str,
+    docker_host: Option<&str>,
+) -> Result<Docker> {
+    DockerEndpoint::from_env_or_default(socket_path, docker_host)
+        .connect()
+        .await
 }
 
 #[cfg(test)]
@@ -68,8 +73,14 @@ mod tests {
     use super::*;
     use std::env::{remove_var, set_var};
 
+    // Helper function to reset DOCKER_HOST environment variable
     fn reset_docker_host() {
         remove_var("DOCKER_HOST");
+        // Verify the environment variable is actually removed
+        assert!(
+            env::var("DOCKER_HOST").is_err(),
+            "DOCKER_HOST environment variable should be unset"
+        );
     }
 
     #[test]
@@ -77,7 +88,7 @@ mod tests {
         reset_docker_host();
         let default_socket = "/var/run/docker.sock";
         let cli_host = "tcp://1.2.3.4:2375";
-        
+
         let endpoint = DockerEndpoint::from_env_or_default(default_socket, Some(cli_host));
         assert_eq!(endpoint, DockerEndpoint::Tcp(cli_host.to_string()));
     }
@@ -87,9 +98,12 @@ mod tests {
         reset_docker_host();
         let default_socket = "/var/run/docker.sock";
         let cli_host = "unix:///custom/docker.sock";
-        
+
         let endpoint = DockerEndpoint::from_env_or_default(default_socket, Some(cli_host));
-        assert_eq!(endpoint, DockerEndpoint::Unix("/custom/docker.sock".to_string()));
+        assert_eq!(
+            endpoint,
+            DockerEndpoint::Unix("/custom/docker.sock".to_string())
+        );
     }
 
     #[test]
@@ -98,7 +112,7 @@ mod tests {
         let default_socket = "/var/run/docker.sock";
         let env_host = "tcp://1.2.3.4:2375";
         set_var("DOCKER_HOST", env_host);
-        
+
         let endpoint = DockerEndpoint::from_env_or_default(default_socket, None);
         assert_eq!(endpoint, DockerEndpoint::Tcp(env_host.to_string()));
     }
@@ -109,9 +123,12 @@ mod tests {
         let default_socket = "/var/run/docker.sock";
         let env_host = "unix:///custom/docker.sock";
         set_var("DOCKER_HOST", env_host);
-        
+
         let endpoint = DockerEndpoint::from_env_or_default(default_socket, None);
-        assert_eq!(endpoint, DockerEndpoint::Unix("/custom/docker.sock".to_string()));
+        assert_eq!(
+            endpoint,
+            DockerEndpoint::Unix("/custom/docker.sock".to_string())
+        );
     }
 
     #[test]
@@ -121,16 +138,27 @@ mod tests {
         let env_host = "tcp://1.2.3.4:2375";
         let cli_host = "unix:///custom/docker.sock";
         set_var("DOCKER_HOST", env_host);
-        
+
         let endpoint = DockerEndpoint::from_env_or_default(default_socket, Some(cli_host));
-        assert_eq!(endpoint, DockerEndpoint::Unix("/custom/docker.sock".to_string()));
+        assert_eq!(
+            endpoint,
+            DockerEndpoint::Unix("/custom/docker.sock".to_string())
+        );
     }
 
     #[test]
     fn test_docker_endpoint_fallback_to_default() {
+        // Double-check that DOCKER_HOST is unset
         reset_docker_host();
+
         let default_socket = "/var/run/docker.sock";
-        
+
+        // Verify DOCKER_HOST is still unset before the test
+        assert!(
+            env::var("DOCKER_HOST").is_err(),
+            "DOCKER_HOST should be unset before test"
+        );
+
         let endpoint = DockerEndpoint::from_env_or_default(default_socket, None);
         assert_eq!(endpoint, DockerEndpoint::Unix(default_socket.to_string()));
     }
@@ -141,7 +169,7 @@ mod tests {
         let default_socket = "/var/run/docker.sock";
         let invalid_host = "invalid://1.2.3.4:2375";
         set_var("DOCKER_HOST", invalid_host);
-        
+
         let endpoint = DockerEndpoint::from_env_or_default(default_socket, None);
         assert_eq!(endpoint, DockerEndpoint::Unix(default_socket.to_string()));
     }
