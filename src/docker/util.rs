@@ -26,7 +26,7 @@ impl DockerEndpoint {
         // Then try DOCKER_HOST environment variable
         if let Ok(host) = env::var("DOCKER_HOST") {
             if host.starts_with("tcp://") {
-                DockerEndpoint::Tcp(host)
+                DockerEndpoint::Tcp(host.to_string())
             } else if host.starts_with("unix://") {
                 DockerEndpoint::Unix(host[7..].to_string())
             } else {
