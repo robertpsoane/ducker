@@ -25,7 +25,9 @@ use crate::{
     context::AppContext,
     docker::volume::DockerVolume,
     events::{message::MessageResponse, Key, Message, Transition},
+    sorting::{SortOrder, SortState, VolumeSortField},
     traits::{Close, Component, ModalComponent, Page},
+    ui::{render_column_header, is_field_sorted, get_field_sort_order},
 };
 
 const NAME: &str = "Volumes";
@@ -41,7 +43,14 @@ const D_KEY: Key = Key::Char('d');
 const G_KEY: Key = Key::Char('g');
 const SHIFT_G_KEY: Key = Key::Char('G');
 
-#[derive(Debug)]
+// Sort keys
+const SHIFT_N_KEY: Key = Key::Char('N');
+const SHIFT_C_KEY: Key = Key::Char('C');
+const SHIFT_M_KEY: Key = Key::Char('M');
+
+type VolumeSortState = SortState<VolumeSortField>;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ModalTypes {
     DeleteVolume,
     ForceDeleteVolume,
@@ -56,7 +65,7 @@ pub struct Volume {
     volumes: Vec<DockerVolume>,
     list_state: TableState,
     modal: Option<BooleanModal<ModalTypes>>,
-    show_dangling: bool,
+    sort_state: VolumeSortState,
 }
 
 #[async_trait::async_trait]
@@ -79,7 +88,8 @@ impl Page for Volume {
                 MessageResponse::Consumed
             }
             SHIFT_D_KEY => {
-                self.show_dangling = !self.show_dangling;
+                self.sort_state.toggle_or_set(VolumeSortField::Driver);
+                self.sort_volumes();
                 MessageResponse::Consumed
             }
             G_KEY => {
@@ -88,6 +98,21 @@ impl Page for Volume {
             }
             SHIFT_G_KEY => {
                 self.list_state.select(Some(self.volumes.len() - 1));
+                MessageResponse::Consumed
+            }
+            SHIFT_N_KEY => {
+                self.sort_state.toggle_or_set(VolumeSortField::Name);
+                self.sort_volumes();
+                MessageResponse::Consumed
+            }
+            SHIFT_C_KEY => {
+                self.sort_state.toggle_or_set(VolumeSortField::Created);
+                self.sort_volumes();
+                MessageResponse::Consumed
+            }
+            SHIFT_M_KEY => {
+                self.sort_state.toggle_or_set(VolumeSortField::Mountpoint);
+                self.sort_volumes();
                 MessageResponse::Consumed
             }
             CTRL_D_KEY => match self.delete_volume(false, None, None) {
@@ -143,12 +168,16 @@ impl Close for Volume {}
 impl Volume {
     #[must_use]
     pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Arc<Config>) -> Self {
-        let page_help = PageHelpBuilder::new(NAME.into(), config.clone())
-            .add_input(format!("{CTRL_D_KEY}"), "delete".into())
-            .add_input(format!("{G_KEY}"), "top".into())
-            .add_input(format!("{SHIFT_G_KEY}"), "bottom".into())
+        let page_help = PageHelpBuilder::new(NAME.to_string(), config.clone())
+            .add_input(format!("{CTRL_D_KEY}"), "delete".to_string())
+            .add_input(format!("{G_KEY}"), "top".to_string())
+            .add_input(format!("{SHIFT_G_KEY}"), "bottom".to_string())
             // .add_input(format!("{SHIFT_D_KEY}"), "dangling".into())
-            .add_input(format!("{D_KEY}"), "describe".into())
+            .add_input(format!("{D_KEY}"), "describe".to_string())
+            .add_input(format!("{SHIFT_N_KEY}"), "sort by name".to_string())
+            .add_input(format!("{SHIFT_C_KEY}"), "sort by created".to_string())
+            .add_input(format!("{SHIFT_D_KEY}"), "sort by driver".to_string())
+            .add_input(format!("{SHIFT_M_KEY}"), "sort by mountpoint".to_string())
             .build();
 
         Self {
@@ -159,7 +188,7 @@ impl Volume {
             volumes: vec![],
             list_state: TableState::default(),
             modal: None,
-            show_dangling: false,
+            sort_state: VolumeSortState::default(),
         }
     }
 
@@ -170,7 +199,34 @@ impl Volume {
         self.volumes = DockerVolume::list(&self.docker)
             .await
             .context("unable to retrieve list of volumes")?;
+
+        // Apply current sort after refresh
+        self.sort_volumes();
+
         Ok(())
+    }
+
+    fn sort_volumes(&mut self) {
+        let field = self.sort_state.field;
+        let order = self.sort_state.order;
+
+        self.volumes.sort_by(|a, b| {
+            let comparison = match field {
+                VolumeSortField::Name => a.name.cmp(&b.name),
+                VolumeSortField::Driver => a.driver.cmp(&b.driver),
+                VolumeSortField::Mountpoint => a.mountpoint.cmp(&b.mountpoint),
+                VolumeSortField::Created => {
+                    let a_created = a.created_at.as_deref().unwrap_or("");
+                    let b_created = b.created_at.as_deref().unwrap_or("");
+                    a_created.cmp(b_created)
+                }
+            };
+
+            match order {
+                SortOrder::Ascending => comparison,
+                SortOrder::Descending => comparison.reverse(),
+            }
+        });
     }
 
     async fn update_modal(&mut self, message: Key) -> Result<MessageResponse> {
@@ -300,7 +356,7 @@ impl Volume {
 impl Component for Volume {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         let rows = get_volume_rows(&self.volumes);
-        let columns = Row::new(vec!["Name", "Driver", "Mountpoint", "Created"]);
+        let columns = get_header_row(&self.sort_state);
 
         let widths = constraints![==30%, ==15%, ==30%, ==25%];
 
@@ -331,4 +387,19 @@ fn get_volume_rows(volumes: &[DockerVolume]) -> Vec<Row> {
         })
         .collect::<Vec<Row>>();
     rows
+}
+
+fn get_header_row(sort_state: &VolumeSortState) -> Row {
+    let headers = vec![
+        render_column_header("Name", is_field_sorted(sort_state, &VolumeSortField::Name),
+                           get_field_sort_order(sort_state, &VolumeSortField::Name).unwrap_or(SortOrder::Ascending)),
+        render_column_header("Driver", is_field_sorted(sort_state, &VolumeSortField::Driver),
+                           get_field_sort_order(sort_state, &VolumeSortField::Driver).unwrap_or(SortOrder::Ascending)),
+        render_column_header("Mountpoint", is_field_sorted(sort_state, &VolumeSortField::Mountpoint),
+                           get_field_sort_order(sort_state, &VolumeSortField::Mountpoint).unwrap_or(SortOrder::Ascending)),
+        render_column_header("Created", is_field_sorted(sort_state, &VolumeSortField::Created),
+                           get_field_sort_order(sort_state, &VolumeSortField::Created).unwrap_or(SortOrder::Ascending)),
+    ];
+
+    Row::new(headers)
 }

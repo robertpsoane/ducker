@@ -25,6 +25,7 @@ use crate::{
     context::AppContext,
     docker::container::DockerContainer,
     events::{message::MessageResponse, Key, Message, Transition},
+    sorting::{ContainerSortField, SortOrder, SortState, sort_containers_by_name, sort_containers_by_image, sort_containers_by_status, sort_containers_by_created, sort_containers_by_ports},
     traits::{Close, Component, ModalComponent, Page},
 };
 
@@ -44,7 +45,14 @@ const G_KEY: Key = Key::Char('g');
 const L_KEY: Key = Key::Char('l');
 const SHIFT_G_KEY: Key = Key::Char('G');
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+// Sorting keys
+const SHIFT_N_KEY: Key = Key::Char('N');
+const SHIFT_I_KEY: Key = Key::Char('I');
+const SHIFT_S_KEY: Key = Key::Char('S');
+const SHIFT_C_KEY: Key = Key::Char('C');
+const SHIFT_P_KEY: Key = Key::Char('P');
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ModalTypes {
     DeleteContainer,
 }
@@ -60,6 +68,7 @@ pub struct Containers {
     list_state: TableState,
     modal: Option<BooleanModal<ModalTypes>>,
     stopping_containers: Arc<Mutex<HashSet<String>>>,
+    sort_state: SortState<ContainerSortField>,
 }
 
 #[async_trait::async_trait]
@@ -134,6 +143,32 @@ impl Page for Containers {
                     .await?;
                 MessageResponse::Consumed
             }
+            // Sorting functionality
+            SHIFT_N_KEY => {
+                self.sort_state.toggle_or_set(ContainerSortField::Name);
+                self.sort_containers();
+                MessageResponse::Consumed
+            }
+            SHIFT_I_KEY => {
+                self.sort_state.toggle_or_set(ContainerSortField::Image);
+                self.sort_containers();
+                MessageResponse::Consumed
+            }
+            SHIFT_S_KEY => {
+                self.sort_state.toggle_or_set(ContainerSortField::Status);
+                self.sort_containers();
+                MessageResponse::Consumed
+            }
+            SHIFT_C_KEY => {
+                self.sort_state.toggle_or_set(ContainerSortField::Created);
+                self.sort_containers();
+                MessageResponse::Consumed
+            }
+            SHIFT_P_KEY => {
+                self.sort_state.toggle_or_set(ContainerSortField::Ports);
+                self.sort_containers();
+                MessageResponse::Consumed
+            }
             _ => MessageResponse::NotConsumed,
         };
         self.refresh().await?;
@@ -147,6 +182,9 @@ impl Page for Containers {
         self.refresh()
             .await
             .context("unable to set refresh containers")?;
+
+        // Apply initial sorting
+        self.sort_containers();
 
         // If a context has been passed in, choose that item in list
         // this ist to allo logs, attach etc to appear to revert to previous
@@ -181,14 +219,19 @@ impl Close for Containers {}
 
 impl Containers {
     pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Arc<Config>) -> Self {
-        let page_help = PageHelpBuilder::new(NAME.into(), config.clone())
-            .add_input(format!("{}", A_KEY), "exec".into())
-            .add_input(format!("{CTRL_D_KEY}"), "delete".into())
-            .add_input(format!("{R_KEY}"), "run".into())
-            .add_input(format!("{S_KEY}"), "stop".into())
-            .add_input(format!("{G_KEY}"), "top".into())
-            .add_input(format!("{SHIFT_G_KEY}"), "bottom".into())
-            .add_input(format!("{L_KEY}"), "logs".into())
+        let page_help = PageHelpBuilder::new(NAME.to_string(), config.clone())
+            .add_input(format!("{A_KEY}"), "exec".to_string())
+            .add_input(format!("{CTRL_D_KEY}"), "delete".to_string())
+            .add_input(format!("{R_KEY}"), "run".to_string())
+            .add_input(format!("{S_KEY}"), "stop".to_string())
+            .add_input(format!("{G_KEY}"), "top".to_string())
+            .add_input(format!("{SHIFT_G_KEY}"), "bottom".to_string())
+            .add_input(format!("{L_KEY}"), "logs".to_string())
+            .add_input(format!("{SHIFT_N_KEY}"), "sort by name".to_string())
+            .add_input(format!("{SHIFT_I_KEY}"), "sort by image".to_string())
+            .add_input(format!("{SHIFT_S_KEY}"), "sort by status".to_string())
+            .add_input(format!("{SHIFT_C_KEY}"), "sort by created".to_string())
+            .add_input(format!("{SHIFT_P_KEY}"), "sort by ports".to_string())
             .build();
 
         Self {
@@ -201,12 +244,29 @@ impl Containers {
             list_state: TableState::default(),
             modal: None,
             stopping_containers: Arc::new(Mutex::new(HashSet::new())),
+            sort_state: SortState::new(ContainerSortField::Name),
         }
     }
 
     async fn refresh(&mut self) -> Result<(), color_eyre::eyre::Error> {
         self.containers = DockerContainer::list(&self.docker).await?;
+        self.sort_containers();
         Ok(())
+    }
+
+    fn sort_containers(&mut self) {
+        let field = self.sort_state.field;
+        let order = self.sort_state.order;
+
+        self.containers.sort_by(|a, b| {
+            match field {
+                ContainerSortField::Name => sort_containers_by_name(a, b, order),
+                ContainerSortField::Image => sort_containers_by_image(a, b, order),
+                ContainerSortField::Status => sort_containers_by_status(a, b, order),
+                ContainerSortField::Created => sort_containers_by_created(a, b, order),
+                ContainerSortField::Ports => sort_containers_by_ports(a, b, order),
+            }
+        });
     }
 
     fn increment_list(&mut self) {
@@ -326,6 +386,17 @@ impl Containers {
 
         Ok(cx)
     }
+
+    fn get_column_header(&self, column_name: &str, field: ContainerSortField) -> String {
+        if self.sort_state.field == field {
+            match self.sort_state.order {
+                SortOrder::Ascending => format!("{} ↑", column_name),
+                SortOrder::Descending => format!("{} ↓", column_name),
+            }
+        } else {
+            column_name.to_string()
+        }
+    }
 }
 
 impl Component for Containers {
@@ -344,8 +415,16 @@ impl Component for Containers {
             ])
             .style(style)
         });
+
+        // Create column headers with sort indicators
         let columns = Row::new(vec![
-            "ID", "Image", "Command", "Created", "Status", "Ports", "Names",
+            "ID".to_string(), // ID is not sortable
+            self.get_column_header("Image", ContainerSortField::Image),
+            "Command".to_string(), // Command is not sortable
+            self.get_column_header("Created", ContainerSortField::Created),
+            self.get_column_header("Status", ContainerSortField::Status),
+            self.get_column_header("Ports", ContainerSortField::Ports),
+            self.get_column_header("Names", ContainerSortField::Name),
         ]);
 
         let widths = constraints![==12%, ==20%, ==20%, ==10%, ==13%, ==10%, ==10%];
