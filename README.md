@@ -106,11 +106,11 @@ The following actions are available on the Containers page:
 
 The following actions are available on the Images page:
 
-| Hotkey   | Action                                                         |
-| -------- | -------------------------------------------------------------- |
-| `Ctrl+d` | Delete the currently selected image                            |
-| `d`      | Describe the currently selected image                          |
-| `D`      | Toggle whether or not to show dangling images (off by default) |
+| Hotkey   | Action                                |
+| -------- | ------------------------------------- |
+| `Ctrl+d` | Delete the currently selected image   |
+| `Alt+d`  | Toggle dangling images                |
+| `d`      | Describe the currently selected image |
 
 #### Volumes
 
@@ -119,6 +119,7 @@ The following actions are available on the Volumes page:
 | Hotkey   | Action                                 |
 | -------- | -------------------------------------- |
 | `Ctrl+d` | Delete the currently selected volume   |
+| `Alt+d`  | Toggle dangling volumes                |
 | `d`      | Describe the currently selected volume |
 
 #### Networks

@@ -42,6 +42,7 @@ const SHIFT_D_KEY: Key = Key::Char('D');
 const D_KEY: Key = Key::Char('d');
 const G_KEY: Key = Key::Char('g');
 const SHIFT_G_KEY: Key = Key::Char('G');
+const ALT_D_KEY: Key = Key::Alt('d');
 
 // Sort keys
 const SHIFT_N_KEY: Key = Key::Char('N');
@@ -66,6 +67,7 @@ pub struct Volume {
     list_state: TableState,
     modal: Option<BooleanModal<ModalTypes>>,
     sort_state: VolumeSortState,
+    show_dangling: bool,
 }
 
 #[async_trait::async_trait]
@@ -119,6 +121,10 @@ impl Page for Volume {
                 Ok(()) => MessageResponse::Consumed,
                 Err(_) => MessageResponse::NotConsumed,
             },
+            ALT_D_KEY => {
+                self.show_dangling = !self.show_dangling;
+                MessageResponse::Consumed
+            },
             D_KEY => {
                 self.tx
                     .send(Message::Transition(Transition::ToDescribeContainerPage(
@@ -170,6 +176,7 @@ impl Volume {
     pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Arc<Config>) -> Self {
         let page_help = PageHelpBuilder::new(NAME.to_string(), config.clone())
             .add_input(format!("{CTRL_D_KEY}"), "delete".to_string())
+            .add_input(format!("{ALT_D_KEY}"), "dangling".to_string())
             .add_input(format!("{G_KEY}"), "top".to_string())
             .add_input(format!("{SHIFT_G_KEY}"), "bottom".to_string())
             .add_input(format!("{D_KEY}"), "describe".to_string())
@@ -184,12 +191,17 @@ impl Volume {
             list_state: TableState::default(),
             modal: None,
             sort_state: VolumeSortState::default(),
+            show_dangling: true,
         }
     }
 
     async fn refresh(&mut self) -> Result<(), color_eyre::eyre::Error> {
         let mut filters: HashMap<String, Vec<String>> = HashMap::new();
-        filters.insert("dangling".into(), vec!["false".into()]);
+        if self.show_dangling {
+            filters.insert("dangling".into(), vec!["true".into()]);
+        } else {
+            filters.insert("dangling".into(), vec!["false".into()]);
+        }
 
         self.volumes = DockerVolume::list(&self.docker)
             .await

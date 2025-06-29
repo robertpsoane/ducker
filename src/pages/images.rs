@@ -36,10 +36,10 @@ const DOWN_KEY: Key = Key::Down;
 const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
 const CTRL_D_KEY: Key = Key::Ctrl('d');
-const SHIFT_D_KEY: Key = Key::Char('D');
 const D_KEY: Key = Key::Char('d');
 const G_KEY: Key = Key::Char('g');
 const SHIFT_G_KEY: Key = Key::Char('G');
+const ALT_D_KEY: Key = Key::Alt('d');
 
 // Sort keys
 const SHIFT_N_KEY: Key = Key::Char('N');
@@ -87,10 +87,6 @@ impl Page for Images {
                 self.increment_list();
                 MessageResponse::Consumed
             }
-            SHIFT_D_KEY => {
-                self.show_dangling = !self.show_dangling;
-                MessageResponse::Consumed
-            }
             G_KEY => {
                 self.list_state.select(Some(0));
                 MessageResponse::Consumed
@@ -122,6 +118,10 @@ impl Page for Images {
             CTRL_D_KEY => match self.delete_image(false, None, None) {
                 Ok(_) => MessageResponse::Consumed,
                 Err(_) => MessageResponse::NotConsumed,
+            },
+            ALT_D_KEY => {
+                self.show_dangling = !self.show_dangling;
+                MessageResponse::Consumed
             },
             D_KEY => {
                 self.tx
@@ -177,9 +177,9 @@ impl Images {
     pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Arc<Config>) -> Self {
         let page_help = PageHelpBuilder::new(NAME.to_string(), config.clone())
             .add_input(format!("{CTRL_D_KEY}"), "delete".to_string())
+            .add_input(format!("{ALT_D_KEY}"), "dangling".to_string())
             .add_input(format!("{G_KEY}"), "top".to_string())
             .add_input(format!("{SHIFT_G_KEY}"), "bottom".to_string())
-            .add_input(format!("{SHIFT_D_KEY}"), "dangling".to_string())
             .add_input(format!("{D_KEY}"), "describe".to_string())
             .build();
 
