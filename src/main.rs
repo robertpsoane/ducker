@@ -53,6 +53,10 @@ async fn main() -> color_eyre::Result<()> {
         args.docker_host,
     )?;
 
+    if args.export_default_config {
+        return Ok(());
+    }
+
     let docker = new_local_docker_connection(&config.docker_path, config.docker_host.as_deref())
         .await
         .context(format!("failed to create docker connection, potentially due to misconfiguration (see {CONFIGURATION_DOC_PATH})"))?;

@@ -114,18 +114,20 @@ impl TextInputState {
 #[derive(Debug)]
 pub struct Autocomplete<'a> {
     possibles: Vec<&'a str>,
+    autocomplete_min_length: usize,
 }
 
 impl<'a> Autocomplete<'a> {
-    pub fn from(mut possibles: Vec<&'a str>) -> Self {
+    pub fn new(mut possibles: Vec<&'a str>, autocomplete_min_length: usize) -> Self {
         possibles.sort();
-        Self { possibles }
+        Self {
+            possibles,
+            autocomplete_min_length,
+        }
     }
 
     pub fn get_completion(&self, current: &str) -> Option<String> {
-        // Only want to attempt completion for commands with at least 2 letters
-        // as 1 letter commands are possible and it could create confusion
-        if current.len() < 2 {
+        if current.len() < self.autocomplete_min_length {
             return None;
         }
 
