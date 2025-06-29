@@ -33,10 +33,17 @@ pub struct CommandInput {
 }
 
 impl CommandInput {
-    pub fn new(tx: Sender<Message<Key, Transition>>, prompt: String) -> Self {
-        let ac: Autocomplete = Autocomplete::from(vec![
-            QUIT, Q, IMAGE, IMAGES, CONTAINER, CONTAINERS, VOLUME, VOLUMES, NETWORK, NETWORKS,
-        ]);
+    pub fn new(
+        tx: Sender<Message<Key, Transition>>,
+        prompt: String,
+        ac_minimum_length: usize,
+    ) -> Self {
+        let ac: Autocomplete = Autocomplete::new(
+            vec![
+                QUIT, Q, IMAGE, IMAGES, CONTAINER, CONTAINERS, VOLUME, VOLUMES, NETWORK, NETWORKS,
+            ],
+            ac_minimum_length,
+        );
         Self {
             tx,
             history: History::new(),

@@ -25,6 +25,9 @@ pub struct Config {
     #[serde(default = "default_check_update")]
     pub check_for_update: bool,
 
+    #[serde(default = "default_autocomplete_minimum_length")]
+    pub autocomplete_minimum_length: usize,
+
     #[serde(default)]
     pub theme: Theme,
 }
@@ -84,6 +87,10 @@ fn default_use_theme() -> bool {
     false
 }
 
+fn default_autocomplete_minimum_length() -> usize {
+    2
+}
+
 impl Default for Config {
     fn default() -> Self {
         Self {
@@ -92,6 +99,7 @@ impl Default for Config {
             docker_path: default_docker_path(),
             docker_host: None,
             check_for_update: default_check_update(),
+            autocomplete_minimum_length: default_autocomplete_minimum_length(),
             theme: Theme::default(),
         }
     }
