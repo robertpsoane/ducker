@@ -168,16 +168,18 @@ mod tests {
 
     #[test]
     fn test_docker_endpoint_from_env_unix() {
-        reset_docker_host();
-        let default_socket = "/var/run/docker.sock";
-        let env_host = "unix:///custom/docker.sock";
-        set_var("DOCKER_HOST", env_host);
+        if cfg!(unix) {
+            reset_docker_host();
+            let default_socket = "/var/run/docker.sock";
+            let env_host = "unix:///custom/docker.sock";
+            set_var("DOCKER_HOST", env_host);
 
-        let endpoint = DockerEndpoint::from_env_or_default(default_socket, None);
-        assert_eq!(
-            endpoint,
-            DockerEndpoint::Unix("/custom/docker.sock".to_string())
-        );
+            let endpoint = DockerEndpoint::from_env_or_default(default_socket, None);
+            assert_eq!(
+                endpoint,
+                DockerEndpoint::Unix("/custom/docker.sock".to_string())
+            );
+        }
     }
 
     #[test]
