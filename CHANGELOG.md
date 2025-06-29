@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2](https://github.com/robertpsoane/ducker/compare/v0.3.1...v0.3.2) - 2025-06-29
+
+### Fixed
+
+- env unix test only runs on unix
+- remove ineffective tests
+
+### Other
+
+- :sparkles: feat: SSL via Rustls
+- :bug: fix: only process key press events in event loop
+- *(deps)* bump chrono from 0.4.39 to 0.4.41
+- *(deps)* bump dyn-clone from 1.0.18 to 1.0.19
+- *(deps)* bump tokio from 1.43.0 to 1.45.1
+- *(deps)* bump serde from 1.0.218 to 1.0.219
+
 ## [0.3.1](https://github.com/robertpsoane/ducker/compare/v0.3.0...v0.3.1) - 2025-06-28
 
 ### Other
