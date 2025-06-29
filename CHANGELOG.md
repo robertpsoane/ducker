@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2](https://github.com/robertpsoane/ducker/compare/v0.3.1...v0.3.2) - 2025-06-29
+
+### Fixed
+
+- remove ineffective tests
+
+### Other
+
+- *(deps)* bump tokio from 1.43.0 to 1.45.1
+- *(deps)* bump serde from 1.0.218 to 1.0.219
+
 ## [0.3.1](https://github.com/robertpsoane/ducker/compare/v0.3.0...v0.3.1) - 2025-06-28
 
 ### Other
