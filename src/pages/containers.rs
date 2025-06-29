@@ -227,11 +227,6 @@ impl Containers {
             .add_input(format!("{G_KEY}"), "top".to_string())
             .add_input(format!("{SHIFT_G_KEY}"), "bottom".to_string())
             .add_input(format!("{L_KEY}"), "logs".to_string())
-            .add_input(format!("{SHIFT_N_KEY}"), "sort by name".to_string())
-            .add_input(format!("{SHIFT_I_KEY}"), "sort by image".to_string())
-            .add_input(format!("{SHIFT_S_KEY}"), "sort by status".to_string())
-            .add_input(format!("{SHIFT_C_KEY}"), "sort by created".to_string())
-            .add_input(format!("{SHIFT_P_KEY}"), "sort by ports".to_string())
             .build();
 
         Self {

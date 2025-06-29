@@ -52,6 +52,7 @@ type ImageSortState = SortState<ImageSortField>;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ModalTypes {
     DeleteImage,
+    ForceDeleteImage,
 }
 
 #[derive(Debug)]
@@ -180,10 +181,6 @@ impl Images {
             .add_input(format!("{SHIFT_G_KEY}"), "bottom".to_string())
             .add_input(format!("{SHIFT_D_KEY}"), "dangling".to_string())
             .add_input(format!("{D_KEY}"), "describe".to_string())
-            .add_input(format!("{SHIFT_N_KEY}"), "sort by name".to_string())
-            .add_input(format!("{SHIFT_C_KEY}"), "sort by created".to_string())
-            .add_input(format!("{SHIFT_T_KEY}"), "sort by tag".to_string())
-            .add_input(format!("{SHIFT_S_KEY}"), "sort by size".to_string())
             .build();
 
         Self {
@@ -221,9 +218,6 @@ impl Images {
                 ImageSortField::Size => sort_images_by_size(a, b, order),
             }
         });
-
-        // Reset selection to first item after sorting to avoid confusion
-        self.list_state.select(Some(0));
     }
 
     async fn update_modal(&mut self, message: Key) -> Result<MessageResponse> {
@@ -242,13 +236,17 @@ impl Images {
                         self.modal = None
                     }
                 }
-                Err(_e) => {
-                    let msg = "An error occurred deleting this image; would you like to try to force remove?";
-                    self.delete_image(
-                        true,
-                        Some(msg.into()),
-                        Some(ModalTypes::DeleteImage),
-                    )?
+                Err(e) => {
+                    if let ModalTypes::DeleteImage = m.discriminator {
+                        let msg = "An error occurred deleting this image; would you like to try to force remove?";
+                        self.delete_image(
+                            true,
+                            Some(msg.into()),
+                            Some(ModalTypes::ForceDeleteImage),
+                        )?
+                    } else {
+                        return Err(e);
+                    }
                 }
             }
             Ok(MessageResponse::Consumed)

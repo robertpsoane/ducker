@@ -172,12 +172,7 @@ impl Volume {
             .add_input(format!("{CTRL_D_KEY}"), "delete".to_string())
             .add_input(format!("{G_KEY}"), "top".to_string())
             .add_input(format!("{SHIFT_G_KEY}"), "bottom".to_string())
-            // .add_input(format!("{SHIFT_D_KEY}"), "dangling".into())
             .add_input(format!("{D_KEY}"), "describe".to_string())
-            .add_input(format!("{SHIFT_N_KEY}"), "sort by name".to_string())
-            .add_input(format!("{SHIFT_C_KEY}"), "sort by created".to_string())
-            .add_input(format!("{SHIFT_D_KEY}"), "sort by driver".to_string())
-            .add_input(format!("{SHIFT_M_KEY}"), "sort by mountpoint".to_string())
             .build();
 
         Self {

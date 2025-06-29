@@ -52,6 +52,7 @@ type NetworkSortState = SortState<NetworkSortField>;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ModalTypes {
     DeleteNetwork,
+    FailedToDeleteNetwork,
 }
 
 #[derive(Debug)]
@@ -170,12 +171,7 @@ impl Network {
             .add_input(format!("{CTRL_D_KEY}"), "delete".to_string())
             .add_input(format!("{G_KEY}"), "top".to_string())
             .add_input(format!("{SHIFT_G_KEY}"), "bottom".to_string())
-            // .add_input(format!("{SHIFT_D_KEY}"), "dangling".into())
             .add_input(format!("{D_KEY}"), "describe".to_string())
-            .add_input(format!("{SHIFT_N_KEY}"), "sort by name".to_string())
-            .add_input(format!("{SHIFT_C_KEY}"), "sort by created".to_string())
-            .add_input(format!("{SHIFT_S_KEY}"), "sort by scope".to_string())
-            .add_input(format!("{SHIFT_D_KEY}"), "sort by driver".to_string())
             .build();
 
         Self {
@@ -212,9 +208,6 @@ impl Network {
                 NetworkSortField::Scope => sort_networks_by_scope(a, b, order),
             }
         });
-
-        // Reset selection to first item after sorting to avoid confusion
-        self.list_state.select(Some(0));
     }
 
     async fn update_modal(&mut self, message: Key) -> Result<MessageResponse> {
@@ -233,19 +226,23 @@ impl Network {
                         self.modal = None;
                     }
                 }
-                Err(_e) => {
-                    let msg =
-                        "An error occurred deleting this network.  It is likely still in use.  Will not try again.";
-                    let mut modal = BooleanModal::<ModalTypes>::new(
-                        "Failed Deletion".into(),
-                        ModalTypes::DeleteNetwork,
-                    );
+                Err(e) => {
+                    if let ModalTypes::DeleteNetwork = m.discriminator {
+                        let msg =
+                            "An error occurred deleting this network.  It is likely still in use.  Will not try again.";
+                        let mut modal = BooleanModal::<ModalTypes>::new(
+                            "Failed Deletion".into(),
+                            ModalTypes::FailedToDeleteNetwork,
+                        );
 
-                    modal.initialise(
-                        msg.into(),
-                        Some(Arc::new(FutureMutex::new(EmptyCallable::new()))),
-                    );
-                    self.modal = Some(modal)
+                        modal.initialise(
+                            msg.into(),
+                            Some(Arc::new(FutureMutex::new(EmptyCallable::new()))),
+                        );
+                        self.modal = Some(modal)
+                    } else {
+                        return Err(e);
+                    }
                 }
             }
             Ok(MessageResponse::Consumed)

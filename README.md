@@ -140,6 +140,45 @@ The following actions are available on the Logs page:
 | ------ | ----------------------------- |
 | `Esc`  | Return to the containers page |
 
+## Sorting Hotkeys
+
+> **Tip:** Use `Shift` + the indicated key to sort columns.
+> Pressing the same sorting key again will sort the same column in the opposite order (toggle ascending/descending).
+> See the table below for each page's sort options.
+
+### Containers
+| Hotkey    | Action          |
+| --------- | --------------- |
+| `Shift+N` | Sort by name    |
+| `Shift+I` | Sort by image   |
+| `Shift+S` | Sort by status  |
+| `Shift+C` | Sort by created |
+| `Shift+P` | Sort by ports   |
+
+### Images
+| Hotkey    | Action          |
+| --------- | --------------- |
+| `Shift+N` | Sort by name    |
+| `Shift+C` | Sort by created |
+| `Shift+T` | Sort by tag     |
+| `Shift+S` | Sort by size    |
+
+### Networks
+| Hotkey    | Action          |
+| --------- | --------------- |
+| `Shift+N` | Sort by name    |
+| `Shift+C` | Sort by created |
+| `Shift+S` | Sort by scope   |
+| `Shift+D` | Sort by driver  |
+
+### Volumes
+| Hotkey    | Action             |
+| --------- | ------------------ |
+| `Shift+N` | Sort by name       |
+| `Shift+C` | Sort by created    |
+| `Shift+D` | Sort by driver     |
+| `Shift+M` | Sort by mountpoint |
+
 ## Configuration
 
 Ducker is configured via a yaml file found in the relevant config directory for host platform.  On linux this is `~/.config/ducker/config.yaml`.
