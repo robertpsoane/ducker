@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1](https://github.com/robertpsoane/ducker/compare/v0.3.0...v0.3.1) - 2025-06-28
+
+### Other
+
+- Minor change to use https in the github url in Cargo.toml ([#167](https://github.com/robertpsoane/ducker/pull/167))
+
 ## [0.3.0](https://github.com/robertpsoane/ducker/compare/v0.2.4...v0.3.0) - 2025-03-08
 
 ### Added
