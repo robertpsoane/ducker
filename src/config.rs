@@ -19,6 +19,9 @@ pub struct Config {
     #[serde(default = "default_docker_path")]
     pub docker_path: String,
 
+    #[serde(default)]
+    pub docker_host: Option<String>,
+
     #[serde(default = "default_check_update")]
     pub check_for_update: bool,
 
@@ -27,7 +30,11 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(write: &bool, docker_path: Option<String>) -> Result<Self> {
+    pub fn new(
+        write: &bool,
+        docker_path: Option<String>,
+        docker_host: Option<String>,
+    ) -> Result<Self> {
         let config_path = get_app_config_path()?.join("config.yaml");
         if *write {
             write_default_config(&config_path).context("failed to write default config")?;
@@ -43,6 +50,10 @@ impl Config {
 
         if let Some(p) = docker_path {
             config.docker_path = p;
+        }
+
+        if let Some(h) = docker_host {
+            config.docker_host = Some(h);
         }
 
         Ok(config)
@@ -79,6 +90,7 @@ impl Default for Config {
             prompt: default_prompt(),
             default_exec: default_exec(),
             docker_path: default_docker_path(),
+            docker_host: None,
             check_for_update: default_check_update(),
             theme: Theme::default(),
         }
@@ -236,3 +248,100 @@ fn write_default_config(path: &PathBuf) -> Result<()> {
     fs::write(path, serde_yml::to_string(&config)?)?;
     Ok(())
 }
+
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use tempfile::TempDir;
+
+//     fn create_test_config_dir() -> TempDir {
+//         TempDir::new().expect("Failed to create temporary directory")
+//     }
+
+//     #[test]
+//     fn test_config_new_with_defaults() {
+//         let config = Config::new(&false, None, None).unwrap();
+//         assert_eq!(config.prompt, "🦆");
+//         assert_eq!(config.default_exec, "/bin/bash");
+//         #[cfg(unix)]
+//         assert_eq!(config.docker_path, "unix:///var/run/docker.sock");
+//         #[cfg(windows)]
+//         assert_eq!(config.docker_path, "npipe:////./pipe/docker_engine");
+//         assert!(config.docker_host.is_none());
+//         assert!(config.check_for_update);
+//     }
+
+//     #[test]
+//     fn test_config_new_with_docker_path() {
+//         let custom_path = "/custom/docker.sock";
+//         let config = Config::new(&false, Some(custom_path.to_string()), None).unwrap();
+//         assert_eq!(config.docker_path, custom_path);
+//         assert!(config.docker_host.is_none());
+//     }
+
+//     #[test]
+//     fn test_config_new_with_docker_host() {
+//         let custom_host = "tcp://1.2.3.4:2375";
+//         let config = Config::new(&false, None, Some(custom_host.to_string())).unwrap();
+//         assert_eq!(config.docker_host, Some(custom_host.to_string()));
+//     }
+
+//     #[test]
+//     fn test_config_new_with_both_docker_options() {
+//         let custom_path = "/custom/docker.sock";
+//         let custom_host = "tcp://1.2.3.4:2375";
+//         let config = Config::new(
+//             &false,
+//             Some(custom_path.to_string()),
+//             Some(custom_host.to_string()),
+//         )
+//         .unwrap();
+//         assert_eq!(config.docker_path, custom_path);
+//         assert_eq!(config.docker_host, Some(custom_host.to_string()));
+//     }
+
+//     #[test]
+//     fn test_config_write_and_read() {
+//         let temp_dir = create_test_config_dir();
+//         let config_path = temp_dir.path().join("config.yaml");
+
+//         // Write default config
+//         write_default_config(&config_path).unwrap();
+
+//         // Read it back
+//         let config: Config =
+//             serde_yml::from_reader(BufReader::new(File::open(&config_path).unwrap())).unwrap();
+
+//         // Verify defaults
+//         assert_eq!(config.prompt, "🦆");
+//         assert_eq!(config.default_exec, "/bin/bash");
+//         assert!(config.docker_host.is_none());
+//     }
+
+//     #[test]
+//     fn test_theme_defaults() {
+//         let theme = Theme::default();
+//         assert!(!theme.use_theme);
+//         // Test that color getters return expected values when use_theme is false
+//         assert_eq!(theme.title(), Color::Green);
+//         assert_eq!(theme.help(), Color::Red);
+//         assert_eq!(theme.background(), Color::Reset);
+//         assert_eq!(theme.footer(), Color::Cyan);
+//         assert_eq!(theme.success(), Color::Green);
+//         assert_eq!(theme.error(), Color::Red);
+//         assert_eq!(theme.positive_highlight(), Color::Green);
+//         assert_eq!(theme.negative_highlight(), Color::Magenta);
+//     }
+
+//     #[test]
+//     fn test_theme_custom_colors() {
+//         let mut theme = Theme::default();
+//         theme.use_theme = true;
+//         theme.title = Color::Blue;
+//         theme.help = Color::Yellow;
+
+//         // Test that color getters respect custom colors when use_theme is true
+//         assert_eq!(theme.title(), Color::Blue);
+//         assert_eq!(theme.help(), Color::Yellow);
+//     }
+// }

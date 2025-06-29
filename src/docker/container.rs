@@ -180,3 +180,88 @@ impl Describe for DockerContainer {
         Ok(summary.lines().map(String::from).collect())
     }
 }
+
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use bollard::models::{Port, PortTypeEnum};
+
+//     fn create_mock_container_summary() -> ContainerSummary {
+//         ContainerSummary {
+//             id: Some("abc123".to_string()),
+//             names: Some(vec!["/test-container".to_string()]),
+//             image: Some("test-image:latest".to_string()),
+//             image_id: Some("sha256:def456".to_string()),
+//             command: Some("/bin/bash".to_string()),
+//             created: Some(1234567890),
+//             ports: Some(vec![Port {
+//                 ip: Some("0.0.0.0".to_string()),
+//                 private_port: 8080,
+//                 public_port: Some(80),
+//                 typ: Some(PortTypeEnum::TCP),
+//             }]),
+//             state: Some("running".to_string()),
+//             status: Some("Up 2 hours".to_string()),
+//             ..Default::default()
+//         }
+//     }
+
+//     #[test]
+//     fn test_container_from_summary() {
+//         let summary = create_mock_container_summary();
+//         let container = DockerContainer::from(summary.clone());
+
+//         assert_eq!(container.id, summary.id.unwrap());
+//         assert_eq!(container.image, summary.image.unwrap());
+//         assert_eq!(container.command, summary.command.unwrap());
+//         assert!(container.running);
+//         assert_eq!(container.status, summary.status.unwrap());
+//         assert_eq!(container.names, "test-container");
+//         assert!(container.ports.contains("0.0.0.0:8080:80:TCP"));
+//     }
+
+//     #[test]
+//     fn test_container_from_summary_minimal() {
+//         let summary = ContainerSummary {
+//             id: Some("abc123".to_string()),
+//             ..Default::default()
+//         };
+//         let container = DockerContainer::from(summary);
+
+//         assert_eq!(container.id, "abc123");
+//         assert_eq!(container.image, "");
+//         assert_eq!(container.command, "");
+//         assert!(!container.running);
+//         assert_eq!(container.status, "");
+//         assert_eq!(container.names, "");
+//         assert_eq!(container.ports, "");
+//     }
+
+//     #[test]
+//     fn test_container_describe() {
+//         let container = DockerContainer {
+//             id: "abc123".to_string(),
+//             image: "test-image:latest".to_string(),
+//             image_id: "sha256:def456".to_string(),
+//             command: "/bin/bash".to_string(),
+//             created: "2024-01-01 12:00:00".to_string(),
+//             status: "Up 2 hours".to_string(),
+//             ports: "80:8080".to_string(),
+//             names: "test-container".to_string(),
+//             running: true,
+//             read_write_size: "".to_string(),
+//             root_fs_size: "".to_string(),
+//             labels: None,
+//             network_mode: None,
+//         };
+
+//         let description = container.describe().unwrap();
+//         assert!(!description.is_empty());
+
+//         // Verify key information is present in the description
+//         let desc_str = description.join("\n");
+//         assert!(desc_str.contains(&container.id));
+//         assert!(desc_str.contains(&container.image));
+//         assert!(desc_str.contains(&container.command));
+//     }
+// }
