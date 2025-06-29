@@ -68,7 +68,11 @@ impl App {
             title: Header::new(config.clone()),
             page_manager: body,
             footer: Footer::new(config.clone()).await,
-            input_field: CommandInput::new(tx, config.prompt.clone()),
+            input_field: CommandInput::new(
+                tx,
+                config.prompt.clone(),
+                config.autocomplete_minimum_length,
+            ),
             modal: None,
         };
         Ok(app)

@@ -107,9 +107,12 @@ impl EventLoop {
                     _ = delay => {}
                     Some(Ok(event)) = crossterm_event => {
                         if let CrossTermEvent::Key(key) = event {
-                            let key = Key::from(key);
-                            trace!{"received event input `{}`", key};
-                            tx.send(Message::Input(key)).await.unwrap();
+                            // Only process key press events, not releases
+                            if key.kind == crossterm::event::KeyEventKind::Press {
+                                let key = Key::from(key);
+                                trace!{"received event input `{}`", key};
+                                tx.send(Message::Input(key)).await.unwrap();
+                            }
                         }
                     }
                 }
