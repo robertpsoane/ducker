@@ -9,9 +9,7 @@ use ratatui::{
     Frame,
 };
 use ratatui_macros::constraints;
-use std::{
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::Sender;
 
 use crate::{
@@ -25,7 +23,10 @@ use crate::{
     context::AppContext,
     docker::network::DockerNetwork,
     events::{message::MessageResponse, Key, Message, Transition},
-    sorting::{NetworkSortField, SortOrder, SortState, sort_networks_by_name, sort_networks_by_created, sort_networks_by_scope, sort_networks_by_driver, sort_networks_by_id},
+    sorting::{
+        sort_networks_by_created, sort_networks_by_driver, sort_networks_by_id,
+        sort_networks_by_name, sort_networks_by_scope, NetworkSortField, SortOrder, SortState,
+    },
     traits::{Close, Component, ModalComponent, Page},
 };
 
@@ -199,14 +200,12 @@ impl Network {
         let field = self.sort_state.field;
         let order = self.sort_state.order;
 
-        self.networks.sort_by(|a, b| {
-            match field {
-                NetworkSortField::Id => sort_networks_by_id(a, b, order),
-                NetworkSortField::Name => sort_networks_by_name(a, b, order),
-                NetworkSortField::Driver => sort_networks_by_driver(a, b, order),
-                NetworkSortField::Created => sort_networks_by_created(a, b, order),
-                NetworkSortField::Scope => sort_networks_by_scope(a, b, order),
-            }
+        self.networks.sort_by(|a, b| match field {
+            NetworkSortField::Id => sort_networks_by_id(a, b, order),
+            NetworkSortField::Name => sort_networks_by_name(a, b, order),
+            NetworkSortField::Driver => sort_networks_by_driver(a, b, order),
+            NetworkSortField::Created => sort_networks_by_created(a, b, order),
+            NetworkSortField::Scope => sort_networks_by_scope(a, b, order),
         });
     }
 

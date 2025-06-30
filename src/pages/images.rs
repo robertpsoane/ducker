@@ -9,9 +9,7 @@ use ratatui::{
     Frame,
 };
 use ratatui_macros::constraints;
-use std::{
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::Sender;
 
 use crate::{
@@ -24,7 +22,10 @@ use crate::{
     context::AppContext,
     docker::image::DockerImage,
     events::{message::MessageResponse, Key, Message, Transition},
-    sorting::{ImageSortField, SortOrder, SortState, sort_images_by_name, sort_images_by_tag, sort_images_by_created, sort_images_by_size, sort_images_by_id},
+    sorting::{
+        sort_images_by_created, sort_images_by_id, sort_images_by_name, sort_images_by_size,
+        sort_images_by_tag, ImageSortField, SortOrder, SortState,
+    },
     traits::{Close, Component, ModalComponent, Page},
 };
 
@@ -122,7 +123,7 @@ impl Page for Images {
             ALT_D_KEY => {
                 self.show_dangling = !self.show_dangling;
                 MessageResponse::Consumed
-            },
+            }
             D_KEY => {
                 self.tx
                     .send(Message::Transition(Transition::ToDescribeContainerPage(
@@ -209,14 +210,12 @@ impl Images {
         let field = self.sort_state.field;
         let order = self.sort_state.order;
 
-        self.images.sort_by(|a, b| {
-            match field {
-                ImageSortField::Id => sort_images_by_id(a, b, order),
-                ImageSortField::Name => sort_images_by_name(a, b, order),
-                ImageSortField::Tag => sort_images_by_tag(a, b, order),
-                ImageSortField::Created => sort_images_by_created(a, b, order),
-                ImageSortField::Size => sort_images_by_size(a, b, order),
-            }
+        self.images.sort_by(|a, b| match field {
+            ImageSortField::Id => sort_images_by_id(a, b, order),
+            ImageSortField::Name => sort_images_by_name(a, b, order),
+            ImageSortField::Tag => sort_images_by_tag(a, b, order),
+            ImageSortField::Created => sort_images_by_created(a, b, order),
+            ImageSortField::Size => sort_images_by_size(a, b, order),
         });
     }
 

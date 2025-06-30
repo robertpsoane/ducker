@@ -1,7 +1,7 @@
 use crate::docker::container::DockerContainer;
 use crate::docker::image::DockerImage;
-use crate::docker::volume::DockerVolume;
 use crate::docker::network::DockerNetwork;
+use crate::docker::volume::DockerVolume;
 
 use std::cmp::Ordering;
 use std::default::Default;
@@ -132,7 +132,11 @@ where
 }
 
 // Sorting functions for containers
-pub fn sort_containers_by_name(a: &DockerContainer, b: &DockerContainer, order: SortOrder) -> Ordering {
+pub fn sort_containers_by_name(
+    a: &DockerContainer,
+    b: &DockerContainer,
+    order: SortOrder,
+) -> Ordering {
     let cmp = a.names.cmp(&b.names);
     match order {
         SortOrder::Ascending => cmp,
@@ -140,7 +144,11 @@ pub fn sort_containers_by_name(a: &DockerContainer, b: &DockerContainer, order: 
     }
 }
 
-pub fn sort_containers_by_image(a: &DockerContainer, b: &DockerContainer, order: SortOrder) -> Ordering {
+pub fn sort_containers_by_image(
+    a: &DockerContainer,
+    b: &DockerContainer,
+    order: SortOrder,
+) -> Ordering {
     let cmp = a.image.cmp(&b.image);
     match order {
         SortOrder::Ascending => cmp,
@@ -148,7 +156,11 @@ pub fn sort_containers_by_image(a: &DockerContainer, b: &DockerContainer, order:
     }
 }
 
-pub fn sort_containers_by_status(a: &DockerContainer, b: &DockerContainer, order: SortOrder) -> Ordering {
+pub fn sort_containers_by_status(
+    a: &DockerContainer,
+    b: &DockerContainer,
+    order: SortOrder,
+) -> Ordering {
     let cmp = a.status.cmp(&b.status);
     match order {
         SortOrder::Ascending => cmp,
@@ -156,7 +168,11 @@ pub fn sort_containers_by_status(a: &DockerContainer, b: &DockerContainer, order
     }
 }
 
-pub fn sort_containers_by_created(a: &DockerContainer, b: &DockerContainer, order: SortOrder) -> Ordering {
+pub fn sort_containers_by_created(
+    a: &DockerContainer,
+    b: &DockerContainer,
+    order: SortOrder,
+) -> Ordering {
     let cmp = a.created.cmp(&b.created);
     match order {
         SortOrder::Ascending => cmp,
@@ -164,7 +180,11 @@ pub fn sort_containers_by_created(a: &DockerContainer, b: &DockerContainer, orde
     }
 }
 
-pub fn sort_containers_by_ports(a: &DockerContainer, b: &DockerContainer, order: SortOrder) -> Ordering {
+pub fn sort_containers_by_ports(
+    a: &DockerContainer,
+    b: &DockerContainer,
+    order: SortOrder,
+) -> Ordering {
     let cmp = a.ports.cmp(&b.ports);
     match order {
         SortOrder::Ascending => cmp,
@@ -240,7 +260,11 @@ pub fn sort_volumes_by_driver(a: &DockerVolume, b: &DockerVolume, order: SortOrd
     }
 }
 
-pub fn sort_volumes_by_mountpoint(a: &DockerVolume, b: &DockerVolume, order: SortOrder) -> Ordering {
+pub fn sort_volumes_by_mountpoint(
+    a: &DockerVolume,
+    b: &DockerVolume,
+    order: SortOrder,
+) -> Ordering {
     let cmp = a.mountpoint.cmp(&b.mountpoint);
     match order {
         SortOrder::Ascending => cmp,
@@ -257,7 +281,11 @@ pub fn sort_networks_by_name(a: &DockerNetwork, b: &DockerNetwork, order: SortOr
     }
 }
 
-pub fn sort_networks_by_created(a: &DockerNetwork, b: &DockerNetwork, order: SortOrder) -> Ordering {
+pub fn sort_networks_by_created(
+    a: &DockerNetwork,
+    b: &DockerNetwork,
+    order: SortOrder,
+) -> Ordering {
     let cmp = a.created_at.cmp(&b.created_at);
     match order {
         SortOrder::Ascending => cmp,

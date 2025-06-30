@@ -27,7 +27,7 @@ use crate::{
     events::{message::MessageResponse, Key, Message, Transition},
     sorting::{SortOrder, SortState, VolumeSortField},
     traits::{Close, Component, ModalComponent, Page},
-    ui::{render_column_header, is_field_sorted, get_field_sort_order},
+    ui::{get_field_sort_order, is_field_sorted, render_column_header},
 };
 
 const NAME: &str = "Volumes";
@@ -124,7 +124,7 @@ impl Page for Volume {
             ALT_D_KEY => {
                 self.show_dangling = !self.show_dangling;
                 MessageResponse::Consumed
-            },
+            }
             D_KEY => {
                 self.tx
                     .send(Message::Transition(Transition::ToDescribeContainerPage(
@@ -398,14 +398,30 @@ fn get_volume_rows(volumes: &[DockerVolume]) -> Vec<Row> {
 
 fn get_header_row(sort_state: &VolumeSortState) -> Row {
     let headers = vec![
-        render_column_header("Name", is_field_sorted(sort_state, &VolumeSortField::Name),
-                           get_field_sort_order(sort_state, &VolumeSortField::Name).unwrap_or(SortOrder::Ascending)),
-        render_column_header("Driver", is_field_sorted(sort_state, &VolumeSortField::Driver),
-                           get_field_sort_order(sort_state, &VolumeSortField::Driver).unwrap_or(SortOrder::Ascending)),
-        render_column_header("Mountpoint", is_field_sorted(sort_state, &VolumeSortField::Mountpoint),
-                           get_field_sort_order(sort_state, &VolumeSortField::Mountpoint).unwrap_or(SortOrder::Ascending)),
-        render_column_header("Created", is_field_sorted(sort_state, &VolumeSortField::Created),
-                           get_field_sort_order(sort_state, &VolumeSortField::Created).unwrap_or(SortOrder::Ascending)),
+        render_column_header(
+            "Name",
+            is_field_sorted(sort_state, &VolumeSortField::Name),
+            get_field_sort_order(sort_state, &VolumeSortField::Name)
+                .unwrap_or(SortOrder::Ascending),
+        ),
+        render_column_header(
+            "Driver",
+            is_field_sorted(sort_state, &VolumeSortField::Driver),
+            get_field_sort_order(sort_state, &VolumeSortField::Driver)
+                .unwrap_or(SortOrder::Ascending),
+        ),
+        render_column_header(
+            "Mountpoint",
+            is_field_sorted(sort_state, &VolumeSortField::Mountpoint),
+            get_field_sort_order(sort_state, &VolumeSortField::Mountpoint)
+                .unwrap_or(SortOrder::Ascending),
+        ),
+        render_column_header(
+            "Created",
+            is_field_sorted(sort_state, &VolumeSortField::Created),
+            get_field_sort_order(sort_state, &VolumeSortField::Created)
+                .unwrap_or(SortOrder::Ascending),
+        ),
     ];
 
     Row::new(headers)

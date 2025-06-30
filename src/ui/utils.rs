@@ -18,6 +18,9 @@ pub fn is_field_sorted<T: PartialEq + Clone>(sort_state: &SortState<T>, field: &
 }
 
 /// Gets the current sort order for a field, or None if not sorted
-pub fn get_field_sort_order<T: PartialEq + Clone>(sort_state: &SortState<T>, field: &T) -> Option<SortOrder> {
+pub fn get_field_sort_order<T: PartialEq + Clone>(
+    sort_state: &SortState<T>,
+    field: &T,
+) -> Option<SortOrder> {
     sort_state.get_order_for_field(field.clone())
 }

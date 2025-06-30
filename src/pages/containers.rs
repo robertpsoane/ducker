@@ -25,7 +25,11 @@ use crate::{
     context::AppContext,
     docker::container::DockerContainer,
     events::{message::MessageResponse, Key, Message, Transition},
-    sorting::{ContainerSortField, SortOrder, SortState, sort_containers_by_name, sort_containers_by_image, sort_containers_by_status, sort_containers_by_created, sort_containers_by_ports},
+    sorting::{
+        sort_containers_by_created, sort_containers_by_image, sort_containers_by_name,
+        sort_containers_by_ports, sort_containers_by_status, ContainerSortField, SortOrder,
+        SortState,
+    },
     traits::{Close, Component, ModalComponent, Page},
 };
 
@@ -253,14 +257,12 @@ impl Containers {
         let field = self.sort_state.field;
         let order = self.sort_state.order;
 
-        self.containers.sort_by(|a, b| {
-            match field {
-                ContainerSortField::Name => sort_containers_by_name(a, b, order),
-                ContainerSortField::Image => sort_containers_by_image(a, b, order),
-                ContainerSortField::Status => sort_containers_by_status(a, b, order),
-                ContainerSortField::Created => sort_containers_by_created(a, b, order),
-                ContainerSortField::Ports => sort_containers_by_ports(a, b, order),
-            }
+        self.containers.sort_by(|a, b| match field {
+            ContainerSortField::Name => sort_containers_by_name(a, b, order),
+            ContainerSortField::Image => sort_containers_by_image(a, b, order),
+            ContainerSortField::Status => sort_containers_by_status(a, b, order),
+            ContainerSortField::Created => sort_containers_by_created(a, b, order),
+            ContainerSortField::Ports => sort_containers_by_ports(a, b, order),
         });
     }
 
