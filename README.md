@@ -141,13 +141,13 @@ The following actions are available on the Logs page:
 | ------ | ----------------------------- |
 | `Esc`  | Return to the containers page |
 
-## Sorting Hotkeys
+### Sorting Hotkeys
 
 > **Tip:** Use `Shift` + the indicated key to sort columns.
 > Pressing the same sorting key again will sort the same column in the opposite order (toggle ascending/descending).
 > See the table below for each page's sort options.
 
-### Containers
+#### Containers
 | Hotkey    | Action          |
 | --------- | --------------- |
 | `Shift+N` | Sort by name    |
@@ -156,7 +156,7 @@ The following actions are available on the Logs page:
 | `Shift+C` | Sort by created |
 | `Shift+P` | Sort by ports   |
 
-### Images
+#### Images
 | Hotkey    | Action          |
 | --------- | --------------- |
 | `Shift+N` | Sort by name    |
@@ -164,7 +164,7 @@ The following actions are available on the Logs page:
 | `Shift+T` | Sort by tag     |
 | `Shift+S` | Sort by size    |
 
-### Networks
+#### Networks
 | Hotkey    | Action          |
 | --------- | --------------- |
 | `Shift+N` | Sort by name    |
@@ -172,7 +172,7 @@ The following actions are available on the Logs page:
 | `Shift+S` | Sort by scope   |
 | `Shift+D` | Sort by driver  |
 
-### Volumes
+#### Volumes
 | Hotkey    | Action             |
 | --------- | ------------------ |
 | `Shift+N` | Sort by name       |
