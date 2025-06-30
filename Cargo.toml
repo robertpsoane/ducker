@@ -11,16 +11,17 @@ license-file = "LICENSE.txt"
 keywords = ["docker", "developer-tools", "ratatui", "terminal"]
 categories = ["command-line-utilities", "development-tools"]
 include = ["/src", "LICENSE.txt", "CHANGELOG.md", "README.md"]
+rust-version = "1.80.0"
 
 [dependencies]
 ansi-to-tui = "7.0.0"
-async-trait = "0.1.87"
+async-trait = "0.1.88"
 bollard = { version = "0.18.1", features = ["ssl"] }
 byte-unit = { version = "5.1.6", features = ["byte"] }
 chrono = "0.4.41"
-clap = { version = "4.5.31", features = ["derive"] }
-color-eyre = "0.6.3"
-crossterm = { version = "0.28", features = ["event-stream"] }
+clap = { version = "4.5.40", features = ["derive"] }
+color-eyre = "0.6.5"
+crossterm = { version = "0.29", features = ["event-stream"] }
 dirs-next = "2.0.0"
 dyn-clone = "1.0.19"
 futures = "0.3.31"
@@ -41,7 +42,7 @@ tokio = { version = "1.45.1", features = [
 tracing = "0.1.41"
 tracing-error = "0.2.1"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-tui-big-text = "0.7.0"
+tui-big-text = "0.7.1"
 ureq = { version = "2.12.1", features = ["json"] }
 
 [dev-dependencies]
