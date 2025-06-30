@@ -6,6 +6,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/robertpsoane/ducker/compare/v0.3.1...v0.4.0) - 2025-06-30
+
+### Added
+
+- sort by column functionality to list views ([#173](https://github.com/robertpsoane/ducker/pull/173))
+
+### Fixed
+
+- remove flaky tests ... again ([#184](https://github.com/robertpsoane/ducker/pull/184))
+- autocomplete minimum number of characters is now configurable
+- env unix test only runs on unix
+- remove ineffective tests
+
+### Other
+
+- *(deps)* bump various dependencies ([#179](https://github.com/robertpsoane/ducker/pull/179))
+- *(docs)* fix heading depth in sorting ([#186](https://github.com/robertpsoane/ducker/pull/186))
+- :sparkles: feat: SSL via Rustls
+- :bug: fix: only process key press events in event loop
+- *(deps)* bump chrono from 0.4.39 to 0.4.41
+- *(deps)* bump dyn-clone from 1.0.18 to 1.0.19
+- *(deps)* bump tokio from 1.43.0 to 1.45.1
+- *(deps)* bump serde from 1.0.218 to 1.0.219
+
 ## [0.3.1](https://github.com/robertpsoane/ducker/compare/v0.3.0...v0.3.1) - 2025-06-28
 
 ### Other
