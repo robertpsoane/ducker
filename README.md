@@ -106,11 +106,11 @@ The following actions are available on the Containers page:
 
 The following actions are available on the Images page:
 
-| Hotkey   | Action                                                         |
-| -------- | -------------------------------------------------------------- |
-| `Ctrl+d` | Delete the currently selected image                            |
-| `d`      | Describe the currently selected image                          |
-| `D`      | Toggle whether or not to show dangling images (off by default) |
+| Hotkey   | Action                                |
+| -------- | ------------------------------------- |
+| `Ctrl+d` | Delete the currently selected image   |
+| `Alt+d`  | Toggle dangling images                |
+| `d`      | Describe the currently selected image |
 
 #### Volumes
 
@@ -119,6 +119,7 @@ The following actions are available on the Volumes page:
 | Hotkey   | Action                                 |
 | -------- | -------------------------------------- |
 | `Ctrl+d` | Delete the currently selected volume   |
+| `Alt+d`  | Toggle dangling volumes                |
 | `d`      | Describe the currently selected volume |
 
 #### Networks
@@ -139,6 +140,45 @@ The following actions are available on the Logs page:
 | Hotkey | Action                        |
 | ------ | ----------------------------- |
 | `Esc`  | Return to the containers page |
+
+## Sorting Hotkeys
+
+> **Tip:** Use `Shift` + the indicated key to sort columns.
+> Pressing the same sorting key again will sort the same column in the opposite order (toggle ascending/descending).
+> See the table below for each page's sort options.
+
+### Containers
+| Hotkey    | Action          |
+| --------- | --------------- |
+| `Shift+N` | Sort by name    |
+| `Shift+I` | Sort by image   |
+| `Shift+S` | Sort by status  |
+| `Shift+C` | Sort by created |
+| `Shift+P` | Sort by ports   |
+
+### Images
+| Hotkey    | Action          |
+| --------- | --------------- |
+| `Shift+N` | Sort by name    |
+| `Shift+C` | Sort by created |
+| `Shift+T` | Sort by tag     |
+| `Shift+S` | Sort by size    |
+
+### Networks
+| Hotkey    | Action          |
+| --------- | --------------- |
+| `Shift+N` | Sort by name    |
+| `Shift+C` | Sort by created |
+| `Shift+S` | Sort by scope   |
+| `Shift+D` | Sort by driver  |
+
+### Volumes
+| Hotkey    | Action             |
+| --------- | ------------------ |
+| `Shift+N` | Sort by name       |
+| `Shift+C` | Sort by created    |
+| `Shift+D` | Sort by driver     |
+| `Shift+M` | Sort by mountpoint |
 
 ## Configuration
 
