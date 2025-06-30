@@ -9,10 +9,7 @@ use ratatui::{
     Frame,
 };
 use ratatui_macros::constraints;
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::Sender;
 
 use crate::{
@@ -25,6 +22,10 @@ use crate::{
     context::AppContext,
     docker::image::DockerImage,
     events::{message::MessageResponse, Key, Message, Transition},
+    sorting::{
+        sort_images_by_created, sort_images_by_id, sort_images_by_name, sort_images_by_size,
+        sort_images_by_tag, ImageSortField, SortOrder, SortState,
+    },
     traits::{Close, Component, ModalComponent, Page},
 };
 
@@ -36,12 +37,20 @@ const DOWN_KEY: Key = Key::Down;
 const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
 const CTRL_D_KEY: Key = Key::Ctrl('d');
-const SHIFT_D_KEY: Key = Key::Char('D');
 const D_KEY: Key = Key::Char('d');
 const G_KEY: Key = Key::Char('g');
 const SHIFT_G_KEY: Key = Key::Char('G');
+const ALT_D_KEY: Key = Key::Alt('d');
 
-#[derive(Debug)]
+// Sort keys
+const SHIFT_N_KEY: Key = Key::Char('N');
+const SHIFT_C_KEY: Key = Key::Char('C');
+const SHIFT_T_KEY: Key = Key::Char('T');
+const SHIFT_S_KEY: Key = Key::Char('S');
+
+type ImageSortState = SortState<ImageSortField>;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ModalTypes {
     DeleteImage,
     ForceDeleteImage,
@@ -57,6 +66,7 @@ pub struct Images {
     list_state: TableState,
     modal: Option<BooleanModal<ModalTypes>>,
     show_dangling: bool,
+    sort_state: ImageSortState,
 }
 
 #[async_trait::async_trait]
@@ -78,10 +88,6 @@ impl Page for Images {
                 self.increment_list();
                 MessageResponse::Consumed
             }
-            SHIFT_D_KEY => {
-                self.show_dangling = !self.show_dangling;
-                MessageResponse::Consumed
-            }
             G_KEY => {
                 self.list_state.select(Some(0));
                 MessageResponse::Consumed
@@ -90,10 +96,34 @@ impl Page for Images {
                 self.list_state.select(Some(self.images.len() - 1));
                 MessageResponse::Consumed
             }
+            SHIFT_N_KEY => {
+                self.sort_state.toggle_or_set(ImageSortField::Name);
+                self.sort_images();
+                MessageResponse::Consumed
+            }
+            SHIFT_C_KEY => {
+                self.sort_state.toggle_or_set(ImageSortField::Created);
+                self.sort_images();
+                MessageResponse::Consumed
+            }
+            SHIFT_T_KEY => {
+                self.sort_state.toggle_or_set(ImageSortField::Tag);
+                self.sort_images();
+                MessageResponse::Consumed
+            }
+            SHIFT_S_KEY => {
+                self.sort_state.toggle_or_set(ImageSortField::Size);
+                self.sort_images();
+                MessageResponse::Consumed
+            }
             CTRL_D_KEY => match self.delete_image(false, None, None) {
                 Ok(_) => MessageResponse::Consumed,
                 Err(_) => MessageResponse::NotConsumed,
             },
+            ALT_D_KEY => {
+                self.show_dangling = !self.show_dangling;
+                MessageResponse::Consumed
+            }
             D_KEY => {
                 self.tx
                     .send(Message::Transition(Transition::ToDescribeContainerPage(
@@ -146,12 +176,12 @@ impl Close for Images {}
 
 impl Images {
     pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Arc<Config>) -> Self {
-        let page_help = PageHelpBuilder::new(NAME.into(), config.clone())
-            .add_input(format!("{CTRL_D_KEY}"), "delete".into())
-            .add_input(format!("{G_KEY}"), "top".into())
-            .add_input(format!("{SHIFT_G_KEY}"), "bottom".into())
-            .add_input(format!("{SHIFT_D_KEY}"), "dangling".into())
-            .add_input(format!("{D_KEY}"), "describe".into())
+        let page_help = PageHelpBuilder::new(NAME.to_string(), config.clone())
+            .add_input(format!("{CTRL_D_KEY}"), "delete".to_string())
+            .add_input(format!("{ALT_D_KEY}"), "dangling".to_string())
+            .add_input(format!("{G_KEY}"), "top".to_string())
+            .add_input(format!("{SHIFT_G_KEY}"), "bottom".to_string())
+            .add_input(format!("{D_KEY}"), "describe".to_string())
             .build();
 
         Self {
@@ -163,17 +193,30 @@ impl Images {
             list_state: TableState::default(),
             modal: None,
             show_dangling: false,
+            sort_state: ImageSortState::new(ImageSortField::Name),
         }
     }
 
     async fn refresh(&mut self) -> Result<(), color_eyre::eyre::Error> {
-        let mut filters: HashMap<String, Vec<String>> = HashMap::new();
-        filters.insert("dangling".into(), vec!["false".into()]);
-
         self.images = DockerImage::list(&self.docker, self.show_dangling)
             .await
             .context("unable to retrieve list of images")?;
+
+        self.sort_images();
         Ok(())
+    }
+
+    fn sort_images(&mut self) {
+        let field = self.sort_state.field;
+        let order = self.sort_state.order;
+
+        self.images.sort_by(|a, b| match field {
+            ImageSortField::Id => sort_images_by_id(a, b, order),
+            ImageSortField::Name => sort_images_by_name(a, b, order),
+            ImageSortField::Tag => sort_images_by_tag(a, b, order),
+            ImageSortField::Created => sort_images_by_created(a, b, order),
+            ImageSortField::Size => sort_images_by_size(a, b, order),
+        });
     }
 
     async fn update_modal(&mut self, message: Key) -> Result<MessageResponse> {
@@ -303,7 +346,13 @@ impl Images {
 impl Component for Images {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         let rows = get_image_rows(&self.images);
-        let columns = Row::new(vec!["ID", "Name", "Tag", "Created", "Size"]);
+        let columns = Row::new(vec![
+            get_header_with_sort_indicator("ID", ImageSortField::Id, &self.sort_state),
+            get_header_with_sort_indicator("Name", ImageSortField::Name, &self.sort_state),
+            get_header_with_sort_indicator("Tag", ImageSortField::Tag, &self.sort_state),
+            get_header_with_sort_indicator("Created", ImageSortField::Created, &self.sort_state),
+            get_header_with_sort_indicator("Size", ImageSortField::Size, &self.sort_state),
+        ]);
 
         let widths = constraints![==20%, ==20%, ==20%, ==20%, ==20%];
 
@@ -335,4 +384,20 @@ fn get_image_rows(containers: &[DockerImage]) -> Vec<Row> {
         })
         .collect::<Vec<Row>>();
     rows
+}
+
+fn get_header_with_sort_indicator(
+    header: &str,
+    field: ImageSortField,
+    sort_state: &ImageSortState,
+) -> String {
+    if sort_state.field == field {
+        let indicator = match sort_state.order {
+            SortOrder::Ascending => "↑",
+            SortOrder::Descending => "↓",
+        };
+        format!("{} {}", header, indicator)
+    } else {
+        header.to_string()
+    }
 }

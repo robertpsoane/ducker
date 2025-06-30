@@ -5,6 +5,7 @@ pub mod context;
 pub mod docker;
 pub mod events;
 pub mod pages;
+pub mod sorting;
 pub mod state;
 pub mod terminal;
 pub mod tracing;

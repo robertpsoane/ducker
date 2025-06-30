@@ -106,11 +106,11 @@ The following actions are available on the Containers page:
 
 The following actions are available on the Images page:
 
-| Hotkey   | Action                                                         |
-| -------- | -------------------------------------------------------------- |
-| `Ctrl+d` | Delete the currently selected image                            |
-| `d`      | Describe the currently selected image                          |
-| `D`      | Toggle whether or not to show dangling images (off by default) |
+| Hotkey   | Action                                |
+| -------- | ------------------------------------- |
+| `Ctrl+d` | Delete the currently selected image   |
+| `Alt+d`  | Toggle dangling images                |
+| `d`      | Describe the currently selected image |
 
 #### Volumes
 
@@ -119,6 +119,7 @@ The following actions are available on the Volumes page:
 | Hotkey   | Action                                 |
 | -------- | -------------------------------------- |
 | `Ctrl+d` | Delete the currently selected volume   |
+| `Alt+d`  | Toggle dangling volumes                |
 | `d`      | Describe the currently selected volume |
 
 #### Networks
@@ -140,19 +141,59 @@ The following actions are available on the Logs page:
 | ------ | ----------------------------- |
 | `Esc`  | Return to the containers page |
 
+### Sorting Hotkeys
+
+> **Tip:** Use `Shift` + the indicated key to sort columns.
+> Pressing the same sorting key again will sort the same column in the opposite order (toggle ascending/descending).
+> See the table below for each page's sort options.
+
+#### Containers
+| Hotkey    | Action          |
+| --------- | --------------- |
+| `Shift+N` | Sort by name    |
+| `Shift+I` | Sort by image   |
+| `Shift+S` | Sort by status  |
+| `Shift+C` | Sort by created |
+| `Shift+P` | Sort by ports   |
+
+#### Images
+| Hotkey    | Action          |
+| --------- | --------------- |
+| `Shift+N` | Sort by name    |
+| `Shift+C` | Sort by created |
+| `Shift+T` | Sort by tag     |
+| `Shift+S` | Sort by size    |
+
+#### Networks
+| Hotkey    | Action          |
+| --------- | --------------- |
+| `Shift+N` | Sort by name    |
+| `Shift+C` | Sort by created |
+| `Shift+S` | Sort by scope   |
+| `Shift+D` | Sort by driver  |
+
+#### Volumes
+| Hotkey    | Action             |
+| --------- | ------------------ |
+| `Shift+N` | Sort by name       |
+| `Shift+C` | Sort by created    |
+| `Shift+D` | Sort by driver     |
+| `Shift+M` | Sort by mountpoint |
+
 ## Configuration
 
 Ducker is configured via a yaml file found in the relevant config directory for host platform.  On linux this is `~/.config/ducker/config.yaml`.
 
 The following table summarises the available config values:
 
-| Key              | Default                       | Description                                                                                                                   |
-| ---------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| prompt           | 🦆                             | The default prompt to display in the command pane                                                                             |
-| default_exec     | `/bin/bash`                   | The default prompt to display in the command pane. NB - currently uses this for all exec's; it is planned to offer a choice   |
-| docker_path      | `unix:///var/run/docker.sock` | The location of the socket on which the docker daemon is exposed (defaults to `npipe:////./pipe/docker_engine` on windows)    |
-| check_for_update | `true`                        | When true, checks whether there is a newer version on load.  If a newer version is found, indicates via note in bottom right. |
-| theme            | [See below]                   | The colour theme configuration                                                                                                |
+| Key                         | Default                       | Description                                                                                                                   |
+| --------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| prompt                      | 🦆                             | The default prompt to display in the command pane                                                                             |
+| default_exec                | `/bin/bash`                   | The default prompt to display in the command pane. NB - currently uses this for all exec's; it is planned to offer a choice   |
+| docker_path                 | `unix:///var/run/docker.sock` | The location of the socket on which the docker daemon is exposed (defaults to `npipe:////./pipe/docker_engine` on windows)    |
+| check_for_update            | `true`                        | When true, checks whether there is a newer version on load.  If a newer version is found, indicates via note in bottom right. |
+| autocomplete_minimum_length | 2                             | The default minimum length before autocompletion in prompt.                                                                   |
+| theme                       | [See below]                   | The colour theme configuration                                                                                                |
 
 If a value is unset or if the config file is unfound, Ducker will use the default values.  If a value is malformed, Ducker will fail to run.
 
