@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1](https://github.com/robertpsoane/ducker/compare/v0.4.0...v0.4.1) - 2025-07-02
+
+### Other
+
+- *(deps)* bump tempfile from 3.18.0 to 3.20.0 ([#189](https://github.com/robertpsoane/ducker/pull/189))
+
 ## [0.4.0](https://github.com/robertpsoane/ducker/compare/v0.3.1...v0.4.0) - 2025-06-30
 
 ### Added
