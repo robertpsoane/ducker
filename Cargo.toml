@@ -19,7 +19,7 @@ async-trait = "0.1.88"
 bollard = { version = "0.18.1", features = ["ssl"] }
 byte-unit = { version = "5.1.6", features = ["byte"] }
 chrono = "0.4.41"
-clap = { version = "4.5.40", features = ["derive"] }
+clap = { version = "4.5.45", features = ["derive"] }
 color-eyre = "0.6.5"
 crossterm = { version = "0.29", features = ["event-stream"] }
 dirs-next = "2.0.0"
