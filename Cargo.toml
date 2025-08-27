@@ -15,7 +15,7 @@ rust-version = "1.80.0"
 
 [dependencies]
 ansi-to-tui = "7.0.0"
-async-trait = "0.1.88"
+async-trait = "0.1.89"
 bollard = { version = "0.18.1", features = ["ssl"] }
 byte-unit = { version = "5.1.6", features = ["byte"] }
 chrono = "0.4.41"
