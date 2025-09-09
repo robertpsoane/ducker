@@ -36,9 +36,9 @@ You can install `ducker` from the [official repositories](https://archlinux.org/
 pacman -S ducker
 ```
 
-### Brew
+### Homebrew
 
-For macOS, you can install `ducker` using by `homebrew`.
+If you have homebrew:
 
 ```sh
 brew install ducker
