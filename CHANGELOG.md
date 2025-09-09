@@ -1,4 +1,24 @@
 # Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.4.2](https://github.com/robertpsoane/ducker/compare/v0.4.1...v0.4.2) - 2025-09-09
+
+### Other
+
+- *(deps)* bump chrono from 0.4.41 to 0.4.42 ([#209](https://github.com/robertpsoane/ducker/pull/209))
+- Update README.md ([#210](https://github.com/robertpsoane/ducker/pull/210))
+- *(deps)* bump async-trait from 0.1.88 to 0.1.89 ([#201](https://github.com/robertpsoane/ducker/pull/201))
+- *(deps)* bump clap from 4.5.40 to 4.5.45 ([#200](https://github.com/robertpsoane/ducker/pull/200))
+- *(deps)* bump tokio from 1.46.1 to 1.47.1 ([#197](https://github.com/robertpsoane/ducker/pull/197))
+- *(deps)* bump dyn-clone from 1.0.19 to 1.0.20 ([#196](https://github.com/robertpsoane/ducker/pull/196))
+- *(deps)* bump tokio from 1.45.1 to 1.46.1 ([#191](https://github.com/robertpsoane/ducker/pull/191))
+# Changelog
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
