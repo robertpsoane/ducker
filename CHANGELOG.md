@@ -6,6 +6,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2](https://github.com/robertpsoane/ducker/compare/v0.4.1...v0.4.2) - 2025-09-25
+
+### Other
+
+- *(deps)* bump tempfile from 3.21.0 to 3.22.0 ([#212](https://github.com/robertpsoane/ducker/pull/212))
+- *(deps)* bump clap from 4.5.47 to 4.5.48 ([#214](https://github.com/robertpsoane/ducker/pull/214))
+- *(deps)* bump serde from 1.0.219 to 1.0.226 ([#215](https://github.com/robertpsoane/ducker/pull/215))
+- *(deps)* bump clap from 4.5.45 to 4.5.47 ([#208](https://github.com/robertpsoane/ducker/pull/208))
+- *(deps)* bump tracing-subscriber from 0.3.19 to 0.3.20 ([#206](https://github.com/robertpsoane/ducker/pull/206))
+- *(deps)* bump tempfile from 3.20.0 to 3.21.0 ([#205](https://github.com/robertpsoane/ducker/pull/205))
+- *(deps)* bump chrono from 0.4.41 to 0.4.42 ([#209](https://github.com/robertpsoane/ducker/pull/209))
+- Update README.md ([#210](https://github.com/robertpsoane/ducker/pull/210))
+- *(deps)* bump async-trait from 0.1.88 to 0.1.89 ([#201](https://github.com/robertpsoane/ducker/pull/201))
+- *(deps)* bump clap from 4.5.40 to 4.5.45 ([#200](https://github.com/robertpsoane/ducker/pull/200))
+- *(deps)* bump tokio from 1.46.1 to 1.47.1 ([#197](https://github.com/robertpsoane/ducker/pull/197))
+- *(deps)* bump dyn-clone from 1.0.19 to 1.0.20 ([#196](https://github.com/robertpsoane/ducker/pull/196))
+- *(deps)* bump tokio from 1.45.1 to 1.46.1 ([#191](https://github.com/robertpsoane/ducker/pull/191))
+
 ## [0.4.1](https://github.com/robertpsoane/ducker/compare/v0.4.0...v0.4.1) - 2025-07-02
 
 ### Other
