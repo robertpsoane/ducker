@@ -24,6 +24,9 @@ const VOLUME: &str = "volume";
 const VOLUMES: &str = "volumes";
 const NETWORK: &str = "network";
 const NETWORKS: &str = "networks";
+const HELP: &str = "help";
+const H: &str = "h";
+const QUESTION_MARK: &str = "?";
 
 #[derive(Debug)]
 pub struct CommandInput {
@@ -40,7 +43,19 @@ impl CommandInput {
     ) -> Self {
         let ac: Autocomplete = Autocomplete::new(
             vec![
-                QUIT, Q, IMAGE, IMAGES, CONTAINER, CONTAINERS, VOLUME, VOLUMES, NETWORK, NETWORKS,
+                QUIT,
+                Q,
+                IMAGE,
+                IMAGES,
+                CONTAINER,
+                CONTAINERS,
+                VOLUME,
+                VOLUMES,
+                NETWORK,
+                NETWORKS,
+                HELP,
+                H,
+                QUESTION_MARK,
             ],
             ac_minimum_length,
         );
@@ -103,6 +118,7 @@ impl CommandInput {
             CONTAINER | CONTAINERS => Some(Transition::ToContainerPage(AppContext::default())),
             VOLUME | VOLUMES => Some(Transition::ToVolumePage(AppContext::default())),
             NETWORK | NETWORKS => Some(Transition::ToNetworkPage(AppContext::default())),
+            HELP | H | QUESTION_MARK => Some(Transition::ToHelpPage(AppContext::default())),
             _ => None,
         };
 
