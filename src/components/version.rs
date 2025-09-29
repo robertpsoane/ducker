@@ -78,10 +78,11 @@ async fn get_update_to(version: &str) -> Option<String> {
 }
 
 async fn find_latest_version() -> Result<String> {
-    let body: serde_yml::Value = ureq::get(TAGS_URL)
-        .set("User-Agent", &format!("Ducker / {VERSION}"))
-        .call()?
-        .into_json()?;
+    let mut response = ureq::get(TAGS_URL)
+        .header("User-Agent", &format!("Ducker / {VERSION}"))
+        .call()?;
+    let body_str = response.body_mut().read_to_string()?;
+    let body: serde_yml::Value = serde_json::from_str(&body_str)?;
 
     let release = match body.get(0) {
         Some(v) => v,
