@@ -7,11 +7,10 @@ on:
     branches:
       - master
 
-
 jobs:
   check:
     permissions:
       checks: write
     uses: robertpsoane/github-workflows/.github/workflows/rust-check.yml@main
     with:
-      msrv: 1.80.0 # this is optional defaults to 1.56.0
+      msrv: 1.82.0

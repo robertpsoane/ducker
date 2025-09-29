@@ -1,4 +1,4 @@
-use bollard::image::RemoveImageOptions;
+use bollard::query_parameters::{ListImagesOptionsBuilder, RemoveImageOptionsBuilder};
 use byte_unit::{Byte, UnitType};
 use chrono::prelude::DateTime;
 use chrono::Local;
@@ -8,7 +8,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::time::{Duration, UNIX_EPOCH};
 
-use bollard::{image::ListImagesOptions, secret::ImageSummary};
+use bollard::secret::ImageSummary;
 
 use super::traits::Describe;
 
@@ -70,12 +70,13 @@ impl DockerImage {
             filters.insert("dangling".into(), vec!["false".into()]);
         }
 
+        let opts = ListImagesOptionsBuilder::default()
+            .all(true)
+            .digests(false)
+            .filters(&filters)
+            .build();
         let mut images = docker
-            .list_images(Some(ListImagesOptions::<String> {
-                all: true,
-                digests: false,
-                filters,
-            }))
+            .list_images(Some(opts))
             .await
             .context("unable to retrieve list of images")?
             .into_iter()
@@ -86,15 +87,9 @@ impl DockerImage {
     }
 
     pub async fn delete(&self, docker: &bollard::Docker, force: bool) -> Result<()> {
+        let opts = RemoveImageOptionsBuilder::default().force(force).build();
         docker
-            .remove_image(
-                &self.get_full_name(),
-                Some(RemoveImageOptions {
-                    force,
-                    ..Default::default()
-                }),
-                None,
-            )
+            .remove_image(&self.get_full_name(), Some(opts), None)
             .await?;
         Ok(())
     }

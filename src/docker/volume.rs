@@ -1,7 +1,5 @@
-use bollard::{
-    secret::{Volume, VolumeScopeEnum},
-    volume::RemoveVolumeOptions,
-};
+use bollard::query_parameters::{ListVolumesOptionsBuilder, RemoveVolumeOptionsBuilder};
+use bollard::secret::{Volume, VolumeScopeEnum};
 use byte_unit::{Byte, UnitType};
 use color_eyre::eyre::{bail, Result};
 use serde::Serialize;
@@ -60,7 +58,8 @@ impl DockerVolume {
     }
 
     pub async fn list(docker: &bollard::Docker) -> Result<Vec<Self>> {
-        let bollard_volumes = docker.list_volumes::<String>(None).await?;
+        let opts = ListVolumesOptionsBuilder::default().build();
+        let bollard_volumes = docker.list_volumes(Some(opts)).await?;
         let mut docker_volumes: Vec<Self> = match bollard_volumes.volumes {
             Some(v) => v,
             None => bail!(""),
@@ -75,9 +74,8 @@ impl DockerVolume {
     }
 
     pub async fn delete(&self, docker: &bollard::Docker, force: bool) -> Result<()> {
-        docker
-            .remove_volume(&self.get_name(), Some(RemoveVolumeOptions { force }))
-            .await?;
+        let opts = RemoveVolumeOptionsBuilder::default().force(force).build();
+        docker.remove_volume(&self.get_name(), Some(opts)).await?;
         Ok(())
     }
 }

@@ -1,4 +1,7 @@
-use bollard::container::{ListContainersOptions, RemoveContainerOptions};
+use bollard::query_parameters::{
+    ListContainersOptionsBuilder, RemoveContainerOptionsBuilder, StartContainerOptions,
+    StopContainerOptions,
+};
 use chrono::prelude::DateTime;
 use chrono::Local;
 use color_eyre::eyre::{bail, Context, Result};
@@ -61,7 +64,7 @@ impl DockerContainer {
         .format("%Y-%m-%d %H:%M:%S")
         .to_string();
 
-        let running = matches!(c.state.clone().unwrap_or_default().as_str(), "running");
+        let running = matches!(c.state.as_ref(), Some(state) if state.to_string().to_lowercase() == "running");
 
         let names = c
             .names
@@ -94,11 +97,9 @@ impl DockerContainer {
     /// **Note:** While this returns all containers present, it will
     /// return only the minimal set of values (those which aren't marked optional).
     pub async fn list(docker: &bollard::Docker) -> Result<Vec<Self>> {
+        let opts = ListContainersOptionsBuilder::default().all(true).build();
         let containers = docker
-            .list_containers(Some(ListContainersOptions::<String> {
-                all: true,
-                ..Default::default()
-            }))
+            .list_containers(Some(opts))
             .await
             .context("unable to retrieve list of containers")?
             .into_iter()
@@ -110,30 +111,31 @@ impl DockerContainer {
 
     /// Delete the container from the relevant docker daemon
     pub async fn delete(&self, docker: &bollard::Docker, force: bool) -> Result<()> {
-        let opt = RemoveContainerOptions {
-            force,
-            ..Default::default()
-        };
+        let opt = RemoveContainerOptionsBuilder::default()
+            .force(force)
+            .build();
         docker.remove_container(&self.id, Some(opt)).await?;
         Ok(())
     }
 
     /// Start the container on the docker daemon
     pub async fn start(&self, docker: &bollard::Docker) -> Result<()> {
+        let opts = StartContainerOptions::default();
         docker
-            .start_container::<String>(&self.id, None)
+            .start_container(&self.id, Some(opts))
             .await
-            .context("failed to start container")?;
+            .context("unable to start container")?;
 
         Ok(())
     }
 
     /// Stop the container from running
     pub async fn stop(&self, docker: &bollard::Docker) -> Result<()> {
+        let opts = StopContainerOptions::default();
         docker
-            .stop_container(&self.id, None)
+            .stop_container(&self.id, Some(opts))
             .await
-            .context("failed to stop container")?;
+            .context("unable to stop container")?;
         Ok(())
     }
 
