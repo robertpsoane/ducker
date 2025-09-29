@@ -96,10 +96,10 @@ impl Component for HelpPage {
             .block(block)
             .scroll((self.scroll, 0))
             .wrap(ratatui::widgets::Wrap { trim: true });
+        // This is a slightly backwards hack to pass back the total number of lines
+        // in the paragraph to the _next_ rendering tick
         let total_lines = paragraph.line_count(area.width) as u16;
-        // max_scroll is the maximum scroll offset so the last line is visible at the bottom
         self.max_scroll = total_lines.saturating_sub(area.height);
-        // Clamp scroll to max_scroll in case window shrinks
         if self.scroll > self.max_scroll {
             self.scroll = self.max_scroll;
         }
