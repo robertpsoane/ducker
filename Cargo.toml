@@ -11,7 +11,7 @@ license-file = "LICENSE.txt"
 keywords = ["docker", "developer-tools", "ratatui", "terminal"]
 categories = ["command-line-utilities", "development-tools"]
 include = ["/src", "LICENSE.txt", "CHANGELOG.md", "README.md"]
-rust-version = "1.80.0"
+rust-version = "1.82.0"
 
 [dependencies]
 serde_json = "1.0.120"
