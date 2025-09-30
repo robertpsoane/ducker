@@ -1,4 +1,4 @@
-use bollard::container::LogsOptions;
+use bollard::query_parameters::LogsOptionsBuilder;
 use futures::{Stream, StreamExt};
 
 use super::container::DockerContainer;
@@ -18,21 +18,18 @@ impl Default for StreamOptions {
     }
 }
 
-impl From<StreamOptions> for LogsOptions<String> {
+impl From<StreamOptions> for bollard::query_parameters::LogsOptions {
     fn from(val: StreamOptions) -> Self {
-        let mut opts = LogsOptions::<String> {
-            follow: true,
-            stdout: true,
-            stderr: true,
-            tail: val.tail,
-            ..Default::default()
-        };
-
+        let mut builder = LogsOptionsBuilder::default();
+        builder = builder
+            .follow(true)
+            .stdout(true)
+            .stderr(true)
+            .tail(&val.tail);
         if val.all {
-            opts.tail = "all".into()
+            builder = builder.tail("all");
         }
-
-        opts
+        builder.build()
     }
 }
 
@@ -55,8 +52,9 @@ impl DockerLogs {
         docker: &bollard::Docker,
         stream_options: StreamOptions,
     ) -> impl Stream<Item = String> {
+        let opts: bollard::query_parameters::LogsOptions = stream_options.into();
         let logstream = docker
-            .logs(&self.container.id, Some(stream_options.into()))
+            .logs(&self.container.id, Some(opts))
             .filter_map(|res| async move {
                 Some(match res {
                     Ok(r) => format!("{r}"),

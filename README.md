@@ -70,6 +70,7 @@ The following commands are supported:
 | `containers` | `container` | Open the `Containers` top level page |
 | `volumes`    | `volume`    | Open the `Volumes` top level page    |
 | `networks`   | `network`   | Open the `Networks` top level page   |
+| `help`       | `h`         | Open the `Help` page                 |
 | `quit`       | `q`         | Close the application                |
 
 
@@ -141,6 +142,7 @@ The following actions are available on the Logs page:
 | ------ | ----------------------------- |
 | `Esc`  | Return to the containers page |
 
+
 ### Sorting Hotkeys
 
 > **Tip:** Use `Shift` + the indicated key to sort columns.
@@ -180,6 +182,12 @@ The following actions are available on the Logs page:
 | `Shift+D` | Sort by driver     |
 | `Shift+M` | Sort by mountpoint |
 
+### Sorting Hotkeys
+
+> **Tip:** Use `Shift` + the indicated key to sort columns.
+> Pressing the same sorting key again will sort the same column in the opposite order (toggle ascending/descending).
+> See the table below for each page's sort options.
+
 ## Configuration
 
 Ducker is configured via a yaml file found in the relevant config directory for host platform.  On linux this is `~/.config/ducker/config.yaml`.
@@ -203,17 +211,17 @@ To create a fully populated default config, run ducker with the `-e/--export-def
 
 By default, ducker uses the terminal emulator's preset colours.  However, it is possible to set a custom colour theme in config.  This is set in the `theme` section of the config file.  The following table describes the theme options.  The default theme provides the colours provided in the GIF in this README.
 
-| Key                | Default   | Description                                                                                          |
-| ------------------ | --------- | ---------------------------------------------------------------------------------------------------- |
-| use_theme          | `false`   | When `true` uses the colour scheme defined in config, when `false` uses the default terminal colours |
-| title              | `#96E072` | The colour used for the Ducker font in the header                                                    |
-| help               | `#EE5D43` | The colour used in the help prompts in the header                                                    |
-| background         | `#23262E` | The colour used in the background                                                                    |
-| footer             | `#00E8C6` | The colour used for the text in the footer                                                           |
-| success            | `#96E072` | The colour used for a successful result                                                              |
-| error              | `#EE5D43` | The colour used for an error result                                                                  |
-| positive_highlight | `#96E072` | The colour used for highlighting in a happy state                                                    |
-| negative_highlight | `#FF00AA` | The colour used for highlighting in a sad state                                                      |
+| Key                | Default   | Description                                       |
+| ------------------ | --------- | ------------------------------------------------- |
+| use_theme          | `false`   | Whether to use the theme defined in config        |
+| title              | `#96E072` | The colour used for the Ducker font in the header |
+| help               | `#EE5D43` | The colour used in the help prompts in the header |
+| background         | `#23262E` | The colour used in the background                 |
+| footer             | `#00E8C6` | The colour used for the text in the footer        |
+| success            | `#96E072` | The colour used for a successful result           |
+| error              | `#EE5D43` | The colour used for an error result               |
+| positive_highlight | `#96E072` | The colour used for highlighting in a happy state |
+| negative_highlight | `#FF00AA` | The colour used for highlighting in a sad state   |
 
 ### Tmux
 

@@ -1,3 +1,4 @@
+use bollard::query_parameters::ListNetworksOptionsBuilder;
 use bollard::secret::{Network, NetworkContainer};
 use color_eyre::eyre::{bail, Result};
 use serde::Serialize;
@@ -32,7 +33,8 @@ impl DockerNetwork {
     }
 
     pub async fn list(docker: &bollard::Docker) -> Result<Vec<Self>> {
-        let networks = docker.list_networks::<String>(None).await?;
+        let opts = ListNetworksOptionsBuilder::default().build();
+        let networks = docker.list_networks(Some(opts)).await?;
         let mut network: Vec<Self> = networks.into_iter().map(Self::from).collect();
 
         network.sort_by_key(|v| v.name.clone());

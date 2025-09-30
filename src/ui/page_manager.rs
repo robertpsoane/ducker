@@ -97,6 +97,10 @@ impl PageManager {
                     .await?;
                 MessageResponse::Consumed
             }
+            Transition::ToHelpPage(cx) => {
+                self.set_current_page(state::CurrentPage::Help, cx).await?;
+                MessageResponse::Consumed
+            }
             _ => MessageResponse::NotConsumed,
         };
         Ok(result)
@@ -167,7 +171,8 @@ impl PageManager {
                     self.config.clone(),
                 ))
             }
-        };
+            state::CurrentPage::Help => self.page = Box::new(crate::pages::help::HelpPage::new()),
+        }
 
         self.page.initialise(cx).await?;
 

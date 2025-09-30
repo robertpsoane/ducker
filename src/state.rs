@@ -23,6 +23,7 @@ pub enum CurrentPage {
     Attach,
     Network,
     DescribeContainer,
+    Help,
 }
 
 // impl Default for CurrentPage {
