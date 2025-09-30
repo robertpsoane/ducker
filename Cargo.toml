@@ -2,7 +2,7 @@
 name = "ducker"
 description = "A slightly quackers Docker TUI based on k9s 🦆"
 authors = ["Robert Soane"]
-version = "0.5.1"
+version = "0.5.2"
 homepage = "https://ducker.soane.io"
 repository = "https://github.com/robertpsoane/ducker"
 edition = "2021"
