@@ -182,11 +182,6 @@ The following actions are available on the Logs page:
 | `Shift+D` | Sort by driver     |
 | `Shift+M` | Sort by mountpoint |
 
-### Sorting Hotkeys
-
-> **Tip:** Use `Shift` + the indicated key to sort columns.
-> Pressing the same sorting key again will sort the same column in the opposite order (toggle ascending/descending).
-> See the table below for each page's sort options.
 
 ## Configuration
 
