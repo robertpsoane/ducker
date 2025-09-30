@@ -4,7 +4,7 @@ layout: home
 
 hero:
   tagline: "A slightly quackers Docker TUI based on k9s 🦆"
-  image: ./assets/ducker-logo.png
+  image: https://raw.githubusercontent.com/robertpsoane/ducker/master/assets/ducker-logo.png?raw=true
   actions:
     - theme: brand
       text: Getting Started
