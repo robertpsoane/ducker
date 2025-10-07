@@ -8,10 +8,14 @@ export default defineConfig({
   titleTemplate: "Robert Soane",
   description: "A slightly quackers Docker TUI based on k9s 🦆",
   lastUpdated: true,
-  
+
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
-    
+
+    nav: [
+      { text: 'Docs', link: '/docs/' },
+      { text: 'About', link: 'https://soane.io/blog/ducker' },
+    ],
 
     sidebar: generateSidebar({
       useTitleFromFileHeading: true,
