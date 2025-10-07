@@ -14,7 +14,7 @@ export default defineConfig({
 
     nav: [
       { text: 'Docs', link: '/docs/' },
-      { text: 'About', link: 'https://soane.io/blog/ducker' },
+      { text: 'About', link: 'https://soane.io/blog/2025/10/07/ducker/' },
     ],
 
     sidebar: generateSidebar({
