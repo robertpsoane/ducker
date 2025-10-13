@@ -215,7 +215,7 @@ Add this to your `~/.config/ducker/config.yaml`:
 format: "table {{.ID}}\t{{.Names}}\t{{.Status}}"
 ```
 
-This will display only short container IDs, names, and status columns.
+This will display only short container IDs, names, and status columns with proper spacing.
 
 #### Available Fields
 

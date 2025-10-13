@@ -447,11 +447,11 @@ impl Component for Containers {
 
         let widths: Vec<Constraint> = match self.container_fields.len() {
             1 => vec![Constraint::Percentage(100)],
-            2 => vec![Constraint::Percentage(30), Constraint::Percentage(70)],
+            2 => vec![Constraint::Percentage(25), Constraint::Percentage(75)],
             _ if self.container_fields.len() >= 3 => {
-                let mut constraints = vec![Constraint::Length(12)]; // ID column
+                let mut constraints = vec![Constraint::Length(15)]; // ID column with more space
                 let remaining = self.container_fields.len() - 1;
-                let each_remaining = 88 / remaining as u16;
+                let each_remaining = 85 / remaining as u16;
                 for _ in 0..remaining {
                     constraints.push(Constraint::Percentage(each_remaining));
                 }
