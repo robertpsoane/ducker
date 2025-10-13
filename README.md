@@ -196,11 +196,55 @@ The following table summarises the available config values:
 | docker_path                 | `unix:///var/run/docker.sock` | The location of the socket on which the docker daemon is exposed (defaults to `npipe:////./pipe/docker_engine` on windows)    |
 | check_for_update            | `true`                        | When true, checks whether there is a newer version on load.  If a newer version is found, indicates via note in bottom right. |
 | autocomplete_minimum_length | 2                             | The default minimum length before autocompletion in prompt.                                                                   |
+| format                      | `null`                        | Go-template style format string for container display columns (e.g., `"table {{.ID}}\t{{.Names}}\t{{.Status}}"`). Leave unset for default columns. |
 | theme                       | [See below]                   | The colour theme configuration                                                                                                |
 
 If a value is unset or if the config file is unfound, Ducker will use the default values.  If a value is malformed, Ducker will fail to run.
 
 To create a fully populated default config, run ducker with the `-e/--export-default-config` flag; this will write the default config to the default location, overwriting any existing config.
+
+### Custom Container Display
+
+By default, Ducker shows all 7 container columns (ID, Image, Command, Created, Status, Ports, Names). However, you can customize which fields to display using the `format` configuration option. This uses a Go-template style format string, similar to Docker's `ps --format` flag.
+
+#### Example Configuration
+
+Add this to your `~/.config/ducker/config.yaml`:
+
+```yaml
+format: "table {{.ID}}\t{{.Names}}\t{{.Status}}"
+```
+
+This will display only short container IDs, names, and status columns.
+
+#### Available Fields
+
+- `{{.ID}}` - Container ID (shown as short 12-character format)
+- `{{.Image}}` - Container image
+- `{{.Command}}` - Container command
+- `{{.Created}}` - Creation timestamp
+- `{{.Status}}` - Container status
+- `{{.Ports}}` - Port mappings
+- `{{.Names}}` - Container names
+
+#### More Examples
+
+Show only essential info:
+```yaml
+format: "table {{.ID}}\t{{.Names}}\t{{.Status}}"
+```
+
+Show image and status:
+```yaml
+format: "table {{.Image}}\t{{.Status}}\t{{.Names}}"
+```
+
+Show minimal columns:
+```yaml
+format: "table {{.Names}}\t{{.Status}}"
+```
+
+Leave `format` unset or set to `null` to use the default display with all columns.
 
 ### Themes
 
