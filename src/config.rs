@@ -30,6 +30,9 @@ pub struct Config {
 
     #[serde(default)]
     pub theme: Theme,
+
+    #[serde(default)]
+    pub format: Option<String>,
 }
 
 impl Config {
@@ -101,6 +104,7 @@ impl Default for Config {
             check_for_update: default_check_update(),
             autocomplete_minimum_length: default_autocomplete_minimum_length(),
             theme: Theme::default(),
+            format: None,
         }
     }
 }
@@ -255,6 +259,16 @@ fn write_default_config(path: &PathBuf) -> Result<()> {
     let config = Config::default();
     fs::write(path, serde_yml::to_string(&config)?)?;
     Ok(())
+}
+
+pub fn parse_format_fields(format: &str) -> Vec<String> {
+    let re = regex::Regex::new(r"\{\{\.(\w+)\}\}").unwrap();
+    let fields: Vec<String> = re.captures_iter(format).map(|cap| cap[1].to_string()).collect();
+    if fields.is_empty() {
+        vec!["id", "image", "command", "created", "status", "ports", "names"].iter().map(|s| s.to_string()).collect()
+    } else {
+        fields
+    }
 }
 
 // #[cfg(test)]

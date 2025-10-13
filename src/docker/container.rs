@@ -165,6 +165,22 @@ impl DockerContainer {
     }
 }
 
+impl DockerContainer {
+    /// Get the value of a field by its name (case-insensitive)
+    pub fn get_field(&self, field: &str) -> String {
+        match field.to_lowercase().as_str() {
+            "id" => self.id.chars().take(12).collect::<String>(),
+            "image" => self.image.clone(),
+            "command" => self.command.clone(),
+            "created" => self.created.clone(),
+            "status" => self.status.clone(),
+            "ports" => self.ports.clone(),
+            "names" => self.names.clone(),
+            _ => "".to_string(),
+        }
+    }
+}
+
 impl Describe for DockerContainer {
     fn get_id(&self) -> String {
         self.id.clone()

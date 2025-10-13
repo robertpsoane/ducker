@@ -8,7 +8,7 @@ use ratatui::{
     widgets::{Row, Table, TableState},
     Frame,
 };
-use ratatui_macros::constraints;
+
 use std::{
     collections::HashSet,
     sync::{Arc, Mutex},
@@ -73,6 +73,7 @@ pub struct Containers {
     modal: Option<BooleanModal<ModalTypes>>,
     stopping_containers: Arc<Mutex<HashSet<String>>>,
     sort_state: SortState<ContainerSortField>,
+    container_fields: Vec<String>,
 }
 
 #[async_trait::async_trait]
@@ -180,6 +181,8 @@ impl Page for Containers {
     }
 
     async fn initialise(&mut self, cx: AppContext) -> Result<()> {
+        self.container_fields = super::super::config::parse_format_fields(self.config.format.as_deref().unwrap_or(""));
+
         self.list_state = TableState::default();
         self.list_state.select(Some(0));
 
@@ -244,6 +247,7 @@ impl Containers {
             modal: None,
             stopping_containers: Arc::new(Mutex::new(HashSet::new())),
             sort_state: SortState::new(ContainerSortField::Name),
+            container_fields: vec![],
         }
     }
 
@@ -384,21 +388,35 @@ impl Containers {
         Ok(cx)
     }
 
-    fn get_column_header(&self, column_name: &str, field: ContainerSortField) -> String {
-        if self.sort_state.field == field {
-            match self.sort_state.order {
-                SortOrder::Ascending => format!("{} ↑", column_name),
-                SortOrder::Descending => format!("{} ↓", column_name),
-            }
-        } else {
-            column_name.to_string()
+    fn field_to_header(&self, field: &str) -> String {
+        match field.to_lowercase().as_str() {
+            "id" => "ID".to_string(),
+            "image" => "Image".to_string(),
+            "command" => "Command".to_string(),
+            "created" => "Created".to_string(),
+            "status" => "Status".to_string(),
+            "ports" => "Ports".to_string(),
+            "names" => "Names".to_string(),
+            _ => field.to_string(),
         }
     }
+
+    fn field_to_sort_field(&self, field: &str) -> Option<ContainerSortField> {
+        match field.to_lowercase().as_str() {
+            "name" | "names" => Some(ContainerSortField::Name),
+            "image" => Some(ContainerSortField::Image),
+            "status" => Some(ContainerSortField::Status),
+            "created" => Some(ContainerSortField::Created),
+            "ports" => Some(ContainerSortField::Ports),
+            _ => None,
+        }
+    }
+
 }
 
 impl Component for Containers {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
-        let rows = self.containers.clone().into_iter().map(|c| {
+        let rows: Vec<Row> = self.containers.clone().into_iter().map(|c| {
             let style = if self.stopping_containers.lock().unwrap().contains(&c.id) {
                 Style::default().fg(self.config.theme.negative_highlight())
             } else if c.running {
@@ -407,27 +425,43 @@ impl Component for Containers {
                 Style::default()
             };
 
-            Row::new(vec![
-                c.id, c.image, c.command, c.created, c.status, c.ports, c.names,
-            ])
-            .style(style)
-        });
+            let row_vec: Vec<String> = self.container_fields.iter().map(|f| c.get_field(f)).collect();
+            Row::new(row_vec).style(style)
+        }).collect();
 
         // Create column headers with sort indicators
-        let columns = Row::new(vec![
-            "ID".to_string(), // ID is not sortable
-            self.get_column_header("Image", ContainerSortField::Image),
-            "Command".to_string(), // Command is not sortable
-            self.get_column_header("Created", ContainerSortField::Created),
-            self.get_column_header("Status", ContainerSortField::Status),
-            self.get_column_header("Ports", ContainerSortField::Ports),
-            self.get_column_header("Names", ContainerSortField::Name),
-        ]);
+        let columns_strings: Vec<String> = self.container_fields.iter().map(|f| {
+            let mut hdr = self.field_to_header(f);
+            if let Some(sf) = self.field_to_sort_field(f) {
+                if self.sort_state.field == sf {
+                    let arrow = match self.sort_state.order {
+                        SortOrder::Ascending => " ↑",
+                        SortOrder::Descending => " ↓",
+                    };
+                    hdr += arrow;
+                }
+            }
+            hdr
+        }).collect();
+        let columns = Row::new(columns_strings).style(Style::new().bold());
 
-        let widths = constraints![==12%, ==20%, ==20%, ==10%, ==13%, ==10%, ==10%];
+        let widths: Vec<Constraint> = match self.container_fields.len() {
+            1 => vec![Constraint::Percentage(100)],
+            2 => vec![Constraint::Percentage(30), Constraint::Percentage(70)],
+            _ if self.container_fields.len() >= 3 => {
+                let mut constraints = vec![Constraint::Length(12)]; // ID column
+                let remaining = self.container_fields.len() - 1;
+                let each_remaining = 88 / remaining as u16;
+                for _ in 0..remaining {
+                    constraints.push(Constraint::Percentage(each_remaining));
+                }
+                constraints
+            },
+            _ => vec![Constraint::Percentage(100 / self.container_fields.len() as u16); self.container_fields.len()],
+        };
 
-        let table = Table::new(rows.clone(), widths)
-            .header(columns.clone().style(Style::new().bold()))
+        let table = Table::new(rows, widths)
+            .header(columns)
             .row_highlight_style(Style::new().reversed());
 
         f.render_stateful_widget(table, area, &mut self.list_state);
