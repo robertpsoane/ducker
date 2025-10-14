@@ -9,6 +9,29 @@ use serde::{Deserialize, Serialize};
 use color_eyre::eyre::{bail, Context, Result};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContainerDisplayColumns {
+    #[serde(default = "default_container_display_id")]
+    pub id: bool,
+    #[serde(default = "default_container_display_image")]
+    pub image: bool,
+    #[serde(default = "default_container_display_command")]
+    pub command: bool,
+    #[serde(default = "default_container_display_created")]
+    pub created: bool,
+    #[serde(default = "default_container_display_status")]
+    pub status: bool,
+    #[serde(default = "default_container_display_ports")]
+    pub ports: bool,
+    #[serde(default = "default_container_display_names")]
+    pub names: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DisplayColumns {
+    pub containers: Option<ContainerDisplayColumns>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     #[serde(default)]
     pub prompt: String,
@@ -33,6 +56,9 @@ pub struct Config {
 
     #[serde(default)]
     pub format: Option<String>,
+
+    #[serde(default)]
+    pub display_columns: Option<DisplayColumns>,
 }
 
 impl Config {
@@ -94,6 +120,36 @@ fn default_autocomplete_minimum_length() -> usize {
     2
 }
 
+fn default_container_display_id() -> bool { true }
+fn default_container_display_image() -> bool { true }
+fn default_container_display_command() -> bool { true }
+fn default_container_display_created() -> bool { true }
+fn default_container_display_status() -> bool { true }
+fn default_container_display_ports() -> bool { true }
+fn default_container_display_names() -> bool { true }
+
+impl Default for ContainerDisplayColumns {
+    fn default() -> Self {
+        Self {
+            id: default_container_display_id(),
+            image: default_container_display_image(),
+            command: default_container_display_command(),
+            created: default_container_display_created(),
+            status: default_container_display_status(),
+            ports: default_container_display_ports(),
+            names: default_container_display_names(),
+        }
+    }
+}
+
+impl Default for DisplayColumns {
+    fn default() -> Self {
+        Self {
+            containers: Some(ContainerDisplayColumns::default()),
+        }
+    }
+}
+
 impl Default for Config {
     fn default() -> Self {
         Self {
@@ -105,6 +161,7 @@ impl Default for Config {
             autocomplete_minimum_length: default_autocomplete_minimum_length(),
             theme: Theme::default(),
             format: None,
+            display_columns: None,
         }
     }
 }
@@ -256,7 +313,13 @@ pub fn get_app_config_path() -> Result<std::path::PathBuf> {
 }
 
 fn write_default_config(path: &PathBuf) -> Result<()> {
-    let config = Config::default();
+    let config = Config {
+        // Set format to null explicitly in default config to avoid confusion
+        format: None,
+        // Set display_columns to none to show how it's optional
+        display_columns: None,
+        ..Default::default()
+    };
     fs::write(path, serde_yml::to_string(&config)?)?;
     Ok(())
 }
@@ -268,6 +331,43 @@ pub fn parse_format_fields(format: &str) -> Vec<String> {
         vec!["id", "image", "command", "created", "status", "ports", "names"].iter().map(|s| s.to_string()).collect()
     } else {
         fields
+    }
+}
+
+pub fn parse_display_columns(display_columns: &ContainerDisplayColumns) -> Vec<String> {
+    let mut fields = Vec::new();
+
+    // Maintain standard Docker order for boolean config
+    if display_columns.id { fields.push("id".to_string()); }
+    if display_columns.image { fields.push("image".to_string()); }
+    if display_columns.command { fields.push("command".to_string()); }
+    if display_columns.created { fields.push("created".to_string()); }
+    if display_columns.status { fields.push("status".to_string()); }
+    if display_columns.ports { fields.push("ports".to_string()); }
+    if display_columns.names { fields.push("names".to_string()); }
+
+    // Return all fields if empty (shouldn't happen due to defaults)
+    if fields.is_empty() {
+        vec!["id", "image", "command", "created", "status", "ports", "names"].iter().map(|s| s.to_string()).collect()
+    } else {
+        fields
+    }
+}
+
+pub fn get_container_display_fields(config: &Config) -> Vec<String> {
+    // Priority: format string > display_columns > default all fields
+    if let Some(format) = &config.format {
+        parse_format_fields(format)
+    } else if let Some(display_columns) = &config.display_columns {
+        if let Some(containers) = &display_columns.containers {
+            parse_display_columns(containers)
+        } else {
+            // Default to all fields
+            vec!["id", "image", "command", "created", "status", "ports", "names"].iter().map(|s| s.to_string()).collect()
+        }
+    } else {
+        // Default to all fields
+        vec!["id", "image", "command", "created", "status", "ports", "names"].iter().map(|s| s.to_string()).collect()
     }
 }
 

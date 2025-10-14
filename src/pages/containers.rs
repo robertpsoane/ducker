@@ -181,7 +181,7 @@ impl Page for Containers {
     }
 
     async fn initialise(&mut self, cx: AppContext) -> Result<()> {
-        self.container_fields = super::super::config::parse_format_fields(self.config.format.as_deref().unwrap_or(""));
+        self.container_fields = super::super::config::get_container_display_fields(&self.config);
 
         self.list_state = TableState::default();
         self.list_state.select(Some(0));
