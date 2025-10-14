@@ -381,8 +381,8 @@ impl Component for Volume {
     }
 }
 
-fn get_volume_rows(volumes: &[DockerVolume]) -> Vec<Row> {
-    let rows = volumes
+fn get_volume_rows(volumes: &[DockerVolume]) -> Vec<Row<'static>> {
+    volumes
         .iter()
         .map(|c| {
             Row::new(vec![
@@ -392,11 +392,10 @@ fn get_volume_rows(volumes: &[DockerVolume]) -> Vec<Row> {
                 c.created_at.clone().unwrap_or_default(),
             ])
         })
-        .collect::<Vec<Row>>();
-    rows
+        .collect::<Vec<Row<'static>>>()
 }
 
-fn get_header_row(sort_state: &VolumeSortState) -> Row {
+fn get_header_row(sort_state: &VolumeSortState) -> Row<'static> {
     let headers = vec![
         render_column_header(
             "Name",

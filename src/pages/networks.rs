@@ -351,20 +351,19 @@ impl Component for Network {
     }
 }
 
-fn get_network_rows(networks: &[DockerNetwork]) -> Vec<Row> {
-    let rows = networks
+fn get_network_rows<'a>(networks: &'a [DockerNetwork]) -> Vec<Row<'a>> {
+    networks
         .iter()
         .map(|c| {
             Row::new(vec![
-                c.id.clone(),
-                c.name.clone(),
-                c.driver.clone(),
-                c.created_at.clone(),
-                c.scope.clone(),
+                c.id.as_str(),
+                c.name.as_str(),
+                c.driver.as_str(),
+                c.created_at.as_str(),
+                c.scope.as_str(),
             ])
         })
-        .collect::<Vec<Row>>();
-    rows
+        .collect::<Vec<Row<'a>>>()
 }
 
 fn get_header_with_sort_indicator(

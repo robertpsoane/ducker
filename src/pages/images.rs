@@ -370,8 +370,8 @@ impl Component for Images {
     }
 }
 
-fn get_image_rows(containers: &[DockerImage]) -> Vec<Row> {
-    let rows = containers
+fn get_image_rows(containers: &'_ [DockerImage]) -> Vec<Row<'_>> {
+    containers
         .iter()
         .map(|c| {
             Row::new(vec![
@@ -382,8 +382,7 @@ fn get_image_rows(containers: &[DockerImage]) -> Vec<Row> {
                 c.size.clone(),
             ])
         })
-        .collect::<Vec<Row>>();
-    rows
+        .collect()
 }
 
 fn get_header_with_sort_indicator(
