@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3](https://github.com/robertpsoane/ducker/compare/v0.5.2...v0.5.3) - 2025-10-20
+
+### Fixed
+
+- *(images-networks-volumes)* Optimize resource table row gener… ([#234](https://github.com/robertpsoane/ducker/pull/234))
+
+### Other
+
+- *(deps)* bump tokio from 1.47.1 to 1.48.0 ([#236](https://github.com/robertpsoane/ducker/pull/236))
+- *(deps)* bump clap from 4.5.48 to 4.5.49 ([#237](https://github.com/robertpsoane/ducker/pull/237))
+
 ## [0.5.2](https://github.com/robertpsoane/ducker/compare/v0.5.1...v0.5.2) - 2025-09-30
 
 ### Added
