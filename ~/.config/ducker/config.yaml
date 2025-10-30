@@ -1,0 +1,16 @@
+prompt:
+default_exec: /bin/bash
+docker_path: unix:///var/run/docker.sock
+check_for_update: true
+autocomplete_minimum_length: 2
+display_columns:
+  containers:
+    id: true
+    image: false
+    command: false
+    created: false
+    status: true
+    ports: false
+    names: true
+theme:
+  use_theme: false

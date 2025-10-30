@@ -16,6 +16,7 @@ The following table summarises the available config values:
 | docker_path                 | `unix:///var/run/docker.sock` | The location of the socket on which the docker daemon is exposed (defaults to `npipe:////./pipe/docker_engine` on windows)    |
 | check_for_update            | `true`                        | When true, checks whether there is a newer version on load.  If a newer version is found, indicates via note in bottom right. |
 | autocomplete_minimum_length | 2                             | The default minimum length before autocompletion in prompt.                                                                   |
+| format                      | `null`                        | Go-template style format string for container display columns (e.g., `"table {{.ID}}\\t{{.Names}}\\t{{.Status}}"`). Leave unset for default columns. |
 | theme                       | [See below]                   | The colour theme configuration                                                                                                |
 
 If a value is unset or if the config file is unfound, Ducker will use the default values.  If a value is malformed, Ducker will fail to run.
