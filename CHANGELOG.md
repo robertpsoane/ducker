@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4](https://github.com/robertpsoane/ducker/compare/v0.5.3...v0.5.4) - 2025-10-30
+
+### Other
+
+- *(deps)* bump clap from 4.5.49 to 4.5.50 ([#238](https://github.com/robertpsoane/ducker/pull/238))
+
 ## [0.5.3](https://github.com/robertpsoane/ducker/compare/v0.5.2...v0.5.3) - 2025-10-20
 
 ### Fixed
