@@ -44,6 +44,28 @@ If you have homebrew:
 brew install ducker
 ```
 
+### Nix
+
+`ducker` is packaged in [nixpkgs](https://github.com/NixOS/nixpkgs).
+
+You can try `ducker` without installing it with:
+
+```sh
+nix-shell -p ducker
+# or with flakes enabled
+nix run nixpkgs#ducker
+```
+
+Install `ducker` by adding it to your `configuration.nix` file:
+
+```nix
+environment.systemPackages = with pkgs; [
+  ducker
+];
+```
+
+More details can be found via the [NixOS search page](https://search.nixos.org/packages?channel=unstable&show=ducker&query=ducker).
+
 ### Unstable
 
 To install the latest unstable version of Ducker, run the following command:
