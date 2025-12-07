@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.5](https://github.com/robertpsoane/ducker/compare/v0.5.4...v0.5.5) - 2025-12-07
+
+### Other
+
+- *(deps)* bump clap from 4.5.51 to 4.5.53 ([#245](https://github.com/robertpsoane/ducker/pull/245))
+- *(deps)* bump byte-unit from 5.1.6 to 5.2.0 ([#246](https://github.com/robertpsoane/ducker/pull/246))
+- *(deps)* bump tracing from 0.1.41 to 0.1.43 ([#247](https://github.com/robertpsoane/ducker/pull/247))
+- update README.md with nix installation instructions ([#248](https://github.com/robertpsoane/ducker/pull/248))
+- *(deps)* bump ureq from 3.1.2 to 3.1.4 ([#244](https://github.com/robertpsoane/ducker/pull/244))
+- *(deps)* bump bollard from 0.19.3 to 0.19.4 ([#242](https://github.com/robertpsoane/ducker/pull/242))
+- *(deps)* bump clap from 4.5.50 to 4.5.51 ([#240](https://github.com/robertpsoane/ducker/pull/240))
+
 ## [0.5.4](https://github.com/robertpsoane/ducker/compare/v0.5.3...v0.5.4) - 2025-10-30
 
 ### Other
