@@ -239,7 +239,7 @@ impl Containers {
             .add_input(format!("{SHIFT_D_KEY}"), "delete all".to_string())
             .add_input(
                 format!("{CTRL_SHIFT_D_KEY}"),
-                "delete all force".to_string(),
+                "force delete all".to_string(),
             )
             .add_input(format!("{R_KEY}"), "run".to_string())
             .add_input(format!("{S_KEY}"), "stop".to_string())
