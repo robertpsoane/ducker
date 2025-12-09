@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6](https://github.com/robertpsoane/ducker/compare/v0.5.5...v0.5.6) - 2025-12-09
+
+### Added
+
+- containers page allows delete all containers at once ([#250](https://github.com/robertpsoane/ducker/pull/250))
+
+### Other
+
+- *(deps)* bump tracing-subscriber from 0.3.20 to 0.3.22 ([#249](https://github.com/robertpsoane/ducker/pull/249))
+
 ## [0.5.5](https://github.com/robertpsoane/ducker/compare/v0.5.4...v0.5.5) - 2025-12-07
 
 ### Other
