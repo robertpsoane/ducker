@@ -237,10 +237,6 @@ impl Containers {
             .add_input(format!("{A_KEY}"), "exec".to_string())
             .add_input(format!("{CTRL_D_KEY}"), "delete".to_string())
             .add_input(format!("{SHIFT_D_KEY}"), "delete all".to_string())
-            .add_input(
-                format!("{CTRL_SHIFT_D_KEY}"),
-                "force delete all".to_string(),
-            )
             .add_input(format!("{R_KEY}"), "run".to_string())
             .add_input(format!("{S_KEY}"), "stop".to_string())
             .add_input(format!("{G_KEY}"), "top".to_string())
@@ -388,7 +384,7 @@ impl Containers {
             self.tx.clone(),
         )));
 
-        let message = "Are you sure you wish to delete all containers?".to_string();
+        let message = format!("Are you sure you wish to delete all containers?\n\n (to force all, use {CTRL_SHIFT_D_KEY})");
 
         let mut modal =
             BooleanModal::<ModalTypes>::new("Delete".into(), ModalTypes::DeleteContainer);
