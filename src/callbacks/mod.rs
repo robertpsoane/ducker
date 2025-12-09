@@ -4,3 +4,4 @@ pub mod delete_network;
 pub mod delete_volume;
 pub mod empty_callable;
 pub use delete_container::DeleteContainer;
+pub mod delete_all_containers;
