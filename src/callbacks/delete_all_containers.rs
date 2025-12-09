@@ -5,24 +5,27 @@ use crate::{
 };
 use async_trait::async_trait;
 use color_eyre::eyre::Result;
-use futures::future::try_join_all;
+use futures::future::join_all;
 use tokio::sync::mpsc::Sender;
 
 #[derive(Debug)]
 pub struct DeleteAllContainers {
     docker: bollard::Docker,
+    force: bool,
     tx: Sender<Message<Key, Transition>>,
 }
 
 impl DeleteAllContainers {
-    pub fn new(docker: bollard::Docker, tx: Sender<Message<Key, Transition>>) -> Self {
-        Self { docker, tx }
+    pub fn new(docker: bollard::Docker, force: bool, tx: Sender<Message<Key, Transition>>) -> Self {
+        Self { docker, force, tx }
     }
 }
+
 #[async_trait]
 impl Callback for DeleteAllContainers {
     async fn call(&self) -> Result<()> {
         let docker = self.docker.clone();
+        let force = self.force;
         let tx = self.tx.clone();
         tokio::spawn(async move {
             match DockerContainer::list(&docker).await {
@@ -35,21 +38,16 @@ impl Callback for DeleteAllContainers {
                         let docker = docker.clone();
                         let tx = tx.clone();
                         async move {
-                            let message = if container.delete(&docker, true).await.is_ok() {
+                            let message = if container.delete(&docker, force).await.is_ok() {
                                 Message::Tick
                             } else {
                                 let msg = format!("Failed to delete container {}", container.id);
                                 Message::Error(msg)
                             };
                             let _ = tx.send(message).await;
-                            Ok::<(), ()>(())
                         }
                     });
-                    if try_join_all(handlers).await.is_err() {
-                        let _ = tx
-                            .send(Message::Error("Something went wrong".to_string()))
-                            .await;
-                    }
+                    join_all(handlers).await;
                 }
             };
         });

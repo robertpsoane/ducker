@@ -43,6 +43,7 @@ const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
 const CTRL_D_KEY: Key = Key::Ctrl('d');
 const SHIFT_D_KEY: Key = Key::Char('D');
+const CTRL_SHIFT_D_KEY: Key = Key::Ctrl('D');
 const D_KEY: Key = Key::Char('d');
 const R_KEY: Key = Key::Char('r');
 const S_KEY: Key = Key::Char('s');
@@ -104,7 +105,11 @@ impl Page for Containers {
                 Ok(_) => MessageResponse::Consumed,
                 Err(_) => MessageResponse::NotConsumed,
             },
-            SHIFT_D_KEY => match self.delete_all_containers() {
+            SHIFT_D_KEY => match self.delete_all_containers(false) {
+                Ok(_) => MessageResponse::Consumed,
+                Err(_) => MessageResponse::NotConsumed,
+            },
+            CTRL_SHIFT_D_KEY => match self.delete_all_containers(true) {
                 Ok(_) => MessageResponse::Consumed,
                 Err(_) => MessageResponse::NotConsumed,
             },
@@ -232,6 +237,10 @@ impl Containers {
             .add_input(format!("{A_KEY}"), "exec".to_string())
             .add_input(format!("{CTRL_D_KEY}"), "delete".to_string())
             .add_input(format!("{SHIFT_D_KEY}"), "delete all".to_string())
+            .add_input(
+                format!("{CTRL_SHIFT_D_KEY}"),
+                "delete all force".to_string(),
+            )
             .add_input(format!("{R_KEY}"), "run".to_string())
             .add_input(format!("{S_KEY}"), "stop".to_string())
             .add_input(format!("{G_KEY}"), "top".to_string())
@@ -372,9 +381,10 @@ impl Containers {
         Ok(())
     }
 
-    fn delete_all_containers(&mut self) -> Result<()> {
+    fn delete_all_containers(&mut self, force: bool) -> Result<()> {
         let cb = Arc::new(FutureMutex::new(DeleteAllContainers::new(
             self.docker.clone(),
+            force,
             self.tx.clone(),
         )));
 
