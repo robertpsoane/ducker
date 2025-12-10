@@ -340,7 +340,7 @@ impl Network {
         let mut modal = BooleanModal::<ModalTypes>::new("Prune".into(), ModalTypes::DeleteNetwork);
 
         modal.initialise(
-            "Are you sure you wish to prune networks)?".to_string(),
+            "Are you sure you wish to prune networks?".to_string(),
             Some(cb),
         );
         self.modal = Some(modal);

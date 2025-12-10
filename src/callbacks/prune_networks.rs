@@ -3,7 +3,7 @@ use crate::{
     traits::Callback,
 };
 use async_trait::async_trait;
-use bollard::query_parameters::PruneNetworksOptionsBuilder;
+use bollard::query_parameters::PruneNetworksOptions;
 use color_eyre::eyre::Result;
 use tokio::sync::mpsc::Sender;
 
@@ -25,7 +25,7 @@ impl Callback for PruneNetworks {
     async fn call(&self) -> Result<()> {
         if let Err(err) = self
             .docker
-            .prune_networks(Some(PruneNetworksOptionsBuilder::new().build()))
+            .prune_networks(None::<PruneNetworksOptions>)
             .await
         {
             let msg = format!("Failed to prune networks: {err}");
