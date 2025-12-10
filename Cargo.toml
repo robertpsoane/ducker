@@ -29,22 +29,23 @@ futures = "0.3.31"
 itertools = "0.14.0"
 lazy_static = "1.5.0"
 ratatui = { version = "0.29.0", features = [
-    "serde",
-    "unstable-rendered-line-info",
+  "serde",
+  "unstable-rendered-line-info",
 ] }
 ratatui-macros = "0.6.0"
 serde = "1.0.228"
 serde_yml = "0.0.12"
 tokio = { version = "1.48.0", features = [
-    "rt-multi-thread",
-    "macros",
-    "process",
+  "rt-multi-thread",
+  "macros",
+  "process",
 ] }
 tracing = "0.1.43"
 tracing-error = "0.2.1"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 tui-big-text = "0.7.1"
 ureq = { version = "3.1.4", features = ["json"] }
+tui-tree-widget = "0.23.1"
 
 [dev-dependencies]
 tempfile = "3.23.0"
