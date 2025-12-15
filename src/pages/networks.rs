@@ -14,7 +14,9 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{
     // callbacks::delete_network::DeleteNetwork,
-    callbacks::{delete_network::DeleteNetwork, empty_callable::EmptyCallable},
+    callbacks::{
+        delete_network::DeleteNetwork, empty_callable::EmptyCallable, prune_networks::PruneNetworks,
+    },
     components::{
         boolean_modal::{BooleanModal, ModalState},
         help::{PageHelp, PageHelpBuilder},
@@ -42,6 +44,7 @@ const SHIFT_D_KEY: Key = Key::Char('D');
 const D_KEY: Key = Key::Char('d');
 const G_KEY: Key = Key::Char('g');
 const SHIFT_G_KEY: Key = Key::Char('G');
+const CTRL_P_KEY: Key = Key::Ctrl('p');
 
 // Sort keys
 const SHIFT_N_KEY: Key = Key::Char('N');
@@ -119,6 +122,10 @@ impl Page for Network {
                 Ok(()) => MessageResponse::Consumed,
                 Err(_) => MessageResponse::NotConsumed,
             },
+            CTRL_P_KEY => match self.prune_networks() {
+                Ok(()) => MessageResponse::Consumed,
+                Err(_) => MessageResponse::NotConsumed,
+            },
             D_KEY => {
                 self.tx
                     .send(Message::Transition(Transition::ToDescribeContainerPage(
@@ -170,6 +177,7 @@ impl Network {
     pub fn new(docker: Docker, tx: Sender<Message<Key, Transition>>, config: Arc<Config>) -> Self {
         let page_help = PageHelpBuilder::new(NAME.to_string(), config.clone())
             .add_input(format!("{CTRL_D_KEY}"), "delete".to_string())
+            .add_input(format!("{CTRL_P_KEY}"), "prune".to_string())
             .add_input(format!("{G_KEY}"), "top".to_string())
             .add_input(format!("{SHIFT_G_KEY}"), "bottom".to_string())
             .add_input(format!("{D_KEY}"), "describe".to_string())
@@ -320,6 +328,22 @@ impl Network {
         } else {
             bail!("failed to setup deletion modal")
         }
+        Ok(())
+    }
+
+    fn prune_networks(&mut self) -> Result<()> {
+        let cb = Arc::new(FutureMutex::new(PruneNetworks::new(
+            self.docker.clone(),
+            self.tx.clone(),
+        )));
+
+        let mut modal = BooleanModal::<ModalTypes>::new("Prune".into(), ModalTypes::DeleteNetwork);
+
+        modal.initialise(
+            "Are you sure you wish to prune networks?".to_string(),
+            Some(cb),
+        );
+        self.modal = Some(modal);
         Ok(())
     }
 }
