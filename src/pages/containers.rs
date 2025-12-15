@@ -43,7 +43,7 @@ const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
 const CTRL_D_KEY: Key = Key::Ctrl('d');
 const SHIFT_D_KEY: Key = Key::Char('D');
-const CTRL_SHIFT_D_KEY: Key = Key::Ctrl('D');
+const SHIFT_F_KEY: Key = Key::Char('F');
 const D_KEY: Key = Key::Char('d');
 const R_KEY: Key = Key::Char('r');
 const S_KEY: Key = Key::Char('s');
@@ -109,7 +109,7 @@ impl Page for Containers {
                 Ok(_) => MessageResponse::Consumed,
                 Err(_) => MessageResponse::NotConsumed,
             },
-            CTRL_SHIFT_D_KEY => match self.delete_all_containers(true) {
+            SHIFT_F_KEY => match self.delete_all_containers(true) {
                 Ok(_) => MessageResponse::Consumed,
                 Err(_) => MessageResponse::NotConsumed,
             },
@@ -384,7 +384,13 @@ impl Containers {
             self.tx.clone(),
         )));
 
-        let message = format!("Are you sure you wish to delete all containers?\n\n (to force all, use {CTRL_SHIFT_D_KEY})");
+        let message = if force {
+            "Are you sure you wish to force delete all containers?".to_string()
+        } else {
+            format!(
+            "Are you sure you wish to delete all containers?\n\n (to force all, use {SHIFT_F_KEY})"
+        )
+        };
 
         let mut modal =
             BooleanModal::<ModalTypes>::new("Delete".into(), ModalTypes::DeleteContainer);
