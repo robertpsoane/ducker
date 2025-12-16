@@ -442,7 +442,13 @@ impl Component for Containers {
             };
 
             Row::new(vec![
-                c.id, c.image, c.command, c.created, c.status, c.ports, c.names,
+                c.id,
+                c.image,
+                c.command,
+                c.created,
+                c.status,
+                c.ports.to_string(),
+                c.names,
             ])
             .style(style)
         });

@@ -1,17 +1,17 @@
 [package]
-name = "ducker"
-description = "A slightly quackers Docker TUI based on k9s 🦆"
 authors = ["Robert Soane"]
-version = "0.5.7"
-homepage = "https://ducker.soane.io"
-repository = "https://github.com/robertpsoane/ducker"
-edition = "2024"
-readme = "README.md"
-license-file = "LICENSE.txt"
-keywords = ["docker", "developer-tools", "ratatui", "terminal"]
 categories = ["command-line-utilities", "development-tools"]
+description = "A slightly quackers Docker TUI based on k9s 🦆"
+edition = "2024"
+homepage = "https://ducker.soane.io"
 include = ["/src", "LICENSE.txt", "CHANGELOG.md", "README.md"]
+keywords = ["docker", "developer-tools", "ratatui", "terminal"]
+license-file = "LICENSE.txt"
+name = "ducker"
+readme = "README.md"
+repository = "https://github.com/robertpsoane/ducker"
 rust-version = "1.88"
+version = "0.5.7"
 
 [dependencies]
 serde_json = "1.0.149"
@@ -28,12 +28,13 @@ dyn-clone = "1.0.20"
 futures = "0.3.31"
 itertools = "0.14.0"
 lazy_static = "1.5.0"
+parse-display = "0.10.0"
 serde = "1.0.228"
 serde_yml = "0.0.12"
 tokio = { version = "1.49.0", features = [
-    "rt-multi-thread",
-    "macros",
-    "process",
+  "rt-multi-thread",
+  "macros",
+  "process",
 ] }
 tracing = "0.1.44"
 tracing-error = "0.2.1"
@@ -44,8 +45,8 @@ ureq = { version = "3.1.4", features = ["json"] }
 ansi-to-tui = "8.0.1"
 ratatui-macros = "0.7.0"
 ratatui = { version = "0.30.0", features = [
-    "serde",
-    "unstable-rendered-line-info",
+  "serde",
+  "unstable-rendered-line-info",
 ] }
 tui-big-text = "0.8.1"
 
@@ -53,11 +54,11 @@ tui-big-text = "0.8.1"
 tempfile = "3.24.0"
 
 [profile.release]
-strip = true
-lto = true
 codegen-units = 1
-panic = "abort"
+lto = true
 opt-level = "z"
+panic = "abort"
+strip = true
 
 [badges]
 maintenance = { status = "actively-developed" }

@@ -5,13 +5,15 @@ use bollard::query_parameters::{
 use chrono::Local;
 use chrono::prelude::DateTime;
 use color_eyre::eyre::{Context, Result, bail};
-use serde::Serialize;
+use itertools::Itertools;
+use serde::{Serialize, Serializer};
 use std::{
     collections::HashMap,
     time::{Duration, UNIX_EPOCH},
 };
 use tokio::process::Command;
 
+use bollard::models::{Port as BollardPort, PortTypeEnum as BollardPortTypeEnum};
 use bollard::secret::ContainerSummary;
 
 use super::traits::Describe;
@@ -24,7 +26,7 @@ pub struct DockerContainer {
     pub command: String,
     pub created: String,
     pub status: String,
-    pub ports: String,
+    pub ports: Ports,
     pub names: String,
     pub running: bool,
     read_write_size: String,
@@ -33,30 +35,41 @@ pub struct DockerContainer {
     network_mode: Option<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, parse_display::Display)]
+pub(crate) enum Ip {
+    #[display("*")]
+    All,
+    #[display("")]
+    Localhost,
+    #[display("{0}")]
+    Net(String),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, parse_display::Display)]
+pub(crate) enum PortType {
+    Tcp,
+    Udp,
+    Sctp,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct Port {
+    ip: Ip,
+    private_port: u16,
+    public_port: Option<u16>,
+    port_type: Option<PortType>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub(crate) struct Ports(Vec<Port>);
+
 impl DockerContainer {
     /// Builds a DockerContainer struct from a bollard::...::ContainerSummary instance.
     pub fn from(c: ContainerSummary) -> Self {
-        let ports = match c.ports.clone() {
-            Some(p) => p
-                .into_iter()
-                .map(|p| {
-                    let ip = p.ip.unwrap_or_default();
-                    let private_port = p.private_port.to_string();
-                    let public_port = match p.public_port {
-                        Some(port) => port.to_string(),
-                        None => String::new(),
-                    };
-                    let typ = match p.typ {
-                        Some(t) => format!("{:?}", t),
-                        None => String::new(),
-                    };
-
-                    format!("{}:{}:{}:{}", ip, private_port, public_port, typ)
-                })
-                .collect::<Vec<String>>()
-                .join(", "),
-            None => "".into(),
-        };
+        let ports = c
+            .ports
+            .map(|ports| Ports(ports.into_iter().map_into().collect()))
+            .unwrap_or_default();
         let datetime = DateTime::<Local>::from(
             UNIX_EPOCH
                 + Duration::from_secs(c.created.unwrap_or_default().try_into().unwrap_or_default()),
@@ -180,6 +193,78 @@ impl Describe for DockerContainer {
             }
         };
         Ok(summary.lines().map(String::from).collect())
+    }
+}
+
+impl ToString for Port {
+    fn to_string(&self) -> String {
+        let public_port = self.public_port.map(|p| p.to_string()).unwrap_or_default();
+        let port_type = self
+            .port_type
+            .as_ref()
+            .map(|p| p.to_string())
+            .unwrap_or_default();
+        format!(
+            "{}:{}:{}:{}",
+            self.ip, public_port, self.private_port, port_type
+        )
+    }
+}
+
+impl ToString for Ports {
+    fn to_string(&self) -> String {
+        self.0
+            .iter()
+            .map(|p| p.to_string())
+            .collect::<Vec<String>>()
+            .join(", ")
+    }
+}
+
+impl From<BollardPort> for Port {
+    fn from(port: BollardPort) -> Self {
+        let ip = match port.ip {
+            None => Ip::Localhost,
+            Some(s) if s.starts_with("127.0.0") => Ip::Localhost,
+            Some(s) if s == "0.0.0.0" => Ip::All,
+            Some(s) => Ip::Net(s),
+        };
+        let port_type = match port.typ {
+            Some(BollardPortTypeEnum::TCP) => Some(PortType::Tcp),
+            Some(BollardPortTypeEnum::UDP) => Some(PortType::Udp),
+            Some(BollardPortTypeEnum::SCTP) => Some(PortType::Sctp),
+            Some(BollardPortTypeEnum::EMPTY) | None => None,
+        };
+        Self {
+            ip,
+            private_port: port.private_port,
+            public_port: port.public_port,
+            port_type,
+        }
+    }
+}
+
+impl Serialize for Ports {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let ports = self.0.iter().map(|p| p.to_string()).join(", ");
+        serializer.serialize_str(&ports)
+    }
+}
+
+impl Ord for Port {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.public_port
+            .unwrap_or(self.private_port)
+            .cmp(other.public_port.as_ref().unwrap_or(&other.private_port))
+    }
+}
+
+impl PartialOrd for Port {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 
