@@ -196,28 +196,33 @@ impl Describe for DockerContainer {
     }
 }
 
-impl ToString for Port {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for Port {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let public_port = self.public_port.map(|p| p.to_string()).unwrap_or_default();
         let port_type = self
             .port_type
             .as_ref()
             .map(|p| p.to_string())
             .unwrap_or_default();
-        format!(
-            "{}:{}:{}:{}",
-            self.ip, public_port, self.private_port, port_type
+        write!(
+            f,
+            "{}:{public_port}:{}:{port_type}",
+            self.ip, self.private_port,
         )
     }
 }
 
-impl ToString for Ports {
-    fn to_string(&self) -> String {
-        self.0
-            .iter()
-            .map(|p| p.to_string())
-            .collect::<Vec<String>>()
-            .join(", ")
+impl std::fmt::Display for Ports {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.0
+                .iter()
+                .map(|p| p.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )
     }
 }
 
@@ -254,11 +259,23 @@ impl Serialize for Ports {
     }
 }
 
+impl Ord for Ports {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.0.cmp(&other.0)
+    }
+}
+
 impl Ord for Port {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.public_port
             .unwrap_or(self.private_port)
             .cmp(other.public_port.as_ref().unwrap_or(&other.private_port))
+    }
+}
+
+impl PartialOrd for Ports {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 
