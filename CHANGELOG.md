@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.7](https://github.com/robertpsoane/ducker/compare/v0.5.6...v0.5.7) - 2025-12-29
+
+### Other
+
+- *(deps)* bump serde_json from 1.0.145 to 1.0.148 ([#256](https://github.com/robertpsoane/ducker/pull/256))
+
 ## [0.5.6](https://github.com/robertpsoane/ducker/compare/v0.5.5...v0.5.6) - 2025-12-15
 
 ### Added
