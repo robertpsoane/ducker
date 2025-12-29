@@ -4,7 +4,6 @@ use futures::lock::Mutex as FutureMutex;
 use ratatui::{
     Frame,
     layout::Rect,
-    prelude::*,
     style::Style,
     widgets::{Row, Table, TableState},
 };
