@@ -14,7 +14,7 @@ include = ["/src", "LICENSE.txt", "CHANGELOG.md", "README.md"]
 rust-version = "1.82.0"
 
 [dependencies]
-serde_json = "1.0.145"
+serde_json = "1.0.148"
 ansi-to-tui = "7.0.0"
 async-trait = "0.1.89"
 bollard = { version = "0.19.4", features = ["ssl"] }
