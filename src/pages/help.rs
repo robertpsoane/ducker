@@ -88,6 +88,12 @@ impl HelpPage {
     }
 }
 
+impl Default for HelpPage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Component for HelpPage {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         let block = Block::default();

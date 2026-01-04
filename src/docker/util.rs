@@ -37,8 +37,8 @@ impl DockerEndpoint {
             }
         } else if host.starts_with("https://") {
             DockerEndpoint::Tls(host.to_string())
-        } else if host.starts_with("unix://") {
-            DockerEndpoint::Unix(host[7..].to_string())
+        } else if let Some(stripped_host) = host.strip_prefix("unix://") {
+            DockerEndpoint::Unix(stripped_host.to_string())
         } else {
             DockerEndpoint::Unix(default_socket.to_string())
         }
@@ -75,9 +75,9 @@ impl DockerEndpoint {
                     .unwrap_or(true);
 
                 // For TLS connections, we need to check if host starts with tcp:// instead of https://
-                let host_url = if host.starts_with("tcp://") {
+                let host_url = if let Some(striped_host) = host.strip_prefix("tcp://") {
                     // Replace tcp:// with https:// for the Docker API client
-                    format!("https://{}", &host[6..])
+                    format!("https://{}", striped_host)
                 } else {
                     host.to_string()
                 };
