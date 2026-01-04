@@ -1,20 +1,19 @@
 [package]
-name = "ducker"
-description = "A slightly quackers Docker TUI based on k9s 🦆"
 authors = ["Robert Soane"]
-version = "0.5.6"
-homepage = "https://ducker.soane.io"
-repository = "https://github.com/robertpsoane/ducker"
-edition = "2021"
-readme = "README.md"
-license-file = "LICENSE.txt"
-keywords = ["docker", "developer-tools", "ratatui", "terminal"]
 categories = ["command-line-utilities", "development-tools"]
+description = "A slightly quackers Docker TUI based on k9s 🦆"
+edition = "2021"
+homepage = "https://ducker.soane.io"
 include = ["/src", "LICENSE.txt", "CHANGELOG.md", "README.md"]
+keywords = ["docker", "developer-tools", "ratatui", "terminal"]
+license-file = "LICENSE.txt"
+name = "ducker"
+readme = "README.md"
+repository = "https://github.com/robertpsoane/ducker"
 rust-version = "1.82.0"
+version = "0.5.6"
 
 [dependencies]
-serde_json = "1.0.148"
 ansi-to-tui = "7.0.0"
 async-trait = "0.1.89"
 bollard = { version = "0.19.4", features = ["ssl"] }
@@ -29,16 +28,17 @@ futures = "0.3.31"
 itertools = "0.14.0"
 lazy_static = "1.5.0"
 ratatui = { version = "0.29.0", features = [
-    "serde",
-    "unstable-rendered-line-info",
+  "serde",
+  "unstable-rendered-line-info",
 ] }
 ratatui-macros = "0.6.0"
 serde = "1.0.228"
+serde_json = "1.0.148"
 serde_yml = "0.0.12"
 tokio = { version = "1.48.0", features = [
-    "rt-multi-thread",
-    "macros",
-    "process",
+  "rt-multi-thread",
+  "macros",
+  "process",
 ] }
 tracing = "0.1.43"
 tracing-error = "0.2.1"
@@ -50,11 +50,11 @@ ureq = { version = "3.1.4", features = ["json"] }
 tempfile = "3.23.0"
 
 [profile.release]
-strip = true
-lto = true
 codegen-units = 1
-panic = "abort"
+lto = true
 opt-level = "z"
+panic = "abort"
+strip = true
 
 [badges]
 maintenance = { status = "actively-developed" }
