@@ -500,7 +500,7 @@ impl Component for Containers {
             self.get_column_header("Names", ContainerSortField::Name),
         ]);
 
-        let widths = constraints![==12%, ==20%, ==20%, ==10%, ==13%, ==10%, ==10%];
+        let widths = constraints![==6%, ==24%, ==20%, ==10%, ==15%, ==15%, ==10%];
 
         let table = Table::new(rows.clone(), widths)
             .header(columns.clone().style(Style::new().bold()))
