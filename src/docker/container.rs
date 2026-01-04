@@ -53,15 +53,15 @@ pub(crate) enum PortType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct Port {
-    ip: Ip,
-    private_port: u16,
-    public_port: Option<u16>,
-    port_type: Option<PortType>,
+pub struct Port {
+    pub(crate) ip: Ip,
+    pub(crate) private_port: u16,
+    pub(crate) public_port: Option<u16>,
+    pub(crate) port_type: Option<PortType>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub(crate) struct Ports(Vec<Port>);
+pub struct Ports(pub(crate) Vec<Port>);
 
 impl DockerContainer {
     /// Builds a DockerContainer struct from a bollard::...::ContainerSummary instance.
@@ -231,7 +231,7 @@ impl From<BollardPort> for Port {
         let ip = match port.ip {
             None => Ip::Localhost,
             Some(s) if s.starts_with("127.0.0") => Ip::Localhost,
-            Some(s) if s == "0.0.0.0" => Ip::All,
+            Some(s) if ["0.0.0.0", "::"].contains(&s.as_str()) => Ip::All,
             Some(s) => Ip::Net(s),
         };
         let port_type = match port.typ {
