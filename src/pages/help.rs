@@ -2,15 +2,15 @@ use crate::config::Config;
 use crate::{
     components::help::{PageHelp, PageHelpBuilder},
     context::AppContext,
-    events::{message::MessageResponse, Key},
+    events::{Key, message::MessageResponse},
     traits::{Close, Component, Page},
 };
 use color_eyre::eyre::Result;
 use ratatui::{
+    Frame,
     layout::Rect,
     text::Text,
     widgets::{Block, Paragraph},
-    Frame,
 };
 use std::sync::{Arc, Mutex};
 

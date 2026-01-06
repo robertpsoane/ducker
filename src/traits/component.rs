@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 
 use color_eyre::eyre::Result;
-use ratatui::{layout::Rect, Frame};
+use ratatui::{Frame, layout::Rect};
 
-use crate::events::{message::MessageResponse, Key};
+use crate::events::{Key, message::MessageResponse};
 
 pub trait Component: Debug {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect);

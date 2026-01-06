@@ -5,15 +5,15 @@ use itertools::Itertools;
 
 use color_eyre::eyre::Result;
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Modifier, Style},
     text::{Line, Span, Text},
     widgets::{Paragraph, Wrap},
-    Frame,
 };
 
 use crate::{
-    events::{message::MessageResponse, Key},
+    events::{Key, message::MessageResponse},
     traits::{Callback, Component, ModalComponent},
     widgets::modal::ModalWidget,
 };

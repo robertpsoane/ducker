@@ -2,8 +2,8 @@ use std::sync::{Arc, Mutex};
 
 use crossterm::terminal::disable_raw_mode;
 
-use color_eyre::eyre::{bail, Result};
-use ratatui::{layout::Rect, Frame};
+use color_eyre::eyre::{Result, bail};
+use ratatui::{Frame, layout::Rect};
 use ratatui_macros::{horizontal, vertical};
 use tokio::sync::mpsc::Sender;
 
@@ -16,7 +16,7 @@ use crate::traits::{Close, ModalComponent};
 use crate::{
     components::help::{PageHelp, PageHelpBuilder},
     docker::container::DockerContainer,
-    events::{message::MessageResponse, Key, Message, Transition},
+    events::{Key, Message, Transition, message::MessageResponse},
     traits::{Component, Page},
 };
 

@@ -1,6 +1,6 @@
 use bollard::query_parameters::ListNetworksOptionsBuilder;
 use bollard::secret::{Network, NetworkContainer};
-use color_eyre::eyre::{bail, Result};
+use color_eyre::eyre::{Result, bail};
 use serde::Serialize;
 use std::collections::HashMap;
 

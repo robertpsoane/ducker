@@ -1,4 +1,4 @@
-use bollard::{Docker, API_DEFAULT_VERSION};
+use bollard::{API_DEFAULT_VERSION, Docker};
 use color_eyre::eyre::{Context, Result};
 use std::{env, path::Path};
 
