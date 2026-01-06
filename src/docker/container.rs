@@ -230,7 +230,7 @@ impl From<BollardPort> for Port {
     fn from(port: BollardPort) -> Self {
         let ip = match port.ip {
             None => Ip::Localhost,
-            Some(s) if s.starts_with("127.0.0") => Ip::Localhost,
+            Some(s) if s.is_empty() || s.starts_with("127.0.0") => Ip::Localhost,
             Some(s) if ["0.0.0.0", "::"].contains(&s.as_str()) => Ip::All,
             Some(s) => Ip::Net(s),
         };
