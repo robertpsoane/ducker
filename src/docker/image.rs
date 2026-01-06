@@ -1,8 +1,8 @@
 use bollard::query_parameters::{ListImagesOptionsBuilder, RemoveImageOptionsBuilder};
 use byte_unit::{Byte, UnitType};
-use chrono::prelude::DateTime;
 use chrono::Local;
-use color_eyre::eyre::{bail, Context, Result};
+use chrono::prelude::DateTime;
+use color_eyre::eyre::{Context, Result, bail};
 use itertools::Itertools;
 use serde::Serialize;
 use std::collections::HashMap;

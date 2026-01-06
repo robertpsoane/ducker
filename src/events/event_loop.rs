@@ -13,9 +13,9 @@ use tokio::{
 };
 use tracing::trace;
 
-use super::key::Key;
 use super::Message;
 use super::Transition;
+use super::key::Key;
 
 const TICK_RATE: Duration = Duration::from_millis(250);
 

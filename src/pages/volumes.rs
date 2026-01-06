@@ -1,12 +1,12 @@
 use bollard::Docker;
-use color_eyre::eyre::{bail, Context, ContextCompat, Result};
+use color_eyre::eyre::{Context, ContextCompat, Result, bail};
 use futures::lock::Mutex as FutureMutex;
 use ratatui::{
+    Frame,
     layout::Rect,
     prelude::*,
     style::Style,
     widgets::{Row, Table, TableState},
-    Frame,
 };
 use ratatui_macros::constraints;
 use std::{
@@ -24,7 +24,7 @@ use crate::{
     config::Config,
     context::AppContext,
     docker::volume::DockerVolume,
-    events::{message::MessageResponse, Key, Message, Transition},
+    events::{Key, Message, Transition, message::MessageResponse},
     sorting::{SortOrder, SortState, VolumeSortField},
     traits::{Close, Component, ModalComponent, Page},
     ui::{get_field_sort_order, is_field_sorted, render_column_header},
@@ -296,10 +296,10 @@ impl Volume {
     }
 
     fn get_volume(&self) -> Result<&DockerVolume> {
-        if let Some(volume_idx) = self.list_state.selected() {
-            if let Some(volume) = self.volumes.get(volume_idx) {
-                return Ok(volume);
-            }
+        if let Some(volume_idx) = self.list_state.selected()
+            && let Some(volume) = self.volumes.get(volume_idx)
+        {
+            return Ok(volume);
         }
         bail!("no container id found");
     }
@@ -373,10 +373,10 @@ impl Component for Volume {
 
         f.render_stateful_widget(table, area, &mut self.list_state);
 
-        if let Some(m) = self.modal.as_mut() {
-            if let ModalState::Open(_) = m.state {
-                m.draw(f, area);
-            }
+        if let Some(m) = self.modal.as_mut()
+            && let ModalState::Open(_) = m.state
+        {
+            m.draw(f, area);
         }
     }
 }

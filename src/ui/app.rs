@@ -3,10 +3,10 @@ use std::sync::Arc;
 use bollard::Docker;
 use color_eyre::eyre::{Context, Result};
 use ratatui::{
+    Frame,
     layout::{Layout, Rect},
     style::Style,
     widgets::Block,
-    Frame,
 };
 use ratatui_macros::{horizontal, vertical};
 use tokio::sync::mpsc::Sender;
@@ -20,7 +20,7 @@ use crate::{
         resize_notice::ResizeScreen,
     },
     config::Config,
-    events::{key::Key, message::MessageResponse, Message, Transition},
+    events::{Message, Transition, key::Key, message::MessageResponse},
     state::{self, Running},
     traits::{Component, ModalComponent},
     ui::page_manager::PageManager,
@@ -84,20 +84,20 @@ impl App {
         // closed.
         // This should be a catch all for any application errors
         // TODO - add more specific modal calls at error-likely points
-        if let Some(m) = self.modal.as_mut() {
-            if let ModalState::Open(_) = m.state {
-                let res = match m.update(message).await {
-                    Ok(r) => r,
-                    Err(e) => {
-                        tracing::error! {"failed to process failure modal; double failure so crashing {}", e}
-                        panic!("failed to process failure modal; {e}")
-                    }
-                };
-                if let ModalState::Closed = m.state {
-                    self.modal = None;
+        if let Some(m) = self.modal.as_mut()
+            && let ModalState::Open(_) = m.state
+        {
+            let res = match m.update(message).await {
+                Ok(r) => r,
+                Err(e) => {
+                    tracing::error! {"failed to process failure modal; double failure so crashing {}", e}
+                    panic!("failed to process failure modal; {e}")
                 }
-                return res;
+            };
+            if let ModalState::Closed = m.state {
+                self.modal = None;
             }
+            return res;
         }
 
         let res = match self.mode {
@@ -112,10 +112,10 @@ impl App {
     }
 
     pub async fn transition(&mut self, transition: Transition) -> MessageResponse {
-        if let Some(m) = self.modal.as_mut() {
-            if let ModalState::Open(_) = m.state {
-                return MessageResponse::NotConsumed;
-            }
+        if let Some(m) = self.modal.as_mut()
+            && let ModalState::Open(_) = m.state
+        {
+            return MessageResponse::NotConsumed;
         }
         match transition {
             Transition::Quit => {
@@ -224,10 +224,10 @@ impl App {
         self.page_manager.draw_help(f, right_space);
         self.footer.draw(f, footer);
 
-        if let Some(m) = self.modal.as_mut() {
-            if let ModalState::Open(_) = m.state {
-                m.draw(f, area)
-            }
+        if let Some(m) = self.modal.as_mut()
+            && let ModalState::Open(_) = m.state
+        {
+            m.draw(f, area)
         }
     }
 }

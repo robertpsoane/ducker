@@ -1,7 +1,7 @@
 use bollard::query_parameters::{ListVolumesOptionsBuilder, RemoveVolumeOptionsBuilder};
 use bollard::secret::{Volume, VolumeScopeEnum};
 use byte_unit::{Byte, UnitType};
-use color_eyre::eyre::{bail, Result};
+use color_eyre::eyre::{Result, bail};
 use serde::Serialize;
 use std::collections::HashMap;
 

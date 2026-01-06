@@ -1,13 +1,13 @@
 use color_eyre::eyre::{Context, Result};
 use itertools::min;
-use ratatui::{layout::Rect, Frame};
+use ratatui::{Frame, layout::Rect};
 use std::{collections::VecDeque, fmt::Debug};
 
 use tokio::sync::mpsc::Sender;
 
 use crate::{
     context::AppContext,
-    events::{message::MessageResponse, transition::send_transition, Key, Message, Transition},
+    events::{Key, Message, Transition, message::MessageResponse, transition::send_transition},
     traits::Component,
     widgets::text_input::Autocomplete,
 };
@@ -231,10 +231,10 @@ impl History {
     /// querying the history.  Acts as a default when the index drops back "below zero"
     pub fn conditional_set_working_buffer(&mut self, working_buffer: &String) {
         // Only add to the working buffer if we're actually adding something
-        if let Some(buf) = &self.working_buffer {
-            if buf.trim().is_empty() {
-                return;
-            }
+        if let Some(buf) = &self.working_buffer
+            && buf.trim().is_empty()
+        {
+            return;
         }
         // Only add to the working buffer if we aren't reading history
         if self.idx.is_some() {

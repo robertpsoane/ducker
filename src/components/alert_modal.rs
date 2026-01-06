@@ -3,14 +3,14 @@ use core::fmt;
 use color_eyre::eyre::Result;
 
 use ratatui::{
+    Frame,
     layout::Rect,
     text::{Line, Span, Text},
     widgets::{Paragraph, Wrap},
-    Frame,
 };
 
 use crate::{
-    events::{message::MessageResponse, Key},
+    events::{Key, message::MessageResponse},
     traits::{Component, ModalComponent},
     widgets::modal::ModalWidget,
 };

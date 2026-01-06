@@ -41,12 +41,14 @@ pub fn initialize_logging(log_to: &Option<PathBuf>) -> Result<()> {
     };
 
     let log_file = std::fs::File::create(log_path)?;
-    std::env::set_var(
-        "RUST_LOG",
-        std::env::var("RUST_LOG")
-            .or_else(|_| std::env::var(LOG_ENV.clone()))
-            .unwrap_or_else(|_| format!("{}=info", env!("CARGO_CRATE_NAME"))),
-    );
+    unsafe {
+        std::env::set_var(
+            "RUST_LOG",
+            std::env::var("RUST_LOG")
+                .or_else(|_| std::env::var(LOG_ENV.clone()))
+                .unwrap_or_else(|_| format!("{}=info", env!("CARGO_CRATE_NAME"))),
+        );
+    };
     let file_subscriber = tracing_subscriber::fmt::layer()
         .with_file(true)
         .with_line_number(true)

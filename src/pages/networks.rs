@@ -1,12 +1,12 @@
 use bollard::Docker;
-use color_eyre::eyre::{bail, Context, ContextCompat, Result};
+use color_eyre::eyre::{Context, ContextCompat, Result, bail};
 use futures::lock::Mutex as FutureMutex;
 use ratatui::{
+    Frame,
     layout::Rect,
     prelude::*,
     style::Style,
     widgets::{Row, Table, TableState},
-    Frame,
 };
 use ratatui_macros::constraints;
 use std::sync::{Arc, Mutex};
@@ -24,10 +24,10 @@ use crate::{
     config::Config,
     context::AppContext,
     docker::network::DockerNetwork,
-    events::{message::MessageResponse, Key, Message, Transition},
+    events::{Key, Message, Transition, message::MessageResponse},
     sorting::{
-        sort_networks_by_created, sort_networks_by_driver, sort_networks_by_id,
-        sort_networks_by_name, sort_networks_by_scope, NetworkSortField, SortOrder, SortState,
+        NetworkSortField, SortOrder, SortState, sort_networks_by_created, sort_networks_by_driver,
+        sort_networks_by_id, sort_networks_by_name, sort_networks_by_scope,
     },
     traits::{Close, Component, ModalComponent, Page},
 };
@@ -235,8 +235,7 @@ impl Network {
                 }
                 Err(e) => {
                     if let ModalTypes::DeleteNetwork = m.discriminator {
-                        let msg =
-                            "An error occurred deleting this network.  It is likely still in use.  Will not try again.";
+                        let msg = "An error occurred deleting this network.  It is likely still in use.  Will not try again.";
                         let mut modal = BooleanModal::<ModalTypes>::new(
                             "Failed Deletion".into(),
                             ModalTypes::FailedToDeleteNetwork,
@@ -283,10 +282,10 @@ impl Network {
     }
 
     fn get_network(&self) -> Result<&DockerNetwork> {
-        if let Some(network_idx) = self.list_state.selected() {
-            if let Some(network) = self.networks.get(network_idx) {
-                return Ok(network);
-            }
+        if let Some(network_idx) = self.list_state.selected()
+            && let Some(network) = self.networks.get(network_idx)
+        {
+            return Ok(network);
         }
         bail!("no container id found");
     }
@@ -367,10 +366,10 @@ impl Component for Network {
 
         f.render_stateful_widget(table, area, &mut self.list_state);
 
-        if let Some(m) = self.modal.as_mut() {
-            if let ModalState::Open(_) = m.state {
-                m.draw(f, area);
-            }
+        if let Some(m) = self.modal.as_mut()
+            && let ModalState::Open(_) = m.state
+        {
+            m.draw(f, area);
         }
     }
 }

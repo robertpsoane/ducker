@@ -3,11 +3,11 @@ use std::sync::{Arc, Mutex};
 
 use bollard::Docker;
 
-use color_eyre::eyre::{bail, Result};
+use color_eyre::eyre::{Result, bail};
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Paragraph;
-use ratatui::{layout::Rect, Frame};
+use ratatui::{Frame, layout::Rect};
 use tokio::sync::mpsc::Sender;
 
 use crate::config::Config;
@@ -16,7 +16,7 @@ use crate::docker::traits::Describe;
 use crate::traits::Close;
 use crate::{
     components::help::{PageHelp, PageHelpBuilder},
-    events::{message::MessageResponse, Key, Message, Transition},
+    events::{Key, Message, Transition, message::MessageResponse},
     traits::{Component, Page},
 };
 
