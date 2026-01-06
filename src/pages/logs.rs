@@ -127,17 +127,16 @@ impl Logs {
     async fn start_log_stream(&mut self) -> Result<()> {
         self.auto_scroll = true;
         if let Some(logs) = self.logs.clone() {
+            let mut logs_stream = logs.get_log_stream(&self.docker, self.stream_options.clone());
             let tx = self.tx.clone();
             let log_messages = self.log_messages.clone();
 
             self.log_streamer_handle = Some(tokio::spawn(async move {
-                let mut logs_stream =
-                    logs.get_log_stream(&self.docker, self.stream_options.clone());
                 while let Some(v) = logs_stream.next().await {
-                    //     {
-                    //         log_messages.lock().unwrap().push(v);
-                    //     }
-                    //     let _ = tx.send(Message::Tick).await;
+                    {
+                        log_messages.lock().unwrap().push(v);
+                    }
+                    let _ = tx.send(Message::Tick).await;
                 }
             }));
         } else {

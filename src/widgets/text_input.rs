@@ -46,11 +46,10 @@ impl StatefulWidget for TextInput {
         }
         input_text.push(Span::raw(&state.value));
 
-        if let Some(candidate) = &state.candidate {
-            if let Some(delta) = candidate.strip_prefix(&state.value as &str) {
-                input_text
-                    .push(Span::raw(delta).style(Style::default().add_modifier(Modifier::DIM)))
-            }
+        if let Some(candidate) = &state.candidate
+            && let Some(delta) = candidate.strip_prefix(&state.value as &str)
+        {
+            input_text.push(Span::raw(delta).style(Style::default().add_modifier(Modifier::DIM)))
         }
 
         let p = Paragraph::new(Line::from(input_text));
