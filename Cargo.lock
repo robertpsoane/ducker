@@ -724,6 +724,7 @@ dependencies = [
  "tracing-error",
  "tracing-subscriber",
  "tui-big-text",
+ "tui-tree-widget",
  "ureq",
 ]
 
@@ -2554,6 +2555,16 @@ dependencies = [
  "font8x8",
  "itertools 0.14.0",
  "ratatui",
+]
+
+[[package]]
+name = "tui-tree-widget"
+version = "0.23.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c14c4488e071617f5b5922222193cdf6725835e492c6229557af85d3c1a4e903"
+dependencies = [
+ "ratatui",
+ "unicode-width 0.2.0",
 ]
 
 [[package]]
