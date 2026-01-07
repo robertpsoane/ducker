@@ -2,14 +2,13 @@ use bollard::query_parameters::{ListVolumesOptionsBuilder, RemoveVolumeOptionsBu
 use bollard::secret::{Volume, VolumeScopeEnum};
 use byte_unit::{Byte, UnitType};
 use color_eyre::eyre::{Result, bail};
-use serde::Serialize;
 use std::collections::HashMap;
 
 use crate::docker::traits::DescribeSection;
 
 use super::traits::Describe;
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DockerVolume {
     pub name: String,
     pub driver: String,

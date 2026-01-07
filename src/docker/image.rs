@@ -4,7 +4,6 @@ use chrono::Local;
 use chrono::prelude::DateTime;
 use color_eyre::eyre::{Context, Result};
 use itertools::Itertools;
-use serde::Serialize;
 use std::collections::HashMap;
 use std::time::{Duration, UNIX_EPOCH};
 
@@ -14,7 +13,7 @@ use crate::docker::traits::DescribeSection;
 
 use super::traits::Describe;
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct DockerImage {
     pub id: String,
     pub name: String,

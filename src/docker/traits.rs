@@ -20,21 +20,21 @@ pub trait Describe: fmt::Debug + Send + Sync + DynClone {
 dyn_clone::clone_trait_object!(Describe);
 
 #[derive(Debug, PartialEq, Eq)]
-pub(crate) struct DescribeSection {
+pub struct DescribeSection {
     pub(crate) id: Uuid,
     pub(crate) name: String,
     pub(crate) items: Vec<DescribeItem>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub(crate) struct DescribeItem {
+pub struct DescribeItem {
     pub(crate) id: Uuid,
     pub(crate) name: String,
     pub(crate) value: String,
 }
 
 impl DescribeItem {
-    pub(crate) fn new<N: ToString, V: ToString>(name: N, value: V) -> Self {
+    pub fn new<N: ToString, V: ToString>(name: N, value: V) -> Self {
         Self {
             id: Uuid::new_v4(),
             name: name.to_string(),
@@ -44,7 +44,7 @@ impl DescribeItem {
 }
 
 impl DescribeSection {
-    pub(crate) fn new<N: ToString>(name: N) -> Self {
+    pub fn new<N: ToString>(name: N) -> Self {
         Self {
             id: Uuid::new_v4(),
             name: name.to_string(),
@@ -52,12 +52,8 @@ impl DescribeSection {
         }
     }
 
-    pub(crate) fn push(&mut self, item: DescribeItem) -> &mut Self {
-        self.items.push(item);
-        self
-    }
-
     pub(crate) fn item<N: ToString, V: ToString>(&mut self, name: N, value: V) -> &mut Self {
-        self.push(DescribeItem::new(name, value))
+        self.items.push(DescribeItem::new(name, value));
+        self
     }
 }
