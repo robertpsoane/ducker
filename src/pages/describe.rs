@@ -180,7 +180,7 @@ fn section_to_tree_item<'a>(
         Span::from(&section.name).style(*section_style),
         items,
     )
-    .unwrap();
+    .expect("all items should be unique");
     state.open(vec![section.id]);
     item
 }
