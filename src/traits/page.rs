@@ -9,7 +9,7 @@ use color_eyre::eyre::Result;
 use crate::{
     components::help::PageHelp,
     context::AppContext,
-    events::{message::MessageResponse, Key},
+    events::{Key, message::MessageResponse},
     traits::Component,
 };
 

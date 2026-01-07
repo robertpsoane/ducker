@@ -6,7 +6,7 @@ use std::{fs::File, path::PathBuf};
 use ratatui::style::Color;
 use serde::{Deserialize, Serialize};
 
-use color_eyre::eyre::{bail, Context, Result};
+use color_eyre::eyre::{Context, Result, bail};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {

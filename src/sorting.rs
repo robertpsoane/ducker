@@ -30,48 +30,33 @@ pub enum ContainerSortField {
     Ports,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ImageSortField {
     Id,
+    #[default]
     Name,
     Tag,
     Created,
     Size,
 }
 
-impl Default for ImageSortField {
-    fn default() -> Self {
-        ImageSortField::Name
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum VolumeSortField {
+    #[default]
     Name,
     Created,
     Driver,
     Mountpoint,
 }
 
-impl Default for VolumeSortField {
-    fn default() -> Self {
-        VolumeSortField::Name
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum NetworkSortField {
     Id,
+    #[default]
     Name,
     Created,
     Scope,
     Driver,
-}
-
-impl Default for NetworkSortField {
-    fn default() -> Self {
-        NetworkSortField::Name
-    }
 }
 
 #[derive(Debug, Clone)]

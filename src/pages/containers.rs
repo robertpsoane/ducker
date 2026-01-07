@@ -1,12 +1,12 @@
 use bollard::Docker;
-use color_eyre::eyre::{bail, Context, Result};
+use color_eyre::eyre::{Context, Result, bail};
 use futures::lock::Mutex as FutureMutex;
 use ratatui::{
+    Frame,
     layout::Rect,
     prelude::*,
     style::Style,
     widgets::{Row, Table, TableState},
-    Frame,
 };
 use ratatui_macros::constraints;
 use std::{
@@ -16,7 +16,7 @@ use std::{
 use tokio::sync::mpsc::Sender;
 
 use crate::{
-    callbacks::{delete_all_containers::DeleteAllContainers, DeleteContainer},
+    callbacks::{DeleteContainer, delete_all_containers::DeleteAllContainers},
     components::{
         boolean_modal::{BooleanModal, ModalState},
         help::{PageHelp, PageHelpBuilder},
@@ -24,11 +24,11 @@ use crate::{
     config::Config,
     context::AppContext,
     docker::container::DockerContainer,
-    events::{message::MessageResponse, Key, Message, Transition},
+    events::{Key, Message, Transition, message::MessageResponse},
     sorting::{
-        sort_containers_by_created, sort_containers_by_image, sort_containers_by_name,
-        sort_containers_by_ports, sort_containers_by_status, ContainerSortField, SortOrder,
-        SortState,
+        ContainerSortField, SortOrder, SortState, sort_containers_by_created,
+        sort_containers_by_image, sort_containers_by_name, sort_containers_by_ports,
+        sort_containers_by_status,
     },
     traits::{Close, Component, ModalComponent, Page},
 };
@@ -82,14 +82,14 @@ impl Page for Containers {
     async fn update(&mut self, message: Key) -> Result<MessageResponse> {
         // If a modal is open, we process it; if it is open or complete, and the
         // result is Consumed, we exit early with the Consumed result
-        if let Some(m) = self.modal.as_mut() {
-            if let ModalState::Open(_) = m.state {
-                let res = m.update(message).await;
-                if let ModalState::Closed = m.state {
-                    self.modal = None;
-                }
-                return res;
+        if let Some(m) = self.modal.as_mut()
+            && let ModalState::Open(_) = m.state
+        {
+            let res = m.update(message).await;
+            if let ModalState::Closed = m.state {
+                self.modal = None;
             }
+            return res;
         }
 
         let result = match message {
@@ -201,7 +201,7 @@ impl Page for Containers {
         self.sort_containers();
 
         // If a context has been passed in, choose that item in list
-        // this ist to allo logs, attach etc to appear to revert to previous
+        // this is to allow logs, attach etc to appear to revert to previous
         // state
         // I'm sure there is a more sensible way of doing this...
         let container_id: String;
@@ -302,10 +302,10 @@ impl Containers {
     }
 
     fn get_container(&self) -> Result<&DockerContainer> {
-        if let Some(container_idx) = self.list_state.selected() {
-            if let Some(container) = self.containers.get(container_idx) {
-                return Ok(container);
-            }
+        if let Some(container_idx) = self.list_state.selected()
+            && let Some(container) = self.containers.get(container_idx)
+        {
+            return Ok(container);
         }
         bail!("no container id found");
     }
@@ -355,7 +355,9 @@ impl Containers {
             let image = container.image.clone();
 
             let message = if container.running {
-                format!("Are you sure you wish to delete container {name} (image = {image})?  This container is currently running; this will result in a force deletion.")
+                format!(
+                    "Are you sure you wish to delete container {name} (image = {image})?  This container is currently running; this will result in a force deletion."
+                )
             } else {
                 format!("Are you sure you wish to delete container {name} (image = {image})?")
             };
@@ -388,8 +390,8 @@ impl Containers {
             "Are you sure you wish to force delete all containers?".to_string()
         } else {
             format!(
-            "Are you sure you wish to delete all containers?\n\n (to force all, use {SHIFT_F_KEY})"
-        )
+                "Are you sure you wish to delete all containers?\n\n (to force all, use {SHIFT_F_KEY})"
+            )
         };
 
         let mut modal =
@@ -465,10 +467,10 @@ impl Component for Containers {
 
         f.render_stateful_widget(table, area, &mut self.list_state);
 
-        if let Some(m) = self.modal.as_mut() {
-            if let ModalState::Open(_) = m.state {
-                m.draw(f, area)
-            }
+        if let Some(m) = self.modal.as_mut()
+            && let ModalState::Open(_) = m.state
+        {
+            m.draw(f, area)
         }
     }
 }

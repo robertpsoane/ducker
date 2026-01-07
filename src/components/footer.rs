@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Modifier, Style},
     text::{Line, Span},
-    Frame,
 };
 use ratatui_macros::horizontal;
 

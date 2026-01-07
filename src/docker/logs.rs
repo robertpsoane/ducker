@@ -51,7 +51,7 @@ impl DockerLogs {
         &self,
         docker: &bollard::Docker,
         stream_options: StreamOptions,
-    ) -> impl Stream<Item = String> {
+    ) -> impl Stream<Item = String> + 'static {
         let opts: bollard::query_parameters::LogsOptions = stream_options.into();
         let logstream = docker
             .logs(&self.container.id, Some(opts))

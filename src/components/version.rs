@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use crate::{config::Config, traits::Component};
-use color_eyre::eyre::{bail, Result};
+use color_eyre::eyre::{Result, bail};
 use ratatui::{
+    Frame,
     layout::{Margin, Rect},
     style::Style,
     text::{Line, Span},
-    Frame,
 };
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
