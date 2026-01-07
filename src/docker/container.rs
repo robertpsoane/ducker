@@ -14,6 +14,8 @@ use tokio::process::Command;
 
 use bollard::secret::ContainerSummary;
 
+use crate::docker::traits::DescribeSection;
+
 use super::traits::Describe;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -172,14 +174,19 @@ impl Describe for DockerContainer {
     fn get_name(&self) -> String {
         format!("container: {}", self.names)
     }
-    fn describe(&self) -> Result<Vec<String>> {
-        let summary = match serde_yml::to_string(&self) {
-            Ok(s) => s,
-            Err(_) => {
-                bail!("failed to parse container summary")
-            }
-        };
-        Ok(summary.lines().map(String::from).collect())
+    fn describe(&self) -> Result<Vec<DescribeSection>> {
+        let mut summary = DescribeSection::new("Summary");
+        summary
+            .item("ID", &self.id)
+            .item("Image", &self.image)
+            .item("Image ID", &self.image_id)
+            .item("Command", &self.command)
+            .item("Created", &self.created)
+            .item("Status", &self.status)
+            .item("Ports", &self.ports)
+            .item("Names", &self.names)
+            .item("Running", &self.running);
+        Ok(vec![summary])
     }
 }
 

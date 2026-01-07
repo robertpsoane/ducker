@@ -5,6 +5,8 @@ use color_eyre::eyre::{Result, bail};
 use serde::Serialize;
 use std::collections::HashMap;
 
+use crate::docker::traits::DescribeSection;
+
 use super::traits::Describe;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -88,13 +90,52 @@ impl Describe for DockerVolume {
         self.name.clone()
     }
 
-    fn describe(&self) -> Result<Vec<String>> {
-        let summary = match serde_yml::to_string(&self) {
-            Ok(s) => s,
-            Err(_) => {
-                bail!("failed to parse container summary")
-            }
-        };
-        Ok(summary.lines().map(String::from).collect())
+    fn describe(&self) -> Result<Vec<DescribeSection>> {
+        let mut summary = DescribeSection::new("Summary");
+        summary
+            .item("Name", &self.name)
+            .item("Driver", &self.driver)
+            .item("Mountpoint", &self.mountpoint)
+            .item(
+                "Created At",
+                self.created_at
+                    .as_ref()
+                    .map(|v| v.as_str())
+                    .unwrap_or("N/A"),
+            )
+            .item(
+                "Labels",
+                if self.labels.is_empty() {
+                    "N/A".into()
+                } else {
+                    format!("{}", self.labels.len())
+                },
+            )
+            .item(
+                "Scope",
+                self.scope
+                    .as_ref()
+                    .map(|v| format!("{v}"))
+                    .unwrap_or("N/A".into()),
+            )
+            .item(
+                "Options",
+                if self.options.is_empty() {
+                    "N/A".into()
+                } else {
+                    format!("{}", self.options.len())
+                },
+            )
+            .item(
+                "Reference Count",
+                self.ref_count
+                    .map(|v| v.to_string())
+                    .unwrap_or("N/A".into()),
+            )
+            .item(
+                "Size",
+                self.size.as_ref().map(|v| v.as_str()).unwrap_or("N/A"),
+            );
+        Ok(vec![summary])
     }
 }
