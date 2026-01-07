@@ -65,23 +65,17 @@ impl Describe for DockerNetwork {
             .item("Driver", &self.driver)
             .item("Created At", &self.created_at)
             .item("Scope", &self.scope)
-            .item(
-                "Internal",
-                self.internal.map(|v| v.to_string()).unwrap_or("N/A".into()),
-            )
-            .item(
-                "Attachable",
-                self.attachable
-                    .map(|v| v.to_string())
-                    .unwrap_or("N/A".into()),
-            )
-            .item(
-                "Containers",
-                self.containers
-                    .as_ref()
-                    .map(|c| c.len().to_string())
-                    .unwrap_or("0".into()),
-            );
-        Ok(vec![summary])
+            .item_opt("Internal", self.internal)
+            .item_opt("Attachable", self.attachable);
+
+        if let Some(containers) = self.containers.as_ref() {
+            let mut containers_info = DescribeSection::new("Containers");
+            for (name, container) in containers {
+                containers_info.item(name, container.ipv4_address.clone().unwrap_or_default());
+            }
+            Ok(vec![summary, containers_info])
+        } else {
+            Ok(vec![summary])
+        }
     }
 }

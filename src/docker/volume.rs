@@ -95,46 +95,27 @@ impl Describe for DockerVolume {
             .item("Name", &self.name)
             .item("Driver", &self.driver)
             .item("Mountpoint", &self.mountpoint)
-            .item(
-                "Created At",
-                self.created_at
-                    .as_ref()
-                    .map(|v| v.as_str())
-                    .unwrap_or("N/A"),
-            )
-            .item(
-                "Labels",
-                if self.labels.is_empty() {
-                    "N/A".into()
-                } else {
-                    format!("{}", self.labels.len())
-                },
-            )
-            .item(
-                "Scope",
-                self.scope
-                    .as_ref()
-                    .map(|v| format!("{v}"))
-                    .unwrap_or("N/A".into()),
-            )
-            .item(
-                "Options",
-                if self.options.is_empty() {
-                    "N/A".into()
-                } else {
-                    format!("{}", self.options.len())
-                },
-            )
-            .item(
-                "Reference Count",
-                self.ref_count
-                    .map(|v| v.to_string())
-                    .unwrap_or("N/A".into()),
-            )
-            .item(
-                "Size",
-                self.size.as_ref().map(|v| v.as_str()).unwrap_or("N/A"),
-            );
-        Ok(vec![summary])
+            .item_opt("Created At", self.created_at.as_ref())
+            .item_opt("Scope", self.scope)
+            .item_opt("Reference Count", self.ref_count)
+            .item_opt("Size", self.size.as_ref());
+        let mut result = vec![summary];
+
+        if !self.labels.is_empty() {
+            let mut label_section = DescribeSection::new("Labels");
+            for (key, value) in &self.labels {
+                label_section.item(key, value);
+            }
+            result.push(label_section);
+        }
+        if !self.options.is_empty() {
+            let mut options_section = DescribeSection::new("Options");
+            for (key, value) in &self.options {
+                options_section.item(key, value);
+            }
+            result.push(options_section);
+        }
+
+        Ok(result)
     }
 }

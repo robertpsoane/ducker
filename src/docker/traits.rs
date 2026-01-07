@@ -56,4 +56,16 @@ impl DescribeSection {
         self.items.push(DescribeItem::new(name, value));
         self
     }
+
+    pub(crate) fn item_opt<N: ToString, V: ToString>(
+        &mut self,
+        name: N,
+        value: Option<V>,
+    ) -> &mut Self {
+        self.items.push(DescribeItem::new(
+            name,
+            value.map(|v| v.to_string()).unwrap_or_default(),
+        ));
+        self
+    }
 }

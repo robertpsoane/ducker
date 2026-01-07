@@ -184,7 +184,7 @@ impl Describe for DockerContainer {
             .item("Status", &self.status)
             .item("Ports", &self.ports)
             .item("Names", &self.names)
-            .item("Running", &self.running);
+            .item("Running", self.running);
         Ok(vec![summary])
     }
 }
