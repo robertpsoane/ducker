@@ -167,8 +167,8 @@ fn section_to_tree_item<'a>(
         .iter()
         .map(|item| {
             let line = Line::from(vec![
-                Span::from(&item.name).style(key_style.clone()),
-                Span::from(":"),
+                Span::from(&item.name).style(*key_style),
+                Span::from(": "),
                 Span::from(&item.value),
             ]);
             TreeItem::new_leaf(item.id, line)

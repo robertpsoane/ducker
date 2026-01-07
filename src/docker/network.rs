@@ -62,16 +62,8 @@ impl Describe for DockerNetwork {
             .item("Driver", &self.driver)
             .item("Created At", &self.created_at)
             .item("Scope", &self.scope)
-            .item(
-                "Internal",
-                self.internal.map(|v| v.to_string()).unwrap_or("N/A".into()),
-            )
-            .item(
-                "Attachable",
-                self.attachable
-                    .map(|v| v.to_string())
-                    .unwrap_or("N/A".into()),
-            );
+            .item_opt("Internal", self.internal)
+            .item_opt("Attachable", self.attachable);
         Ok(vec![summary])
     }
 }
