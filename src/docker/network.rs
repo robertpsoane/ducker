@@ -1,13 +1,12 @@
 use bollard::query_parameters::ListNetworksOptionsBuilder;
 use bollard::secret::Network;
 use color_eyre::eyre::Result;
-use serde::Serialize;
 
 use crate::docker::traits::DescribeSection;
 
 use super::traits::Describe;
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DockerNetwork {
     pub id: String,
     pub name: String,

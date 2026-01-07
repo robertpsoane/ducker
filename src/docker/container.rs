@@ -5,7 +5,6 @@ use bollard::query_parameters::{
 use chrono::Local;
 use chrono::prelude::DateTime;
 use color_eyre::eyre::{Context, Result, bail};
-use serde::Serialize;
 use std::{
     collections::HashMap,
     time::{Duration, UNIX_EPOCH},
@@ -18,7 +17,7 @@ use crate::docker::traits::DescribeSection;
 
 use super::traits::Describe;
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DockerContainer {
     pub id: String,
     pub image_id: String,
