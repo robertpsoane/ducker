@@ -1,7 +1,9 @@
 use bollard::query_parameters::ListNetworksOptionsBuilder;
 use bollard::secret::Network;
-use color_eyre::eyre::{Result, bail};
+use color_eyre::eyre::Result;
 use serde::Serialize;
+
+use crate::docker::traits::DescribeSection;
 
 use super::traits::Describe;
 
@@ -53,13 +55,24 @@ impl Describe for DockerNetwork {
         self.name.clone()
     }
 
-    fn describe(&self) -> Result<Vec<String>> {
-        let summary = match serde_yml::to_string(&self) {
-            Ok(s) => s,
-            Err(_) => {
-                bail!("failed to parse container summary")
-            }
-        };
-        Ok(summary.lines().map(String::from).collect())
+    fn describe(&self) -> Result<Vec<DescribeSection>> {
+        let mut summary = DescribeSection::new("Summary");
+        summary
+            .item("ID", &self.id)
+            .item("Name", &self.name)
+            .item("Driver", &self.driver)
+            .item("Created At", &self.created_at)
+            .item("Scope", &self.scope)
+            .item(
+                "Internal",
+                self.internal.map(|v| v.to_string()).unwrap_or("N/A".into()),
+            )
+            .item(
+                "Attachable",
+                self.attachable
+                    .map(|v| v.to_string())
+                    .unwrap_or("N/A".into()),
+            );
+        Ok(vec![summary])
     }
 }
