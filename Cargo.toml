@@ -10,7 +10,7 @@ license-file = "LICENSE.txt"
 name = "ducker"
 readme = "README.md"
 repository = "https://github.com/robertpsoane/ducker"
-rust-version = "1.92.0"
+rust-version = "1.88"
 version = "0.5.6"
 
 [dependencies]
