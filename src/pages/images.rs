@@ -1,12 +1,12 @@
 use bollard::Docker;
-use color_eyre::eyre::{bail, Context, ContextCompat, Result};
+use color_eyre::eyre::{Context, ContextCompat, Result, bail};
 use futures::lock::Mutex as FutureMutex;
 use ratatui::{
+    Frame,
     layout::Rect,
     prelude::*,
     style::Style,
     widgets::{Row, Table, TableState},
-    Frame,
 };
 use ratatui_macros::constraints;
 use std::sync::{Arc, Mutex};
@@ -21,10 +21,10 @@ use crate::{
     config::Config,
     context::AppContext,
     docker::image::DockerImage,
-    events::{message::MessageResponse, Key, Message, Transition},
+    events::{Key, Message, Transition, message::MessageResponse},
     sorting::{
-        sort_images_by_created, sort_images_by_id, sort_images_by_name, sort_images_by_size,
-        sort_images_by_tag, ImageSortField, SortOrder, SortState,
+        ImageSortField, SortOrder, SortState, sort_images_by_created, sort_images_by_id,
+        sort_images_by_name, sort_images_by_size, sort_images_by_tag,
     },
     traits::{Close, Component, ModalComponent, Page},
 };
@@ -144,7 +144,7 @@ impl Page for Images {
         self.refresh().await.context("unable to refresh images")?;
 
         // If a context has been passed in, choose that item in list
-        // this ist to allo logs, attach etc to appear to revert to previous
+        // this is to allow logs, attach etc to appear to revert to previous
         // state
         // I'm sure there is a more sensible way of doing this...
         let image_id: String;
@@ -279,10 +279,10 @@ impl Images {
     }
 
     fn get_image(&self) -> Result<&DockerImage> {
-        if let Some(image_idx) = self.list_state.selected() {
-            if let Some(image) = self.images.get(image_idx) {
-                return Ok(image);
-            }
+        if let Some(image_idx) = self.list_state.selected()
+            && let Some(image) = self.images.get(image_idx)
+        {
+            return Ok(image);
         }
         bail!("no container id found");
     }
@@ -362,10 +362,10 @@ impl Component for Images {
 
         f.render_stateful_widget(table, area, &mut self.list_state);
 
-        if let Some(m) = self.modal.as_mut() {
-            if let ModalState::Open(_) = m.state {
-                m.draw(f, area)
-            }
+        if let Some(m) = self.modal.as_mut()
+            && let ModalState::Open(_) = m.state
+        {
+            m.draw(f, area)
         }
     }
 }

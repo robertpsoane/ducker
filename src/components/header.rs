@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use ratatui::{
+    Frame,
     layout::{self, Margin, Rect},
     style::Style,
-    Frame,
 };
 use tui_big_text::{BigText, PixelSize};
 

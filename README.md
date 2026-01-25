@@ -21,7 +21,7 @@
 
 ### Cargo
 
-There isn't currently a downloadable pre-built binary; to install you will need cargo installed:
+There isn't currently a downloadable pre-built binary; to install you will need cargo 1.88 or higher installed:
 
 ```bash
 cargo install --locked ducker

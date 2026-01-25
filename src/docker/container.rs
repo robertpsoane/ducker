@@ -2,9 +2,9 @@ use bollard::query_parameters::{
     ListContainersOptionsBuilder, RemoveContainerOptionsBuilder, StartContainerOptions,
     StopContainerOptions,
 };
-use chrono::prelude::DateTime;
 use chrono::Local;
-use color_eyre::eyre::{bail, Context, Result};
+use chrono::prelude::DateTime;
+use color_eyre::eyre::{Context, Result, bail};
 use serde::Serialize;
 use std::{
     collections::HashMap,

@@ -80,8 +80,11 @@ impl Component for PageHelp {
         let group_height = area.height - 1;
 
         // Integer division - round up
-        let n_blocks =
-            (self.displays.len() + (group_height as usize) - 1) / (group_height as usize);
+        let n_blocks = (self
+            .displays
+            .len()
+            .saturating_add((group_height as usize) - 1))
+            / (group_height as usize);
 
         let displays = self.displays.clone();
         let width = self.width;

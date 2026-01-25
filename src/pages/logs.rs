@@ -5,8 +5,8 @@ use ratatui::widgets::{List, ListState};
 use std::sync::{Arc, Mutex};
 use tokio::task::JoinHandle;
 
-use color_eyre::eyre::{bail, Ok, Result};
-use ratatui::{layout::Rect, Frame};
+use color_eyre::eyre::{Ok, Result, bail};
+use ratatui::{Frame, layout::Rect};
 use tokio::sync::mpsc::Sender;
 
 use crate::config::Config;
@@ -15,7 +15,7 @@ use crate::docker::logs::StreamOptions;
 use crate::{
     components::help::{PageHelp, PageHelpBuilder},
     docker::logs::DockerLogs,
-    events::{message::MessageResponse, Key, Message, Transition},
+    events::{Key, Message, Transition, message::MessageResponse},
     traits::{Close, Component, Page},
 };
 
@@ -126,7 +126,7 @@ impl Logs {
 
     async fn start_log_stream(&mut self) -> Result<()> {
         self.auto_scroll = true;
-        if let Some(logs) = &self.logs {
+        if let Some(logs) = self.logs.clone() {
             let mut logs_stream = logs.get_log_stream(&self.docker, self.stream_options.clone());
             let tx = self.tx.clone();
             let log_messages = self.log_messages.clone();

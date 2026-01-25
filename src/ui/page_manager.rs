@@ -3,17 +3,17 @@ use std::sync::Arc;
 use bollard::Docker;
 use color_eyre::eyre::{Context, Result};
 use ratatui::{
+    Frame,
     layout::{Margin, Rect},
     text::Line,
     widgets::{Block, Padding},
-    Frame,
 };
 use tokio::sync::mpsc::Sender;
 
 use crate::{
     config::Config,
     context::AppContext,
-    events::{message::MessageResponse, Key, Message, Transition},
+    events::{Key, Message, Transition, message::MessageResponse},
     pages::{
         attach::Attach, containers::Containers, describe::DescribeContainer, images::Images,
         logs::Logs, networks::Network, volumes::Volume,

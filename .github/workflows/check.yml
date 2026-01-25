@@ -13,4 +13,4 @@ jobs:
       checks: write
     uses: robertpsoane/github-workflows/.github/workflows/rust-check.yml@main
     with:
-      msrv: 1.82.0
+      msrv: 1.88.0

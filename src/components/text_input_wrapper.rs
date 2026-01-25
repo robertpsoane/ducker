@@ -1,7 +1,7 @@
 use color_eyre::eyre::Result;
 
 use crate::{
-    events::{message::MessageResponse, Key},
+    events::{Key, message::MessageResponse},
     traits::Component,
     widgets::text_input::{Autocomplete, TextInput, TextInputState},
 };
