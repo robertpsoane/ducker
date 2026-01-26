@@ -79,18 +79,6 @@ impl DescribeContainer {
             self.scroll -= 1;
         }
     }
-
-    fn resolve_scroll(&mut self, height: &u16, n_lines: &u16) -> u16 {
-        let max_scroll = if *n_lines < (height / 2) {
-            0
-        } else {
-            n_lines - (height / 2)
-        };
-        if self.scroll > max_scroll {
-            self.scroll = max_scroll;
-        };
-        self.scroll
-    }
 }
 
 #[async_trait::async_trait]
