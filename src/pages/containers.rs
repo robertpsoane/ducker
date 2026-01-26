@@ -1,11 +1,13 @@
 use bollard::Docker;
 use color_eyre::eyre::{Context, Result, bail};
 use futures::lock::Mutex as FutureMutex;
+use itertools::Itertools;
 use ratatui::{
     Frame,
     layout::Rect,
     style::Style,
-    widgets::{Row, Table, TableState},
+    text::{Line, Span},
+    widgets::{Cell, Row, Table, TableState},
 };
 use ratatui_macros::constraints;
 use std::{
@@ -22,7 +24,7 @@ use crate::{
     },
     config::Config,
     context::AppContext,
-    docker::container::DockerContainer,
+    docker::container::{DockerContainer, Ip, Ports},
     events::{Key, Message, Transition, message::MessageResponse},
     sorting::{
         ContainerSortField, SortOrder, SortState, sort_containers_by_created,
@@ -430,6 +432,40 @@ impl Containers {
     }
 }
 
+impl From<Ports> for Cell<'_> {
+    fn from(ports: Ports) -> Self {
+        let mut ports = ports.0;
+        ports.sort();
+        ports.dedup();
+
+        let spans = ports
+            .into_iter()
+            .enumerate()
+            .map(|(index, port)| {
+                let ip_delimiter = match port.ip {
+                    Ip::All | Ip::Net(_) => ":",
+                    Ip::Localhost => "",
+                };
+                let port_label = if port
+                    .public_port
+                    .is_some_and(|public_port| public_port != port.private_port)
+                {
+                    format!(
+                        "{}:{}",
+                        port.public_port.unwrap_or_default(),
+                        port.private_port
+                    )
+                } else {
+                    port.private_port.to_string()
+                };
+                let prefix = if index > 0 { ", " } else { "" };
+                Span::raw(format!("{prefix}{}{ip_delimiter}{port_label}", port.ip))
+            })
+            .collect_vec();
+        Line::from(spans).into()
+    }
+}
+
 impl Component for Containers {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         let rows = self.containers.clone().into_iter().map(|c| {
@@ -442,7 +478,13 @@ impl Component for Containers {
             };
 
             Row::new(vec![
-                c.id, c.image, c.command, c.created, c.status, c.ports, c.names,
+                Cell::from(c.id),
+                Cell::from(c.image),
+                Cell::from(c.command),
+                Cell::from(c.created),
+                Cell::from(c.status),
+                Cell::from(c.ports),
+                Cell::from(c.names),
             ])
             .style(style)
         });
@@ -458,7 +500,7 @@ impl Component for Containers {
             self.get_column_header("Names", ContainerSortField::Name),
         ]);
 
-        let widths = constraints![==12%, ==20%, ==20%, ==10%, ==13%, ==10%, ==10%];
+        let widths = constraints![==6%, ==24%, ==20%, ==10%, ==15%, ==15%, ==10%];
 
         let table = Table::new(rows.clone(), widths)
             .header(columns.clone().style(Style::new().bold()))
