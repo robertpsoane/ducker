@@ -1,8 +1,7 @@
 use bollard::query_parameters::ListNetworksOptionsBuilder;
-use bollard::secret::{Network, NetworkContainer};
+use bollard::secret::Network;
 use color_eyre::eyre::{Result, bail};
 use serde::Serialize;
-use std::collections::HashMap;
 
 use super::traits::Describe;
 
@@ -15,7 +14,6 @@ pub struct DockerNetwork {
     pub scope: String,
     pub internal: Option<bool>,
     pub attachable: Option<bool>,
-    pub containers: Option<HashMap<String, NetworkContainer>>,
 }
 
 impl DockerNetwork {
@@ -28,7 +26,6 @@ impl DockerNetwork {
             scope: v.scope.unwrap_or_default(),
             internal: v.internal,
             attachable: v.attachable,
-            containers: v.containers,
         }
     }
 
