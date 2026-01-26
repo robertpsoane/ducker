@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0](https://github.com/robertpsoane/ducker/compare/v0.5.7...v0.6.0) - 2026-01-26
+
+### Fixed
+
+- bump bollard ([#267](https://github.com/robertpsoane/ducker/pull/267))
+
 ## [0.5.7](https://github.com/robertpsoane/ducker/compare/v0.5.6...v0.5.7) - 2026-01-25
 
 ### Other
