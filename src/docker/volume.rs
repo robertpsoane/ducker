@@ -2,12 +2,13 @@ use bollard::query_parameters::{ListVolumesOptionsBuilder, RemoveVolumeOptionsBu
 use bollard::secret::{Volume, VolumeScopeEnum};
 use byte_unit::{Byte, UnitType};
 use color_eyre::eyre::{Result, bail};
-use serde::Serialize;
 use std::collections::HashMap;
+
+use crate::docker::traits::DescribeSection;
 
 use super::traits::Describe;
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DockerVolume {
     pub name: String,
     pub driver: String,
@@ -88,13 +89,33 @@ impl Describe for DockerVolume {
         self.name.clone()
     }
 
-    fn describe(&self) -> Result<Vec<String>> {
-        let summary = match serde_yml::to_string(&self) {
-            Ok(s) => s,
-            Err(_) => {
-                bail!("failed to parse container summary")
+    fn describe(&self) -> Result<Vec<DescribeSection>> {
+        let mut summary = DescribeSection::new("Summary");
+        summary
+            .item("Name", &self.name)
+            .item("Driver", &self.driver)
+            .item("Mountpoint", &self.mountpoint)
+            .item_opt("Created At", self.created_at.as_ref())
+            .item_opt("Scope", self.scope)
+            .item_opt("Reference Count", self.ref_count)
+            .item_opt("Size", self.size.as_ref());
+        let mut result = vec![summary];
+
+        if !self.labels.is_empty() {
+            let mut label_section = DescribeSection::new("Labels");
+            for (key, value) in &self.labels {
+                label_section.item(key, value);
             }
-        };
-        Ok(summary.lines().map(String::from).collect())
+            result.push(label_section);
+        }
+        if !self.options.is_empty() {
+            let mut options_section = DescribeSection::new("Options");
+            for (key, value) in &self.options {
+                options_section.item(key, value);
+            }
+            result.push(options_section);
+        }
+
+        Ok(result)
     }
 }

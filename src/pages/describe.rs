@@ -4,15 +4,18 @@ use std::sync::{Arc, Mutex};
 use bollard::Docker;
 
 use color_eyre::eyre::{Result, bail};
-use ratatui::style::Style;
+use itertools::Itertools;
+use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::Paragraph;
+use ratatui::widgets::{Scrollbar, ScrollbarOrientation};
 use ratatui::{Frame, layout::Rect};
 use tokio::sync::mpsc::Sender;
+use tui_tree_widget::{Tree, TreeItem, TreeState};
+use uuid::Uuid;
 
 use crate::config::Config;
 use crate::context::AppContext;
-use crate::docker::traits::Describe;
+use crate::docker::traits::{Describe, DescribeSection};
 use crate::traits::Close;
 use crate::{
     components::help::{PageHelp, PageHelpBuilder},
@@ -33,11 +36,12 @@ pub struct DescribeContainer {
     _docker: Docker,
     config: Arc<Config>,
     thing: Option<Box<dyn Describe>>,
-    thing_summary: Option<Vec<String>>,
+    thing_summary: Option<Vec<DescribeSection>>,
     tx: Sender<Message<Key, Transition>>,
     cx: Option<AppContext>,
     page_help: Arc<Mutex<PageHelp>>,
     scroll: u16,
+    tree_state: TreeState<Uuid>,
 }
 
 impl DescribeContainer {
@@ -53,6 +57,7 @@ impl DescribeContainer {
             cx: None,
             page_help: Arc::new(Mutex::new(page_help)),
             scroll: 0,
+            tree_state: TreeState::default(),
         }
     }
 
@@ -73,18 +78,6 @@ impl DescribeContainer {
         if self.scroll > 0 {
             self.scroll -= 1;
         }
-    }
-
-    fn resolve_scroll(&mut self, height: &u16, n_lines: &u16) -> u16 {
-        let max_scroll = if *n_lines < (height / 2) {
-            0
-        } else {
-            n_lines - (height / 2)
-        };
-        if self.scroll > max_scroll {
-            self.scroll = max_scroll;
-        };
-        self.scroll
     }
 }
 
@@ -151,38 +144,67 @@ impl Page for DescribeContainer {
 #[async_trait::async_trait]
 impl Close for DescribeContainer {}
 
+fn section_to_tree_item<'a>(
+    state: &mut TreeState<Uuid>,
+    section: &'a DescribeSection,
+    section_style: &Style,
+    key_style: &Style,
+) -> TreeItem<'a, Uuid> {
+    let items: Vec<TreeItem<Uuid>> = section
+        .items
+        .iter()
+        .map(|item| {
+            let line = Line::from(vec![
+                Span::from(&item.name).style(*key_style),
+                Span::from(": "),
+                Span::from(&item.value),
+            ]);
+            TreeItem::new_leaf(item.id, line)
+        })
+        .collect();
+
+    let item = TreeItem::new(
+        section.id,
+        Span::from(&section.name).style(*section_style),
+        items,
+    )
+    .expect("all items should be unique");
+    state.open(vec![section.id]);
+    item
+}
+
 impl Component for DescribeContainer {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         if self.thing_summary.is_none() {
             return;
         }
-        let container_summary = self.thing_summary.as_ref().unwrap();
-        let lines: Vec<Line> = container_summary
-            .iter()
-            .map(|l| {
-                let l = l.clone();
+        if let Some(summary) = &self.thing_summary {
+            let section_style = Style::default().fg(self.config.theme.footer());
+            let key_style = Style::default().fg(self.config.theme.footer());
+            let tree = summary
+                .iter()
+                .map(|section| {
+                    section_to_tree_item(&mut self.tree_state, section, &section_style, &key_style)
+                })
+                .collect_vec();
 
-                let mut row = l.splitn(2, ':');
-                let key = String::from(row.next().unwrap_or(""));
-                let val = String::from(row.next().unwrap_or(""));
+            let widget = Tree::new(tree.as_slice())
+                .expect("all item identifiers are unique")
+                .experimental_scrollbar(Some(
+                    Scrollbar::new(ScrollbarOrientation::VerticalRight)
+                        .begin_symbol(None)
+                        .track_symbol(None)
+                        .end_symbol(None),
+                ))
+                .highlight_style(
+                    Style::new()
+                        .fg(Color::Black)
+                        .bg(Color::LightGreen)
+                        .add_modifier(Modifier::BOLD),
+                )
+                .highlight_symbol(">> ");
 
-                let key_style = Style::default().fg(self.config.theme.footer());
-
-                Line::from(vec![
-                    Span::from(key.clone()).style(key_style),
-                    Span::from(":"),
-                    Span::from(val.clone()),
-                ])
-            })
-            .collect();
-
-        let paragraph = Paragraph::new(lines);
-
-        let n_lines = paragraph.line_count(area.width) as u16;
-
-        let scroll = self.resolve_scroll(&area.height, &n_lines);
-
-        let paragraph = paragraph.scroll((scroll, 0));
-        f.render_widget(paragraph, area)
+            f.render_stateful_widget(widget, area, &mut self.tree_state);
+        }
     }
 }

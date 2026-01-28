@@ -2,17 +2,18 @@ use bollard::query_parameters::{ListImagesOptionsBuilder, RemoveImageOptionsBuil
 use byte_unit::{Byte, UnitType};
 use chrono::Local;
 use chrono::prelude::DateTime;
-use color_eyre::eyre::{Context, Result, bail};
+use color_eyre::eyre::{Context, Result};
 use itertools::Itertools;
-use serde::Serialize;
 use std::collections::HashMap;
 use std::time::{Duration, UNIX_EPOCH};
 
 use bollard::secret::ImageSummary;
 
+use crate::docker::traits::DescribeSection;
+
 use super::traits::Describe;
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct DockerImage {
     pub id: String,
     pub name: String,
@@ -112,13 +113,16 @@ impl Describe for DockerImage {
     fn get_name(&self) -> String {
         format!("image: {}", self.name)
     }
-    fn describe(&self) -> Result<Vec<String>> {
-        let summary = match serde_yml::to_string(&self) {
-            Ok(s) => s,
-            Err(_) => {
-                bail!("failed to parse image summary")
-            }
-        };
-        Ok(summary.lines().map(String::from).collect())
+    fn describe(&self) -> Result<Vec<DescribeSection>> {
+        let mut summary = DescribeSection::new("Summary");
+        summary
+            .item("ID", &self.id)
+            .item("Name", &self.name)
+            .item("Tag", &self.tag)
+            .item("Created", &self.created)
+            .item("Size", &self.size)
+            .item("Tags", self.tags.join(", "))
+            .item("Digests", self.digests.join(", "));
+        Ok(vec![summary])
     }
 }

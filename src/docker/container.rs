@@ -5,7 +5,6 @@ use bollard::query_parameters::{
 use chrono::Local;
 use chrono::prelude::DateTime;
 use color_eyre::eyre::{Context, Result, bail};
-use serde::Serialize;
 use std::{
     collections::HashMap,
     time::{Duration, UNIX_EPOCH},
@@ -14,9 +13,11 @@ use tokio::process::Command;
 
 use bollard::secret::ContainerSummary;
 
+use crate::docker::traits::DescribeSection;
+
 use super::traits::Describe;
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DockerContainer {
     pub id: String,
     pub image_id: String,
@@ -172,14 +173,19 @@ impl Describe for DockerContainer {
     fn get_name(&self) -> String {
         format!("container: {}", self.names)
     }
-    fn describe(&self) -> Result<Vec<String>> {
-        let summary = match serde_yml::to_string(&self) {
-            Ok(s) => s,
-            Err(_) => {
-                bail!("failed to parse container summary")
-            }
-        };
-        Ok(summary.lines().map(String::from).collect())
+    fn describe(&self) -> Result<Vec<DescribeSection>> {
+        let mut summary = DescribeSection::new("Summary");
+        summary
+            .item("ID", &self.id)
+            .item("Image", &self.image)
+            .item("Image ID", &self.image_id)
+            .item("Command", &self.command)
+            .item("Created", &self.created)
+            .item("Status", &self.status)
+            .item("Ports", &self.ports)
+            .item("Names", &self.names)
+            .item("Running", self.running);
+        Ok(vec![summary])
     }
 }
 
