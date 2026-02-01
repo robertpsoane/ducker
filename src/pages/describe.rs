@@ -24,6 +24,8 @@ const NAME: &str = "Describe";
 
 const UP_KEY: Key = Key::Up;
 const DOWN_KEY: Key = Key::Down;
+const PAGE_UP_KEY: Key = Key::PageUp;
+const PAGE_DOWN_KEY: Key = Key::PageDown;
 
 const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
@@ -38,6 +40,7 @@ pub struct DescribeContainer {
     cx: Option<AppContext>,
     page_help: Arc<Mutex<PageHelp>>,
     scroll: u16,
+    height: u16,
 }
 
 impl DescribeContainer {
@@ -53,6 +56,7 @@ impl DescribeContainer {
             cx: None,
             page_help: Arc::new(Mutex::new(page_help)),
             scroll: 0,
+            height: 0,
         }
     }
 
@@ -65,13 +69,15 @@ impl DescribeContainer {
         PageHelpBuilder::new(page_name, config).build()
     }
 
-    fn down(&mut self) {
-        self.scroll += 1;
+    fn down(&mut self, amount: u16) {
+        self.scroll += amount;
     }
 
-    fn up(&mut self) {
-        if self.scroll > 0 {
-            self.scroll -= 1;
+    fn up(&mut self, amount: u16) {
+        if self.scroll > amount {
+            self.scroll -= amount;
+        } else {
+            self.scroll = 0;
         }
     }
 
@@ -93,11 +99,19 @@ impl Page for DescribeContainer {
     async fn update(&mut self, message: Key) -> Result<MessageResponse> {
         let res = match message {
             UP_KEY | K_KEY => {
-                self.up();
+                self.up(1);
+                MessageResponse::Consumed
+            }
+            PAGE_UP_KEY => {
+                self.up(self.height);
                 MessageResponse::Consumed
             }
             DOWN_KEY | J_KEY => {
-                self.down();
+                self.down(1);
+                MessageResponse::Consumed
+            }
+            PAGE_DOWN_KEY => {
+                self.down(self.height);
                 MessageResponse::Consumed
             }
             Key::Esc => {
@@ -153,6 +167,7 @@ impl Close for DescribeContainer {}
 
 impl Component for DescribeContainer {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
+        self.height = area.height.saturating_sub(1);
         if self.thing_summary.is_none() {
             return;
         }

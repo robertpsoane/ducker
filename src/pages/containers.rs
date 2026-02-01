@@ -36,6 +36,8 @@ const NAME: &str = "Containers";
 
 const UP_KEY: Key = Key::Up;
 const DOWN_KEY: Key = Key::Down;
+const PAGE_UP_KEY: Key = Key::PageUp;
+const PAGE_DOWN_KEY: Key = Key::PageDown;
 
 const A_KEY: Key = Key::Char('a');
 const J_KEY: Key = Key::Char('j');
@@ -74,6 +76,7 @@ pub struct Containers {
     modal: Option<BooleanModal<ModalTypes>>,
     stopping_containers: Arc<Mutex<HashSet<String>>>,
     sort_state: SortState<ContainerSortField>,
+    table_height: u16,
 }
 
 #[async_trait::async_trait]
@@ -93,11 +96,19 @@ impl Page for Containers {
 
         let result = match message {
             UP_KEY | K_KEY => {
-                self.decrement_list();
+                self.scroll_up(1);
+                MessageResponse::Consumed
+            }
+            PAGE_UP_KEY => {
+                self.scroll_up(self.table_height.into());
                 MessageResponse::Consumed
             }
             DOWN_KEY | J_KEY => {
-                self.increment_list();
+                self.scroll_down(1);
+                MessageResponse::Consumed
+            }
+            PAGE_DOWN_KEY => {
+                self.scroll_down(self.table_height.into());
                 MessageResponse::Consumed
             }
             CTRL_D_KEY => match self.delete_container() {
@@ -254,6 +265,7 @@ impl Containers {
             modal: None,
             stopping_containers: Arc::new(Mutex::new(HashSet::new())),
             sort_state: SortState::new(ContainerSortField::Name),
+            table_height: 0,
         }
     }
 
@@ -276,26 +288,27 @@ impl Containers {
         });
     }
 
-    fn increment_list(&mut self) {
+    fn scroll_down(&mut self, amount: usize) {
         let current_idx = self.list_state.selected();
         match current_idx {
             None => self.list_state.select(Some(0)),
             Some(current_idx) => {
-                if !self.containers.is_empty() && current_idx < self.containers.len() - 1 {
-                    self.list_state.select(Some(current_idx + 1))
+                if !self.containers.is_empty() {
+                    let len = self.containers.len();
+                    let new_idx = (current_idx + amount).min(len.saturating_sub(1));
+                    self.list_state.select(Some(new_idx));
                 }
             }
         }
     }
 
-    fn decrement_list(&mut self) {
+    fn scroll_up(&mut self, amount: usize) {
         let current_idx = self.list_state.selected();
         match current_idx {
             None => self.list_state.select(Some(0)),
             Some(current_idx) => {
-                if current_idx > 0 {
-                    self.list_state.select(Some(current_idx - 1))
-                }
+                let new_idx = current_idx.saturating_sub(amount);
+                self.list_state.select(Some(new_idx));
             }
         }
     }
@@ -432,6 +445,7 @@ impl Containers {
 
 impl Component for Containers {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
+        self.table_height = area.height.saturating_sub(2);
         let rows = self.containers.clone().into_iter().map(|c| {
             let style = if self.stopping_containers.lock().unwrap().contains(&c.id) {
                 Style::default().fg(self.config.theme.negative_highlight())

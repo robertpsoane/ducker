@@ -35,6 +35,8 @@ const NAME: &str = "Networks";
 
 const UP_KEY: Key = Key::Up;
 const DOWN_KEY: Key = Key::Down;
+const PAGE_UP_KEY: Key = Key::PageUp;
+const PAGE_DOWN_KEY: Key = Key::PageDown;
 
 const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
@@ -68,6 +70,7 @@ pub struct Network {
     list_state: TableState,
     modal: Option<BooleanModal<ModalTypes>>,
     sort_state: NetworkSortState,
+    table_height: u16,
 }
 
 #[async_trait::async_trait]
@@ -82,11 +85,19 @@ impl Page for Network {
 
         let result = match message {
             UP_KEY | K_KEY => {
-                self.decrement_list();
+                self.scroll_up(1);
+                MessageResponse::Consumed
+            }
+            PAGE_UP_KEY => {
+                self.scroll_up(self.table_height.into());
                 MessageResponse::Consumed
             }
             DOWN_KEY | J_KEY => {
-                self.increment_list();
+                self.scroll_down(1);
+                MessageResponse::Consumed
+            }
+            PAGE_DOWN_KEY => {
+                self.scroll_down(self.table_height.into());
                 MessageResponse::Consumed
             }
             SHIFT_D_KEY => {
@@ -191,6 +202,7 @@ impl Network {
             list_state: TableState::default(),
             modal: None,
             sort_state: NetworkSortState::new(NetworkSortField::Name),
+            table_height: 0,
         }
     }
 
@@ -256,26 +268,27 @@ impl Network {
         }
     }
 
-    fn increment_list(&mut self) {
+    fn scroll_down(&mut self, amount: usize) {
         let current_idx = self.list_state.selected();
         match current_idx {
             None => self.list_state.select(Some(0)),
             Some(current_idx) => {
-                if !self.networks.is_empty() && current_idx < self.networks.len() - 1 {
-                    self.list_state.select(Some(current_idx + 1));
+                if !self.networks.is_empty() {
+                    let len = self.networks.len();
+                    let new_idx = (current_idx + amount).min(len.saturating_sub(1));
+                    self.list_state.select(Some(new_idx));
                 }
             }
         }
     }
 
-    fn decrement_list(&mut self) {
+    fn scroll_up(&mut self, amount: usize) {
         let current_idx = self.list_state.selected();
         match current_idx {
             None => self.list_state.select(Some(0)),
             Some(current_idx) => {
-                if current_idx > 0 {
-                    self.list_state.select(Some(current_idx - 1));
-                }
+                let new_idx = current_idx.saturating_sub(amount);
+                self.list_state.select(Some(new_idx));
             }
         }
     }
@@ -348,6 +361,7 @@ impl Network {
 
 impl Component for Network {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
+        self.table_height = area.height.saturating_sub(2);
         let rows = get_network_rows(&self.networks);
         let columns = Row::new(vec![
             get_header_with_sort_indicator("Id", NetworkSortField::Id, &self.sort_state),
