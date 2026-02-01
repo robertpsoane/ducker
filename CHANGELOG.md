@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1](https://github.com/robertpsoane/ducker/compare/v0.6.0...v0.6.1) - 2026-02-01
+
+### Added
+
+- add support for page down/page up keys ([#269](https://github.com/robertpsoane/ducker/pull/269))
+
 ## [0.6.0](https://github.com/robertpsoane/ducker/compare/v0.5.7...v0.6.0) - 2026-01-26
 
 ### Fixed
