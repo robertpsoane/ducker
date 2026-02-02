@@ -19,7 +19,7 @@ use crate::{
     components::{
         boolean_modal::{BooleanModal, ModalState},
         help::{PageHelp, PageHelpBuilder},
-        text_input_wrapper::TextInputWrapper,
+        table_filter::TableFilter,
     },
     config::Config,
     context::AppContext,
@@ -52,9 +52,6 @@ const S_KEY: Key = Key::Char('s');
 const G_KEY: Key = Key::Char('g');
 const L_KEY: Key = Key::Char('l');
 const SHIFT_G_KEY: Key = Key::Char('G');
-const SLASH_KEY: Key = Key::Char('/');
-const ESC_KEY: Key = Key::Esc;
-const ENTER_KEY: Key = Key::Enter;
 
 // Sorting keys
 const SHIFT_N_KEY: Key = Key::Char('N');
@@ -82,8 +79,7 @@ pub struct Containers {
     stopping_containers: Arc<Mutex<HashSet<String>>>,
     sort_state: SortState<ContainerSortField>,
     table_height: u16,
-    is_filtering: bool,
-    filter_input: TextInputWrapper,
+    filter: TableFilter,
 }
 
 #[async_trait::async_trait]
@@ -101,33 +97,13 @@ impl Page for Containers {
             return res;
         }
 
-        if self.is_filtering {
-            match message {
-                ESC_KEY => {
-                    self.is_filtering = false;
-                    self.filter_input.reset();
-                    self.filter_containers(true);
-                    self.sort_containers();
-                    return Ok(MessageResponse::Consumed);
-                }
-                ENTER_KEY => {
-                    self.is_filtering = false;
-                    return Ok(MessageResponse::Consumed);
-                }
-                _ => {
-                    self.filter_input.update(message)?;
-                    self.filter_containers(true);
-                    self.sort_containers();
-                    return Ok(MessageResponse::Consumed);
-                }
-            }
+        if let Some(msg) = self.filter.handle_input(message)? {
+            self.filter_containers(true);
+            self.sort_containers();
+            return Ok(msg);
         }
 
         let result = match message {
-            SLASH_KEY => {
-                self.is_filtering = true;
-                MessageResponse::Consumed
-            }
             UP_KEY | K_KEY => {
                 self.scroll_up(1);
                 MessageResponse::Consumed
@@ -301,8 +277,7 @@ impl Containers {
             stopping_containers: Arc::new(Mutex::new(HashSet::new())),
             sort_state: SortState::new(ContainerSortField::Name),
             table_height: 0,
-            is_filtering: false,
-            filter_input: TextInputWrapper::new("Filter".to_string(), None),
+            filter: TableFilter::new(),
         }
     }
 
@@ -323,7 +298,7 @@ impl Containers {
     }
 
     fn filter_containers(&mut self, reset_selection: bool) {
-        let filter_text = self.filter_input.get_value().to_lowercase();
+        let filter_text = self.filter.text();
         self.filtered_containers = self
             .containers
             .iter()
@@ -513,12 +488,10 @@ impl Component for Containers {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         use ratatui::layout::{Constraint, Layout};
 
-        let show_filter = self.is_filtering || !self.filter_input.get_value().is_empty();
-
-        let table_area = if show_filter {
-            let layout = Layout::vertical([Constraint::Min(0), Constraint::Length(1)]);
-            let [table_area, filter_area] = layout.areas(area);
-            self.filter_input.draw(f, filter_area);
+        let table_area = if self.filter.is_active() {
+            let layout = Layout::vertical([Constraint::Length(3), Constraint::Min(0)]);
+            let [filter_area, table_area] = layout.areas(area);
+            self.filter.draw(f, filter_area);
             table_area
         } else {
             area

@@ -20,7 +20,7 @@ use crate::{
     components::{
         boolean_modal::{BooleanModal, ModalState},
         help::{PageHelp, PageHelpBuilder},
-        text_input_wrapper::TextInputWrapper,
+        table_filter::TableFilter,
     },
     config::Config,
     context::AppContext,
@@ -46,9 +46,6 @@ const D_KEY: Key = Key::Char('d');
 const G_KEY: Key = Key::Char('g');
 const SHIFT_G_KEY: Key = Key::Char('G');
 const ALT_D_KEY: Key = Key::Alt('d');
-const SLASH_KEY: Key = Key::Char('/');
-const ESC_KEY: Key = Key::Esc;
-const ENTER_KEY: Key = Key::Enter;
 
 // Sort keys
 const SHIFT_N_KEY: Key = Key::Char('N');
@@ -76,8 +73,7 @@ pub struct Volume {
     sort_state: VolumeSortState,
     show_dangling: bool,
     table_height: u16,
-    is_filtering: bool,
-    filter_input: TextInputWrapper,
+    filter: TableFilter,
 }
 
 #[async_trait::async_trait]
@@ -90,33 +86,13 @@ impl Page for Volume {
             return Ok(res);
         }
 
-        if self.is_filtering {
-            match message {
-                ESC_KEY => {
-                    self.is_filtering = false;
-                    self.filter_input.reset();
-                    self.filter_volumes(true);
-                    self.sort_volumes();
-                    return Ok(MessageResponse::Consumed);
-                }
-                ENTER_KEY => {
-                    self.is_filtering = false;
-                    return Ok(MessageResponse::Consumed);
-                }
-                _ => {
-                    self.filter_input.update(message)?;
-                    self.filter_volumes(true);
-                    self.sort_volumes();
-                    return Ok(MessageResponse::Consumed);
-                }
-            }
+        if let Some(msg) = self.filter.handle_input(message)? {
+            self.filter_volumes(true);
+            self.sort_volumes();
+            return Ok(msg);
         }
 
         let result = match message {
-            SLASH_KEY => {
-                self.is_filtering = true;
-                MessageResponse::Consumed
-            }
             UP_KEY | K_KEY => {
                 self.scroll_up(1);
                 MessageResponse::Consumed
@@ -239,8 +215,7 @@ impl Volume {
             sort_state: VolumeSortState::default(),
             show_dangling: true,
             table_height: 0,
-            is_filtering: false,
-            filter_input: TextInputWrapper::new("Filter".to_string(), None),
+            filter: TableFilter::new(),
         }
     }
 
@@ -271,7 +246,7 @@ impl Volume {
     }
 
     fn filter_volumes(&mut self, reset_selection: bool) {
-        let filter_text = self.filter_input.get_value().to_lowercase();
+        let filter_text = self.filter.text();
         self.filtered_volumes = self
             .volumes
             .iter()
@@ -442,12 +417,10 @@ impl Component for Volume {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
         use ratatui::layout::{Constraint, Layout};
 
-        let show_filter = self.is_filtering || !self.filter_input.get_value().is_empty();
-
-        let table_area = if show_filter {
-            let layout = Layout::vertical([Constraint::Min(0), Constraint::Length(1)]);
-            let [table_area, filter_area] = layout.areas(area);
-            self.filter_input.draw(f, filter_area);
+        let table_area = if self.filter.is_active() {
+            let layout = Layout::vertical([Constraint::Length(3), Constraint::Min(0)]);
+            let [filter_area, table_area] = layout.areas(area);
+            self.filter.draw(f, filter_area);
             table_area
         } else {
             area
