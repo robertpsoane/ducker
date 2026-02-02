@@ -20,6 +20,7 @@ use crate::{
     components::{
         boolean_modal::{BooleanModal, ModalState},
         help::{PageHelp, PageHelpBuilder},
+        text_input_wrapper::TextInputWrapper,
     },
     config::Config,
     context::AppContext,
@@ -45,6 +46,9 @@ const D_KEY: Key = Key::Char('d');
 const G_KEY: Key = Key::Char('g');
 const SHIFT_G_KEY: Key = Key::Char('G');
 const ALT_D_KEY: Key = Key::Alt('d');
+const SLASH_KEY: Key = Key::Char('/');
+const ESC_KEY: Key = Key::Esc;
+const ENTER_KEY: Key = Key::Enter;
 
 // Sort keys
 const SHIFT_N_KEY: Key = Key::Char('N');
@@ -66,11 +70,14 @@ pub struct Volume {
     page_help: Arc<Mutex<PageHelp>>,
     docker: Docker,
     volumes: Vec<DockerVolume>,
+    filtered_volumes: Vec<DockerVolume>,
     list_state: TableState,
     modal: Option<BooleanModal<ModalTypes>>,
     sort_state: VolumeSortState,
     show_dangling: bool,
     table_height: u16,
+    is_filtering: bool,
+    filter_input: TextInputWrapper,
 }
 
 #[async_trait::async_trait]
@@ -83,7 +90,33 @@ impl Page for Volume {
             return Ok(res);
         }
 
+        if self.is_filtering {
+            match message {
+                ESC_KEY => {
+                    self.is_filtering = false;
+                    self.filter_input.reset();
+                    self.filter_volumes(true);
+                    self.sort_volumes();
+                    return Ok(MessageResponse::Consumed);
+                }
+                ENTER_KEY => {
+                    self.is_filtering = false;
+                    return Ok(MessageResponse::Consumed);
+                }
+                _ => {
+                    self.filter_input.update(message)?;
+                    self.filter_volumes(true);
+                    self.sort_volumes();
+                    return Ok(MessageResponse::Consumed);
+                }
+            }
+        }
+
         let result = match message {
+            SLASH_KEY => {
+                self.is_filtering = true;
+                MessageResponse::Consumed
+            }
             UP_KEY | K_KEY => {
                 self.scroll_up(1);
                 MessageResponse::Consumed
@@ -110,7 +143,7 @@ impl Page for Volume {
                 MessageResponse::Consumed
             }
             SHIFT_G_KEY => {
-                self.list_state.select(Some(self.volumes.len() - 1));
+                self.list_state.select(Some(self.filtered_volumes.len() - 1));
                 MessageResponse::Consumed
             }
             SHIFT_N_KEY => {
@@ -164,7 +197,7 @@ impl Page for Volume {
             return Ok(());
         }
 
-        for (idx, c) in self.volumes.iter().enumerate() {
+        for (idx, c) in self.filtered_volumes.iter().enumerate() {
             if c.name == volume_id {
                 self.list_state.select(Some(idx));
                 break;
@@ -199,11 +232,14 @@ impl Volume {
             page_help: Arc::new(Mutex::new(page_help)),
             docker,
             volumes: vec![],
+            filtered_volumes: vec![],
             list_state: TableState::default(),
             modal: None,
             sort_state: VolumeSortState::default(),
             show_dangling: true,
             table_height: 0,
+            is_filtering: false,
+            filter_input: TextInputWrapper::new("Filter".to_string(), None),
         }
     }
 
@@ -219,17 +255,45 @@ impl Volume {
             .await
             .context("unable to retrieve list of volumes")?;
 
+        let selected_name = self.get_volume().map(|c| c.name.clone()).ok();
+        self.filter_volumes(false);
         // Apply current sort after refresh
         self.sort_volumes();
 
+        if let Some(name) = selected_name {
+            if let Some(idx) = self.filtered_volumes.iter().position(|c| c.name == name) {
+                self.list_state.select(Some(idx));
+            }
+        }
+
         Ok(())
+    }
+
+    fn filter_volumes(&mut self, reset_selection: bool) {
+        let filter_text = self.filter_input.get_value().to_lowercase();
+        self.filtered_volumes = self
+            .volumes
+            .iter()
+            .filter(|c| {
+                if filter_text.is_empty() {
+                    return true;
+                }
+                c.name.to_lowercase().contains(&filter_text)
+                    || c.driver.to_lowercase().contains(&filter_text)
+                    || c.mountpoint.to_lowercase().contains(&filter_text)
+            })
+            .cloned()
+            .collect();
+        if reset_selection {
+            self.list_state.select(Some(0));
+        }
     }
 
     fn sort_volumes(&mut self) {
         let field = self.sort_state.field;
         let order = self.sort_state.order;
 
-        self.volumes.sort_by(|a, b| {
+        self.filtered_volumes.sort_by(|a, b| {
             let comparison = match field {
                 VolumeSortField::Name => a.name.cmp(&b.name),
                 VolumeSortField::Driver => a.driver.cmp(&b.driver),
@@ -288,8 +352,8 @@ impl Volume {
         match current_idx {
             None => self.list_state.select(Some(0)),
             Some(current_idx) => {
-                if !self.volumes.is_empty() {
-                    let len = self.volumes.len();
+                if !self.filtered_volumes.is_empty() {
+                    let len = self.filtered_volumes.len();
                     let new_idx = (current_idx + amount).min(len.saturating_sub(1));
                     self.list_state.select(Some(new_idx));
                 }
@@ -310,7 +374,7 @@ impl Volume {
 
     fn get_volume(&self) -> Result<&DockerVolume> {
         if let Some(volume_idx) = self.list_state.selected()
-            && let Some(volume) = self.volumes.get(volume_idx)
+            && let Some(volume) = self.filtered_volumes.get(volume_idx)
         {
             return Ok(volume);
         }
@@ -375,8 +439,21 @@ impl Volume {
 
 impl Component for Volume {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
-        self.table_height = area.height.saturating_sub(2);
-        let rows = get_volume_rows(&self.volumes);
+        use ratatui::layout::{Constraint, Layout};
+
+        let show_filter = self.is_filtering || !self.filter_input.get_value().is_empty();
+
+        let table_area = if show_filter {
+            let layout = Layout::vertical([Constraint::Min(0), Constraint::Length(1)]);
+            let [table_area, filter_area] = layout.areas(area);
+            self.filter_input.draw(f, filter_area);
+            table_area
+        } else {
+            area
+        };
+
+        self.table_height = table_area.height.saturating_sub(2);
+        let rows = get_volume_rows(&self.filtered_volumes);
         let columns = get_header_row(&self.sort_state);
 
         let widths = constraints![==30%, ==15%, ==30%, ==25%];
@@ -385,7 +462,7 @@ impl Component for Volume {
             .header(columns.clone().style(Style::new().bold()))
             .row_highlight_style(Style::new().reversed());
 
-        f.render_stateful_widget(table, area, &mut self.list_state);
+        f.render_stateful_widget(table, table_area, &mut self.list_state);
 
         if let Some(m) = self.modal.as_mut()
             && let ModalState::Open(_) = m.state

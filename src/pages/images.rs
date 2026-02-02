@@ -16,6 +16,7 @@ use crate::{
     components::{
         boolean_modal::{BooleanModal, ModalState},
         help::{PageHelp, PageHelpBuilder},
+        text_input_wrapper::TextInputWrapper,
     },
     config::Config,
     context::AppContext,
@@ -42,6 +43,9 @@ const D_KEY: Key = Key::Char('d');
 const G_KEY: Key = Key::Char('g');
 const SHIFT_G_KEY: Key = Key::Char('G');
 const ALT_D_KEY: Key = Key::Alt('d');
+const SLASH_KEY: Key = Key::Char('/');
+const ESC_KEY: Key = Key::Esc;
+const ENTER_KEY: Key = Key::Enter;
 
 // Sort keys
 const SHIFT_N_KEY: Key = Key::Char('N');
@@ -64,11 +68,14 @@ pub struct Images {
     page_help: Arc<Mutex<PageHelp>>,
     docker: Docker,
     images: Vec<DockerImage>,
+    filtered_images: Vec<DockerImage>,
     list_state: TableState,
     modal: Option<BooleanModal<ModalTypes>>,
     show_dangling: bool,
     sort_state: ImageSortState,
     table_height: u16,
+    is_filtering: bool,
+    filter_input: TextInputWrapper,
 }
 
 #[async_trait::async_trait]
@@ -81,7 +88,33 @@ impl Page for Images {
             return Ok(res);
         }
 
+        if self.is_filtering {
+            match message {
+                ESC_KEY => {
+                    self.is_filtering = false;
+                    self.filter_input.reset();
+                    self.filter_images(true);
+                    self.sort_images();
+                    return Ok(MessageResponse::Consumed);
+                }
+                ENTER_KEY => {
+                    self.is_filtering = false;
+                    return Ok(MessageResponse::Consumed);
+                }
+                _ => {
+                    self.filter_input.update(message)?;
+                    self.filter_images(true);
+                    self.sort_images();
+                    return Ok(MessageResponse::Consumed);
+                }
+            }
+        }
+
         let result = match message {
+            SLASH_KEY => {
+                self.is_filtering = true;
+                MessageResponse::Consumed
+            }
             UP_KEY | K_KEY => {
                 self.scroll_up(1);
                 MessageResponse::Consumed
@@ -103,7 +136,7 @@ impl Page for Images {
                 MessageResponse::Consumed
             }
             SHIFT_G_KEY => {
-                self.list_state.select(Some(self.images.len() - 1));
+                self.list_state.select(Some(self.filtered_images.len() - 1));
                 MessageResponse::Consumed
             }
             SHIFT_N_KEY => {
@@ -166,7 +199,7 @@ impl Page for Images {
             return Ok(());
         }
 
-        for (idx, c) in self.images.iter().enumerate() {
+        for (idx, c) in self.filtered_images.iter().enumerate() {
             if c.id == image_id {
                 self.list_state.select(Some(idx));
                 break;
@@ -200,11 +233,14 @@ impl Images {
             page_help: Arc::new(Mutex::new(page_help)),
             docker,
             images: vec![],
+            filtered_images: vec![],
             list_state: TableState::default(),
             modal: None,
             show_dangling: false,
             sort_state: ImageSortState::new(ImageSortField::Name),
             table_height: 0,
+            is_filtering: false,
+            filter_input: TextInputWrapper::new("Filter".to_string(), None),
         }
     }
 
@@ -213,15 +249,44 @@ impl Images {
             .await
             .context("unable to retrieve list of images")?;
 
+        let selected_id = self.get_image().map(|c| c.id.clone()).ok();
+        self.filter_images(false);
         self.sort_images();
+
+        if let Some(id) = selected_id {
+            if let Some(idx) = self.filtered_images.iter().position(|c| c.id == id) {
+                self.list_state.select(Some(idx));
+            }
+        }
+
         Ok(())
+    }
+
+    fn filter_images(&mut self, reset_selection: bool) {
+        let filter_text = self.filter_input.get_value().to_lowercase();
+        self.filtered_images = self
+            .images
+            .iter()
+            .filter(|c| {
+                if filter_text.is_empty() {
+                    return true;
+                }
+                c.id.to_lowercase().contains(&filter_text)
+                    || c.name.to_lowercase().contains(&filter_text)
+                    || c.tag.to_lowercase().contains(&filter_text)
+            })
+            .cloned()
+            .collect();
+        if reset_selection {
+            self.list_state.select(Some(0));
+        }
     }
 
     fn sort_images(&mut self) {
         let field = self.sort_state.field;
         let order = self.sort_state.order;
 
-        self.images.sort_by(|a, b| match field {
+        self.filtered_images.sort_by(|a, b| match field {
             ImageSortField::Id => sort_images_by_id(a, b, order),
             ImageSortField::Name => sort_images_by_name(a, b, order),
             ImageSortField::Tag => sort_images_by_tag(a, b, order),
@@ -270,8 +335,8 @@ impl Images {
         match current_idx {
             None => self.list_state.select(Some(0)),
             Some(current_idx) => {
-                if !self.images.is_empty() {
-                    let len = self.images.len();
+                if !self.filtered_images.is_empty() {
+                    let len = self.filtered_images.len();
                     let new_idx = (current_idx + amount).min(len.saturating_sub(1));
                     self.list_state.select(Some(new_idx));
                 }
@@ -292,7 +357,7 @@ impl Images {
 
     fn get_image(&self) -> Result<&DockerImage> {
         if let Some(image_idx) = self.list_state.selected()
-            && let Some(image) = self.images.get(image_idx)
+            && let Some(image) = self.filtered_images.get(image_idx)
         {
             return Ok(image);
         }
@@ -357,8 +422,21 @@ impl Images {
 
 impl Component for Images {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
-        self.table_height = area.height.saturating_sub(2);
-        let rows = get_image_rows(&self.images);
+        use ratatui::layout::{Constraint, Layout};
+
+        let show_filter = self.is_filtering || !self.filter_input.get_value().is_empty();
+
+        let table_area = if show_filter {
+            let layout = Layout::vertical([Constraint::Min(0), Constraint::Length(1)]);
+            let [table_area, filter_area] = layout.areas(area);
+            self.filter_input.draw(f, filter_area);
+            table_area
+        } else {
+            area
+        };
+
+        self.table_height = table_area.height.saturating_sub(2);
+        let rows = get_image_rows(&self.filtered_images);
         let columns = Row::new(vec![
             get_header_with_sort_indicator("ID", ImageSortField::Id, &self.sort_state),
             get_header_with_sort_indicator("Name", ImageSortField::Name, &self.sort_state),
@@ -373,7 +451,7 @@ impl Component for Images {
             .header(columns.clone().style(Style::new().bold()))
             .row_highlight_style(Style::new().reversed());
 
-        f.render_stateful_widget(table, area, &mut self.list_state);
+        f.render_stateful_widget(table, table_area, &mut self.list_state);
 
         if let Some(m) = self.modal.as_mut()
             && let ModalState::Open(_) = m.state
