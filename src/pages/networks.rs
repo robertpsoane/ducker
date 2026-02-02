@@ -19,6 +19,7 @@ use crate::{
     components::{
         boolean_modal::{BooleanModal, ModalState},
         help::{PageHelp, PageHelpBuilder},
+        table_filter::TableFilter,
     },
     config::Config,
     context::AppContext,
@@ -67,10 +68,12 @@ pub struct Network {
     page_help: Arc<Mutex<PageHelp>>,
     docker: Docker,
     networks: Vec<DockerNetwork>,
+    filtered_networks: Vec<DockerNetwork>,
     list_state: TableState,
     modal: Option<BooleanModal<ModalTypes>>,
     sort_state: NetworkSortState,
     table_height: u16,
+    filter: TableFilter,
 }
 
 #[async_trait::async_trait]
@@ -81,6 +84,12 @@ impl Page for Network {
         let res = self.update_modal(message).await?;
         if res == MessageResponse::Consumed {
             return Ok(res);
+        }
+
+        if let Some(msg) = self.filter.handle_input(message)? {
+            self.filter_networks(true);
+            self.sort_networks();
+            return Ok(msg);
         }
 
         let result = match message {
@@ -110,7 +119,8 @@ impl Page for Network {
                 MessageResponse::Consumed
             }
             SHIFT_G_KEY => {
-                self.list_state.select(Some(self.networks.len() - 1));
+                self.list_state
+                    .select(Some(self.filtered_networks.len() - 1));
                 MessageResponse::Consumed
             }
             SHIFT_N_KEY => {
@@ -164,7 +174,7 @@ impl Page for Network {
             return Ok(());
         }
 
-        for (idx, c) in self.networks.iter().enumerate() {
+        for (idx, c) in self.filtered_networks.iter().enumerate() {
             if c.name == network_id {
                 self.list_state.select(Some(idx));
                 break;
@@ -199,10 +209,12 @@ impl Network {
             page_help: Arc::new(Mutex::new(page_help)),
             docker,
             networks: vec![],
+            filtered_networks: vec![],
             list_state: TableState::default(),
             modal: None,
             sort_state: NetworkSortState::new(NetworkSortField::Name),
             table_height: 0,
+            filter: TableFilter::new(),
         }
     }
 
@@ -211,15 +223,44 @@ impl Network {
             .await
             .context("unable to retrieve list of networks")?;
 
+        let selected_id = self.get_network().map(|c| c.id.clone()).ok();
+        self.filter_networks(false);
         self.sort_networks();
+
+        if let Some(id) = selected_id
+            && let Some(idx) = self.filtered_networks.iter().position(|c| c.id == id)
+        {
+            self.list_state.select(Some(idx));
+        }
+
         Ok(())
+    }
+
+    fn filter_networks(&mut self, reset_selection: bool) {
+        let filter_text = self.filter.text();
+        self.filtered_networks = self
+            .networks
+            .iter()
+            .filter(|c| {
+                if filter_text.is_empty() {
+                    return true;
+                }
+                c.id.to_lowercase().contains(&filter_text)
+                    || c.name.to_lowercase().contains(&filter_text)
+                    || c.driver.to_lowercase().contains(&filter_text)
+            })
+            .cloned()
+            .collect();
+        if reset_selection {
+            self.list_state.select(Some(0));
+        }
     }
 
     fn sort_networks(&mut self) {
         let field = self.sort_state.field;
         let order = self.sort_state.order;
 
-        self.networks.sort_by(|a, b| match field {
+        self.filtered_networks.sort_by(|a, b| match field {
             NetworkSortField::Id => sort_networks_by_id(a, b, order),
             NetworkSortField::Name => sort_networks_by_name(a, b, order),
             NetworkSortField::Driver => sort_networks_by_driver(a, b, order),
@@ -273,8 +314,8 @@ impl Network {
         match current_idx {
             None => self.list_state.select(Some(0)),
             Some(current_idx) => {
-                if !self.networks.is_empty() {
-                    let len = self.networks.len();
+                if !self.filtered_networks.is_empty() {
+                    let len = self.filtered_networks.len();
                     let new_idx = (current_idx + amount).min(len.saturating_sub(1));
                     self.list_state.select(Some(new_idx));
                 }
@@ -295,7 +336,7 @@ impl Network {
 
     fn get_network(&self) -> Result<&DockerNetwork> {
         if let Some(network_idx) = self.list_state.selected()
-            && let Some(network) = self.networks.get(network_idx)
+            && let Some(network) = self.filtered_networks.get(network_idx)
         {
             return Ok(network);
         }
@@ -361,8 +402,19 @@ impl Network {
 
 impl Component for Network {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
-        self.table_height = area.height.saturating_sub(2);
-        let rows = get_network_rows(&self.networks);
+        use ratatui::layout::{Constraint, Layout};
+
+        let table_area = if self.filter.is_active() {
+            let layout = Layout::vertical([Constraint::Length(3), Constraint::Min(0)]);
+            let [filter_area, table_area] = layout.areas(area);
+            self.filter.draw(f, filter_area);
+            table_area
+        } else {
+            area
+        };
+
+        self.table_height = table_area.height.saturating_sub(2);
+        let rows = get_network_rows(&self.filtered_networks);
         let columns = Row::new(vec![
             get_header_with_sort_indicator("Id", NetworkSortField::Id, &self.sort_state),
             get_header_with_sort_indicator("Name", NetworkSortField::Name, &self.sort_state),
@@ -377,7 +429,7 @@ impl Component for Network {
             .header(columns.clone().style(Style::new().bold()))
             .row_highlight_style(Style::new().reversed());
 
-        f.render_stateful_widget(table, area, &mut self.list_state);
+        f.render_stateful_widget(table, table_area, &mut self.list_state);
 
         if let Some(m) = self.modal.as_mut()
             && let ModalState::Open(_) = m.state

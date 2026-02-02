@@ -19,6 +19,7 @@ use crate::{
     components::{
         boolean_modal::{BooleanModal, ModalState},
         help::{PageHelp, PageHelpBuilder},
+        table_filter::TableFilter,
     },
     config::Config,
     context::AppContext,
@@ -72,11 +73,13 @@ pub struct Containers {
     page_help: Arc<Mutex<PageHelp>>,
     docker: Docker,
     containers: Vec<DockerContainer>,
+    filtered_containers: Vec<DockerContainer>,
     list_state: TableState,
     modal: Option<BooleanModal<ModalTypes>>,
     stopping_containers: Arc<Mutex<HashSet<String>>>,
     sort_state: SortState<ContainerSortField>,
     table_height: u16,
+    filter: TableFilter,
 }
 
 #[async_trait::async_trait]
@@ -92,6 +95,12 @@ impl Page for Containers {
                 self.modal = None;
             }
             return res;
+        }
+
+        if let Some(msg) = self.filter.handle_input(message)? {
+            self.filter_containers(true);
+            self.sort_containers();
+            return Ok(msg);
         }
 
         let result = match message {
@@ -140,7 +149,8 @@ impl Page for Containers {
                 MessageResponse::Consumed
             }
             SHIFT_G_KEY => {
-                self.list_state.select(Some(self.containers.len() - 1));
+                self.list_state
+                    .select(Some(self.filtered_containers.len() - 1));
                 MessageResponse::Consumed
             }
             A_KEY => {
@@ -223,7 +233,7 @@ impl Page for Containers {
             return Ok(());
         }
 
-        for (idx, c) in self.containers.iter().enumerate() {
+        for (idx, c) in self.filtered_containers.iter().enumerate() {
             if c.id == container_id {
                 self.list_state.select(Some(idx));
                 break;
@@ -261,25 +271,56 @@ impl Containers {
             tx,
             docker,
             containers: vec![],
+            filtered_containers: vec![],
             list_state: TableState::default(),
             modal: None,
             stopping_containers: Arc::new(Mutex::new(HashSet::new())),
             sort_state: SortState::new(ContainerSortField::Name),
             table_height: 0,
+            filter: TableFilter::new(),
         }
     }
 
     async fn refresh(&mut self) -> Result<(), color_eyre::eyre::Error> {
         self.containers = DockerContainer::list(&self.docker).await?;
+
+        let selected_id = self.get_container().map(|c| c.id.clone()).ok();
+        self.filter_containers(false);
         self.sort_containers();
+
+        if let Some(id) = selected_id
+            && let Some(idx) = self.filtered_containers.iter().position(|c| c.id == id)
+        {
+            self.list_state.select(Some(idx));
+        }
+
         Ok(())
+    }
+
+    fn filter_containers(&mut self, reset_selection: bool) {
+        let filter_text = self.filter.text();
+        self.filtered_containers = self
+            .containers
+            .iter()
+            .filter(|c| {
+                if filter_text.is_empty() {
+                    return true;
+                }
+                c.names.to_lowercase().contains(&filter_text)
+                    || c.image.to_lowercase().contains(&filter_text)
+            })
+            .cloned()
+            .collect();
+        if reset_selection {
+            self.list_state.select(Some(0));
+        }
     }
 
     fn sort_containers(&mut self) {
         let field = self.sort_state.field;
         let order = self.sort_state.order;
 
-        self.containers.sort_by(|a, b| match field {
+        self.filtered_containers.sort_by(|a, b| match field {
             ContainerSortField::Name => sort_containers_by_name(a, b, order),
             ContainerSortField::Image => sort_containers_by_image(a, b, order),
             ContainerSortField::Status => sort_containers_by_status(a, b, order),
@@ -293,8 +334,8 @@ impl Containers {
         match current_idx {
             None => self.list_state.select(Some(0)),
             Some(current_idx) => {
-                if !self.containers.is_empty() {
-                    let len = self.containers.len();
+                if !self.filtered_containers.is_empty() {
+                    let len = self.filtered_containers.len();
                     let new_idx = (current_idx + amount).min(len.saturating_sub(1));
                     self.list_state.select(Some(new_idx));
                 }
@@ -315,7 +356,7 @@ impl Containers {
 
     fn get_container(&self) -> Result<&DockerContainer> {
         if let Some(container_idx) = self.list_state.selected()
-            && let Some(container) = self.containers.get(container_idx)
+            && let Some(container) = self.filtered_containers.get(container_idx)
         {
             return Ok(container);
         }
@@ -445,8 +486,20 @@ impl Containers {
 
 impl Component for Containers {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
-        self.table_height = area.height.saturating_sub(2);
-        let rows = self.containers.clone().into_iter().map(|c| {
+        use ratatui::layout::{Constraint, Layout};
+
+        let table_area = if self.filter.is_active() {
+            let layout = Layout::vertical([Constraint::Length(3), Constraint::Min(0)]);
+            let [filter_area, table_area] = layout.areas(area);
+            self.filter.draw(f, filter_area);
+            table_area
+        } else {
+            area
+        };
+
+        self.table_height = table_area.height.saturating_sub(2);
+
+        let rows = self.filtered_containers.clone().into_iter().map(|c| {
             let style = if self.stopping_containers.lock().unwrap().contains(&c.id) {
                 Style::default().fg(self.config.theme.negative_highlight())
             } else if c.running {
@@ -478,7 +531,7 @@ impl Component for Containers {
             .header(columns.clone().style(Style::new().bold()))
             .row_highlight_style(Style::new().reversed());
 
-        f.render_stateful_widget(table, area, &mut self.list_state);
+        f.render_stateful_widget(table, table_area, &mut self.list_state);
 
         if let Some(m) = self.modal.as_mut()
             && let ModalState::Open(_) = m.state

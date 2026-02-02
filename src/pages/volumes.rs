@@ -20,6 +20,7 @@ use crate::{
     components::{
         boolean_modal::{BooleanModal, ModalState},
         help::{PageHelp, PageHelpBuilder},
+        table_filter::TableFilter,
     },
     config::Config,
     context::AppContext,
@@ -66,11 +67,13 @@ pub struct Volume {
     page_help: Arc<Mutex<PageHelp>>,
     docker: Docker,
     volumes: Vec<DockerVolume>,
+    filtered_volumes: Vec<DockerVolume>,
     list_state: TableState,
     modal: Option<BooleanModal<ModalTypes>>,
     sort_state: VolumeSortState,
     show_dangling: bool,
     table_height: u16,
+    filter: TableFilter,
 }
 
 #[async_trait::async_trait]
@@ -81,6 +84,12 @@ impl Page for Volume {
         let res = self.update_modal(message).await?;
         if res == MessageResponse::Consumed {
             return Ok(res);
+        }
+
+        if let Some(msg) = self.filter.handle_input(message)? {
+            self.filter_volumes(true);
+            self.sort_volumes();
+            return Ok(msg);
         }
 
         let result = match message {
@@ -110,7 +119,8 @@ impl Page for Volume {
                 MessageResponse::Consumed
             }
             SHIFT_G_KEY => {
-                self.list_state.select(Some(self.volumes.len() - 1));
+                self.list_state
+                    .select(Some(self.filtered_volumes.len() - 1));
                 MessageResponse::Consumed
             }
             SHIFT_N_KEY => {
@@ -164,7 +174,7 @@ impl Page for Volume {
             return Ok(());
         }
 
-        for (idx, c) in self.volumes.iter().enumerate() {
+        for (idx, c) in self.filtered_volumes.iter().enumerate() {
             if c.name == volume_id {
                 self.list_state.select(Some(idx));
                 break;
@@ -199,11 +209,13 @@ impl Volume {
             page_help: Arc::new(Mutex::new(page_help)),
             docker,
             volumes: vec![],
+            filtered_volumes: vec![],
             list_state: TableState::default(),
             modal: None,
             sort_state: VolumeSortState::default(),
             show_dangling: true,
             table_height: 0,
+            filter: TableFilter::new(),
         }
     }
 
@@ -219,17 +231,45 @@ impl Volume {
             .await
             .context("unable to retrieve list of volumes")?;
 
+        let selected_name = self.get_volume().map(|c| c.name.clone()).ok();
+        self.filter_volumes(false);
         // Apply current sort after refresh
         self.sort_volumes();
 
+        if let Some(name) = selected_name
+            && let Some(idx) = self.filtered_volumes.iter().position(|c| c.name == name)
+        {
+            self.list_state.select(Some(idx));
+        }
+
         Ok(())
+    }
+
+    fn filter_volumes(&mut self, reset_selection: bool) {
+        let filter_text = self.filter.text();
+        self.filtered_volumes = self
+            .volumes
+            .iter()
+            .filter(|c| {
+                if filter_text.is_empty() {
+                    return true;
+                }
+                c.name.to_lowercase().contains(&filter_text)
+                    || c.driver.to_lowercase().contains(&filter_text)
+                    || c.mountpoint.to_lowercase().contains(&filter_text)
+            })
+            .cloned()
+            .collect();
+        if reset_selection {
+            self.list_state.select(Some(0));
+        }
     }
 
     fn sort_volumes(&mut self) {
         let field = self.sort_state.field;
         let order = self.sort_state.order;
 
-        self.volumes.sort_by(|a, b| {
+        self.filtered_volumes.sort_by(|a, b| {
             let comparison = match field {
                 VolumeSortField::Name => a.name.cmp(&b.name),
                 VolumeSortField::Driver => a.driver.cmp(&b.driver),
@@ -288,8 +328,8 @@ impl Volume {
         match current_idx {
             None => self.list_state.select(Some(0)),
             Some(current_idx) => {
-                if !self.volumes.is_empty() {
-                    let len = self.volumes.len();
+                if !self.filtered_volumes.is_empty() {
+                    let len = self.filtered_volumes.len();
                     let new_idx = (current_idx + amount).min(len.saturating_sub(1));
                     self.list_state.select(Some(new_idx));
                 }
@@ -310,7 +350,7 @@ impl Volume {
 
     fn get_volume(&self) -> Result<&DockerVolume> {
         if let Some(volume_idx) = self.list_state.selected()
-            && let Some(volume) = self.volumes.get(volume_idx)
+            && let Some(volume) = self.filtered_volumes.get(volume_idx)
         {
             return Ok(volume);
         }
@@ -375,8 +415,19 @@ impl Volume {
 
 impl Component for Volume {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
-        self.table_height = area.height.saturating_sub(2);
-        let rows = get_volume_rows(&self.volumes);
+        use ratatui::layout::{Constraint, Layout};
+
+        let table_area = if self.filter.is_active() {
+            let layout = Layout::vertical([Constraint::Length(3), Constraint::Min(0)]);
+            let [filter_area, table_area] = layout.areas(area);
+            self.filter.draw(f, filter_area);
+            table_area
+        } else {
+            area
+        };
+
+        self.table_height = table_area.height.saturating_sub(2);
+        let rows = get_volume_rows(&self.filtered_volumes);
         let columns = get_header_row(&self.sort_state);
 
         let widths = constraints![==30%, ==15%, ==30%, ==25%];
@@ -385,7 +436,7 @@ impl Component for Volume {
             .header(columns.clone().style(Style::new().bold()))
             .row_highlight_style(Style::new().reversed());
 
-        f.render_stateful_widget(table, area, &mut self.list_state);
+        f.render_stateful_widget(table, table_area, &mut self.list_state);
 
         if let Some(m) = self.modal.as_mut()
             && let ModalState::Open(_) = m.state
