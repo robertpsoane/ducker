@@ -143,7 +143,8 @@ impl Page for Network {
                 MessageResponse::Consumed
             }
             SHIFT_G_KEY => {
-                self.list_state.select(Some(self.filtered_networks.len() - 1));
+                self.list_state
+                    .select(Some(self.filtered_networks.len() - 1));
                 MessageResponse::Consumed
             }
             SHIFT_N_KEY => {
@@ -251,10 +252,10 @@ impl Network {
         self.filter_networks(false);
         self.sort_networks();
 
-        if let Some(id) = selected_id {
-            if let Some(idx) = self.filtered_networks.iter().position(|c| c.id == id) {
-                self.list_state.select(Some(idx));
-            }
+        if let Some(id) = selected_id
+            && let Some(idx) = self.filtered_networks.iter().position(|c| c.id == id)
+        {
+            self.list_state.select(Some(idx));
         }
 
         Ok(())

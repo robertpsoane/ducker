@@ -143,7 +143,8 @@ impl Page for Volume {
                 MessageResponse::Consumed
             }
             SHIFT_G_KEY => {
-                self.list_state.select(Some(self.filtered_volumes.len() - 1));
+                self.list_state
+                    .select(Some(self.filtered_volumes.len() - 1));
                 MessageResponse::Consumed
             }
             SHIFT_N_KEY => {
@@ -260,10 +261,10 @@ impl Volume {
         // Apply current sort after refresh
         self.sort_volumes();
 
-        if let Some(name) = selected_name {
-            if let Some(idx) = self.filtered_volumes.iter().position(|c| c.name == name) {
-                self.list_state.select(Some(idx));
-            }
+        if let Some(name) = selected_name
+            && let Some(idx) = self.filtered_volumes.iter().position(|c| c.name == name)
+        {
+            self.list_state.select(Some(idx));
         }
 
         Ok(())

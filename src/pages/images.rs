@@ -253,10 +253,10 @@ impl Images {
         self.filter_images(false);
         self.sort_images();
 
-        if let Some(id) = selected_id {
-            if let Some(idx) = self.filtered_images.iter().position(|c| c.id == id) {
-                self.list_state.select(Some(idx));
-            }
+        if let Some(id) = selected_id
+            && let Some(idx) = self.filtered_images.iter().position(|c| c.id == id)
+        {
+            self.list_state.select(Some(idx));
         }
 
         Ok(())

@@ -173,7 +173,8 @@ impl Page for Containers {
                 MessageResponse::Consumed
             }
             SHIFT_G_KEY => {
-                self.list_state.select(Some(self.filtered_containers.len() - 1));
+                self.list_state
+                    .select(Some(self.filtered_containers.len() - 1));
                 MessageResponse::Consumed
             }
             A_KEY => {
@@ -312,10 +313,10 @@ impl Containers {
         self.filter_containers(false);
         self.sort_containers();
 
-        if let Some(id) = selected_id {
-            if let Some(idx) = self.filtered_containers.iter().position(|c| c.id == id) {
-                self.list_state.select(Some(idx));
-            }
+        if let Some(id) = selected_id
+            && let Some(idx) = self.filtered_containers.iter().position(|c| c.id == id)
+        {
+            self.list_state.select(Some(idx));
         }
 
         Ok(())
