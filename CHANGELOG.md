@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
+<<<<<<< Updated upstream
+=======
+- *(deps)* bump clap from 4.5.56 to 4.5.57 ([#275](https://github.com/robertpsoane/ducker/pull/275))
+- *(deps)* bump tui-big-text from 0.8.1 to 0.8.2 ([#276](https://github.com/robertpsoane/ducker/pull/276))
+>>>>>>> Stashed changes
 - *(deps)* bump ureq from 3.1.4 to 3.2.0 ([#277](https://github.com/robertpsoane/ducker/pull/277))
 - *(deps)* bump clap from 4.5.54 to 4.5.56 ([#272](https://github.com/robertpsoane/ducker/pull/272))
 
