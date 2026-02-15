@@ -38,7 +38,7 @@ tokio = { version = "1.49.0", features = [
 tracing = "0.1.44"
 tracing-error = "0.2.1"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
-ureq = { version = "3.1.4", features = ["json"] }
+ureq = { version = "3.2.0", features = ["json"] }
 
 # Ratatui Dependencies; these often need to be updated in lockstep
 ansi-to-tui = "8.0.1"
