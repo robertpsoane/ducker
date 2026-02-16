@@ -50,7 +50,7 @@ ratatui = { version = "0.30.0", features = [
 tui-big-text = "0.8.2"
 
 [dev-dependencies]
-tempfile = "3.24.0"
+tempfile = "3.25.0"
 
 [profile.release]
 strip = true
