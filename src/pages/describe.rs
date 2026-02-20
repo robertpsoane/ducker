@@ -40,7 +40,6 @@ pub struct DescribeContainer {
     tx: Sender<Message<Key, Transition>>,
     cx: Option<AppContext>,
     page_help: Arc<Mutex<PageHelp>>,
-    scroll: u16,
     tree_state: TreeState<Uuid>,
 }
 
@@ -56,7 +55,6 @@ impl DescribeContainer {
             tx,
             cx: None,
             page_help: Arc::new(Mutex::new(page_help)),
-            scroll: 0,
             tree_state: TreeState::default(),
         }
     }
@@ -71,13 +69,11 @@ impl DescribeContainer {
     }
 
     fn down(&mut self) {
-        self.scroll += 1;
+        self.tree_state.scroll_down(1);
     }
 
     fn up(&mut self) {
-        if self.scroll > 0 {
-            self.scroll -= 1;
-        }
+        self.tree_state.scroll_up(1);
     }
 }
 
@@ -188,21 +184,20 @@ impl Component for DescribeContainer {
                 })
                 .collect_vec();
 
+            let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
+                .begin_symbol(None)
+                .track_symbol(None)
+                .end_symbol(None);
             let widget = Tree::new(tree.as_slice())
                 .expect("all item identifiers are unique")
-                .experimental_scrollbar(Some(
-                    Scrollbar::new(ScrollbarOrientation::VerticalRight)
-                        .begin_symbol(None)
-                        .track_symbol(None)
-                        .end_symbol(None),
-                ))
+                .experimental_scrollbar(Some(scrollbar))
                 .highlight_style(
                     Style::new()
                         .fg(Color::Black)
                         .bg(Color::LightGreen)
                         .add_modifier(Modifier::BOLD),
                 )
-                .highlight_symbol(">> ");
+                .highlight_symbol("");
 
             f.render_stateful_widget(widget, area, &mut self.tree_state);
         }
