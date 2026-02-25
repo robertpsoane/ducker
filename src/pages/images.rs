@@ -32,6 +32,8 @@ const NAME: &str = "Images";
 
 const UP_KEY: Key = Key::Up;
 const DOWN_KEY: Key = Key::Down;
+const PAGE_UP_KEY: Key = Key::PageUp;
+const PAGE_DOWN_KEY: Key = Key::PageDown;
 
 const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
@@ -66,6 +68,7 @@ pub struct Images {
     modal: Option<BooleanModal<ModalTypes>>,
     show_dangling: bool,
     sort_state: ImageSortState,
+    table_height: u16,
 }
 
 #[async_trait::async_trait]
@@ -80,11 +83,19 @@ impl Page for Images {
 
         let result = match message {
             UP_KEY | K_KEY => {
-                self.decrement_list();
+                self.scroll_up(1);
+                MessageResponse::Consumed
+            }
+            PAGE_UP_KEY => {
+                self.scroll_up(self.table_height.into());
                 MessageResponse::Consumed
             }
             DOWN_KEY | J_KEY => {
-                self.increment_list();
+                self.scroll_down(1);
+                MessageResponse::Consumed
+            }
+            PAGE_DOWN_KEY => {
+                self.scroll_down(self.table_height.into());
                 MessageResponse::Consumed
             }
             G_KEY => {
@@ -193,6 +204,7 @@ impl Images {
             modal: None,
             show_dangling: false,
             sort_state: ImageSortState::new(ImageSortField::Name),
+            table_height: 0,
         }
     }
 
@@ -253,26 +265,27 @@ impl Images {
         }
     }
 
-    fn increment_list(&mut self) {
+    fn scroll_down(&mut self, amount: usize) {
         let current_idx = self.list_state.selected();
         match current_idx {
             None => self.list_state.select(Some(0)),
             Some(current_idx) => {
-                if !self.images.is_empty() && current_idx < self.images.len() - 1 {
-                    self.list_state.select(Some(current_idx + 1))
+                if !self.images.is_empty() {
+                    let len = self.images.len();
+                    let new_idx = (current_idx + amount).min(len.saturating_sub(1));
+                    self.list_state.select(Some(new_idx));
                 }
             }
         }
     }
 
-    fn decrement_list(&mut self) {
+    fn scroll_up(&mut self, amount: usize) {
         let current_idx = self.list_state.selected();
         match current_idx {
             None => self.list_state.select(Some(0)),
             Some(current_idx) => {
-                if current_idx > 0 {
-                    self.list_state.select(Some(current_idx - 1))
-                }
+                let new_idx = current_idx.saturating_sub(amount);
+                self.list_state.select(Some(new_idx));
             }
         }
     }
@@ -344,6 +357,7 @@ impl Images {
 
 impl Component for Images {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
+        self.table_height = area.height.saturating_sub(2);
         let rows = get_image_rows(&self.images);
         let columns = Row::new(vec![
             get_header_with_sort_indicator("ID", ImageSortField::Id, &self.sort_state),

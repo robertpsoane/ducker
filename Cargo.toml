@@ -2,7 +2,7 @@
 name = "ducker"
 description = "A slightly quackers Docker TUI based on k9s 🦆"
 authors = ["Robert Soane"]
-version = "0.5.7"
+version = "0.6.2"
 homepage = "https://ducker.soane.io"
 repository = "https://github.com/robertpsoane/ducker"
 edition = "2024"
@@ -17,15 +17,15 @@ rust-version = "1.88"
 serde_json = "1.0.149"
 
 async-trait = "0.1.89"
-bollard = { version = "0.20.0", features = ["ssl"] }
+bollard = { version = "0.20.1", features = ["ssl"] }
 byte-unit = { version = "5.2.0", features = ["byte"] }
-chrono = "0.4.43"
-clap = { version = "4.5.54", features = ["derive"] }
+chrono = "0.4.44"
+clap = { version = "4.5.60", features = ["derive"] }
 color-eyre = "0.6.5"
 crossterm = { version = "0.29.0", features = ["event-stream"] }
 dirs-next = "2.0.0"
 dyn-clone = "1.0.20"
-futures = "0.3.31"
+futures = "0.3.32"
 itertools = "0.14.0"
 lazy_static = "1.5.0"
 serde = "1.0.228"
@@ -38,7 +38,7 @@ tokio = { version = "1.49.0", features = [
 tracing = "0.1.44"
 tracing-error = "0.2.1"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
-ureq = { version = "3.1.4", features = ["json"] }
+ureq = { version = "3.2.0", features = ["json"] }
 uuid = { version = "1.19.0", features = ["v4"] }
 
 # Ratatui Dependencies; these often need to be updated in lockstep
@@ -48,11 +48,11 @@ ratatui = { version = "0.30.0", features = [
     "serde",
     "unstable-rendered-line-info",
 ] }
-tui-big-text = "0.8.1"
+tui-big-text = "0.8.2"
 tui-tree-widget = "0.24.0"
 
 [dev-dependencies]
-tempfile = "3.24.0"
+tempfile = "3.25.0"
 
 [profile.release]
 strip = true

@@ -18,6 +18,8 @@ const HELP_TEXT: &str = include_str!("../../README.md");
 
 const UP_KEY: Key = Key::Up;
 const DOWN_KEY: Key = Key::Down;
+const PAGE_UP_KEY: Key = Key::PageUp;
+const PAGE_DOWN_KEY: Key = Key::PageDown;
 const J_KEY: Key = Key::Char('j');
 const K_KEY: Key = Key::Char('k');
 const G_KEY: Key = Key::Char('g');
@@ -28,6 +30,7 @@ pub struct HelpPage {
     scroll: u16,
     max_scroll: u16,
     help_text: &'static str,
+    height: u16,
 }
 
 #[async_trait::async_trait]
@@ -38,8 +41,16 @@ impl Page for HelpPage {
                 self.scroll_up(1);
                 Ok(MessageResponse::Consumed)
             }
+            PAGE_UP_KEY => {
+                self.scroll_up(self.height);
+                Ok(MessageResponse::Consumed)
+            }
             DOWN_KEY | J_KEY => {
                 self.scroll_down(1);
+                Ok(MessageResponse::Consumed)
+            }
+            PAGE_DOWN_KEY => {
+                self.scroll_down(self.height);
                 Ok(MessageResponse::Consumed)
             }
             G_KEY => {
@@ -78,6 +89,7 @@ impl HelpPage {
             scroll: 0,
             help_text: &HELP_TEXT[usage_start..config_start],
             max_scroll,
+            height: 0,
         }
     }
     pub fn scroll_up(&mut self, amount: u16) {
@@ -96,6 +108,7 @@ impl Default for HelpPage {
 
 impl Component for HelpPage {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
+        self.height = area.height.saturating_sub(1);
         let block = Block::default();
         let text = Text::from(self.help_text);
         let paragraph = Paragraph::new(text)

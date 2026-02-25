@@ -27,6 +27,8 @@ const A_KEY: Key = Key::Char('a');
 const UP_KEY: Key = Key::Up;
 const K_KEY: Key = Key::Char('k');
 const DOWN_KEY: Key = Key::Down;
+const PAGE_UP_KEY: Key = Key::PageUp;
+const PAGE_DOWN_KEY: Key = Key::PageDown;
 const SPACE_BAR: Key = Key::Char(' ');
 const G_KEY: Key = Key::Char('g');
 const SHIFT_G_KEY: Key = Key::Char('G');
@@ -44,6 +46,7 @@ pub struct Logs {
     auto_scroll: bool,
     next: Option<Transition>,
     stream_options: StreamOptions,
+    list_height: u16,
 }
 
 impl Logs {
@@ -66,6 +69,7 @@ impl Logs {
             auto_scroll: true,
             next: None,
             stream_options: StreamOptions::default(),
+            list_height: 0,
         }
     }
 
@@ -124,6 +128,25 @@ impl Logs {
         self.logs = None;
     }
 
+    fn scroll_down(&mut self, amount: usize) {
+        let len = self.log_messages.lock().unwrap().len();
+        if len == 0 {
+            self.list_state.select(Some(0));
+            return;
+        }
+        let current = self.list_state.selected().unwrap_or(0);
+        let next = (current + amount).min(len - 1);
+        self.list_state.select(Some(next));
+        self.deactivate_auto_scroll();
+    }
+
+    fn scroll_up(&mut self, amount: usize) {
+        let current = self.list_state.selected().unwrap_or(0);
+        let next = current.saturating_sub(amount);
+        self.list_state.select(Some(next));
+        self.deactivate_auto_scroll();
+    }
+
     async fn start_log_stream(&mut self) -> Result<()> {
         self.auto_scroll = true;
         if let Some(logs) = self.logs.clone() {
@@ -175,13 +198,19 @@ impl Page for Logs {
                 MessageResponse::Consumed
             }
             J_KEY | DOWN_KEY => {
-                self.list_state.select_next();
-                self.deactivate_auto_scroll();
+                self.scroll_down(1);
+                MessageResponse::Consumed
+            }
+            PAGE_DOWN_KEY => {
+                self.scroll_down(self.list_height.into());
                 MessageResponse::Consumed
             }
             K_KEY | UP_KEY => {
-                self.list_state.select_previous();
-                self.deactivate_auto_scroll();
+                self.scroll_up(1);
+                MessageResponse::Consumed
+            }
+            PAGE_UP_KEY => {
+                self.scroll_up(self.list_height.into());
                 MessageResponse::Consumed
             }
             SPACE_BAR => {
@@ -240,6 +269,7 @@ impl Close for Logs {
 
 impl Component for Logs {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) {
+        self.list_height = area.height.saturating_sub(1);
         let logs: Vec<Text> = self
             .log_messages
             .lock()
