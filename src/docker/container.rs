@@ -1,6 +1,9 @@
-use bollard::query_parameters::{
-    ListContainersOptionsBuilder, RemoveContainerOptionsBuilder, StartContainerOptions,
-    StopContainerOptions,
+use bollard::{
+    config::{PortSummary, PortSummaryTypeEnum},
+    query_parameters::{
+        ListContainersOptionsBuilder, RemoveContainerOptionsBuilder, StartContainerOptions,
+        StopContainerOptions,
+    },
 };
 use chrono::Local;
 use chrono::prelude::DateTime;
@@ -13,7 +16,6 @@ use std::{
 };
 use tokio::process::Command;
 
-use bollard::models::{Port as BollardPort, PortTypeEnum as BollardPortTypeEnum};
 use bollard::secret::ContainerSummary;
 
 use super::traits::Describe;
@@ -226,8 +228,8 @@ impl std::fmt::Display for Ports {
     }
 }
 
-impl From<BollardPort> for Port {
-    fn from(port: BollardPort) -> Self {
+impl From<PortSummary> for Port {
+    fn from(port: PortSummary) -> Self {
         let ip = match port.ip {
             None => Ip::Localhost,
             Some(s) if s.starts_with("127.0.0") => Ip::Localhost,
@@ -235,10 +237,10 @@ impl From<BollardPort> for Port {
             Some(s) => Ip::Net(s),
         };
         let port_type = match port.typ {
-            Some(BollardPortTypeEnum::TCP) => Some(PortType::Tcp),
-            Some(BollardPortTypeEnum::UDP) => Some(PortType::Udp),
-            Some(BollardPortTypeEnum::SCTP) => Some(PortType::Sctp),
-            Some(BollardPortTypeEnum::EMPTY) | None => None,
+            Some(PortSummaryTypeEnum::TCP) => Some(PortType::Tcp),
+            Some(PortSummaryTypeEnum::UDP) => Some(PortType::Udp),
+            Some(PortSummaryTypeEnum::SCTP) => Some(PortType::Sctp),
+            Some(PortSummaryTypeEnum::EMPTY) | None => None,
         };
         Self {
             ip,
