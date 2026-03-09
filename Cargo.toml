@@ -52,7 +52,7 @@ tui-big-text = "0.8.2"
 tui-tree-widget = "0.24.0"
 
 [dev-dependencies]
-tempfile = "3.25.0"
+tempfile = "3.26.0"
 
 [profile.release]
 strip = true
