@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.5](https://github.com/robertpsoane/ducker/compare/v0.6.4...v0.6.5) - 2026-03-21
+
+### Other
+
+- *(deps)* bump clap from 4.5.60 to 4.6.0 ([#293](https://github.com/robertpsoane/ducker/pull/293))
+- *(deps)* bump tempfile from 3.26.0 to 3.27.0 ([#295](https://github.com/robertpsoane/ducker/pull/295))
+- *(deps)* bump tracing-subscriber from 0.3.22 to 0.3.23 ([#294](https://github.com/robertpsoane/ducker/pull/294))
+
 ## [0.6.4](https://github.com/robertpsoane/ducker/compare/v0.6.3...v0.6.4) - 2026-03-09
 
 ### Other
