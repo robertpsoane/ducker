@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.6](https://github.com/robertpsoane/ducker/compare/v0.6.5...v0.6.6) - 2026-08-01
+
+### Other
+
+- *(deps)* bump serde_json from 1.0.149 to 1.0.150 ([#306](https://github.com/robertpsoane/ducker/pull/306))
+- *(deps)* bump tui-big-text from 0.8.2 to 0.8.3 ([#298](https://github.com/robertpsoane/ducker/pull/298))
+- *(deps)* bump ureq from 3.2.0 to 3.3.0 ([#297](https://github.com/robertpsoane/ducker/pull/297))
+
 ## [0.6.5](https://github.com/robertpsoane/ducker/compare/v0.6.4...v0.6.5) - 2026-03-21
 
 ### Other
